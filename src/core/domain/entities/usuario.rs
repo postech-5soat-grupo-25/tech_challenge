@@ -1,7 +1,8 @@
-use crate::domain::base::aggregate_root::AggregateRoot;
-use crate::domain::value_objects::{ cpf, endereco };
-use crate::domain::base::assertion_concern;
+use crate::core::domain::base::aggregate_root::AggregateRoot;
+use crate::core::domain::value_objects::{ cpf, endereco };
+use crate::core::domain::base::assertion_concern;
 
+#[derive(Clone)]
 pub struct Usuario {
   nome: String,
   email: String,

@@ -1,6 +1,7 @@
-mod base;
-mod entities;
-mod value_objects;
+pub mod base;
+pub mod entities;
+pub mod value_objects;
+pub mod repositories;
 
 fn main() {
     println!("Hello, world!");

@@ -1,4 +1,4 @@
-use crate::domain::base::aggregate_root::AggregateRoot;
+use crate::core::domain::base::aggregate_root::AggregateRoot;
 
 pub struct RedeSocial {
   nome: String,

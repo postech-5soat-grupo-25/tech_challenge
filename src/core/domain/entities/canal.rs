@@ -1,5 +1,5 @@
 // use crate::domain::base::domain_exception::{DomainError, Result};
-use crate::domain::base::aggregate_root::AggregateRoot;
+use crate::core::domain::base::aggregate_root::AggregateRoot;
 
 #[derive(Clone)]
 pub struct Canal {
