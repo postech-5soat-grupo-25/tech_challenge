@@ -5,4 +5,4 @@ COPY . .
 
 RUN cargo install --path .
 
-CMD ["aula-2"]
+CMD ["rust_project"]
