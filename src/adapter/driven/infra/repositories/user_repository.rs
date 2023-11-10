@@ -9,7 +9,7 @@ pub struct UserRepository {
 }
 
 impl UserRepository {
-  fn new() -> Self {
+  pub fn new() -> Self {
     let user = Usuario::new(
       "Albert Dias Moreira".to_string(),
       "contato@albert-dm.dev".to_string(),

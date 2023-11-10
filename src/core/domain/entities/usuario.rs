@@ -4,7 +4,7 @@ use crate::core::domain::base::assertion_concern;
 
 #[derive(Clone)]
 pub struct Usuario {
-  nome: String,
+  pub nome: String,
   email: String,
   senha: String,
   cpf: cpf::Cpf,
