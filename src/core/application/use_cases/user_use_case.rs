@@ -1,13 +1,13 @@
-use crate::core::domain::repositories::user_repository::UserRepositoryInterface;
+use crate::core::domain::repositories::user_repository::UserRepository;
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::usuario::Usuario;
 
 pub struct UserUseCase {
-  user_repository: Box<dyn UserRepositoryInterface>
+  user_repository: Box<dyn UserRepository>
 }
 
 impl UserUseCase {
-  pub fn new(user_repository: Box<dyn UserRepositoryInterface>) -> Self {
+  pub fn new(user_repository: Box<dyn UserRepository>) -> Self {
     UserUseCase {
       user_repository
     }
