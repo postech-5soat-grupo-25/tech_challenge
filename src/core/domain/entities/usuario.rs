@@ -4,6 +4,7 @@ use crate::core::domain::base::assertion_concern;
 
 #[derive(Clone)]
 pub struct Usuario {
+  pub id: i32,
   pub nome: String,
   email: String,
   senha: String,
@@ -13,9 +14,9 @@ pub struct Usuario {
 
 impl AggregateRoot for Usuario {}
 
-impl Usuario {
-  pub fn new(nome: String, email: String, senha: String, cpf: cpf::Cpf, endereco: endereco::Endereco) -> Self {
-    Usuario { nome, email, senha, cpf, endereco }
+impl Usuario {  
+  pub fn new(id: i32, nome: String, email: String, senha: String, cpf: cpf::Cpf, endereco: endereco::Endereco) -> Self {
+    Usuario {id, nome, email, senha, cpf, endereco }
   }
 
   fn validate_entity(&self) {

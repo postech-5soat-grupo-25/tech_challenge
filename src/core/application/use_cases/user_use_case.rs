@@ -1,5 +1,5 @@
 use crate::core::domain::repositories::user_repository::UserRepositoryInterface;
-use crate::core::domain::base::domain_exception::Result;
+use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::usuario::Usuario;
 
 pub struct UserUseCase {
@@ -13,8 +13,12 @@ impl UserUseCase {
     }
   }
 
-  pub fn get_users(&self) -> Result<Vec<Usuario>> {
+  pub fn get_users(&self) -> Result<Vec<Usuario>, DomainError> {
     self.user_repository.get_users()
+  }
+
+  pub fn get_user_by_id(&self, id: i32) -> Result<Usuario, DomainError> {
+    self.user_repository.get_user_by_id(id)
   }
 }
 

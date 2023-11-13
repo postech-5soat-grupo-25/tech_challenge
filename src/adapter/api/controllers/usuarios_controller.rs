@@ -22,6 +22,24 @@ pub fn get_users(state: State<UserUseCase>) -> Result<&'static str, ()> {
     }
 }
 
+#[get("/<id>")]
+pub fn get_user(state: State<UserUseCase>, id: i32) -> Result<String, ()> {
+    let user = state.get_user_by_id(id);
+    match user {
+        Ok(user) => {
+            Ok(format!("Usuario encontrado: {}", user.nome))
+        },
+        Err(error) => {
+            match error {
+                _ => {
+                  println!("Erro ao buscar usuários");
+                  Ok(String::from("Erro ao buscar usuários"))
+                }
+            }
+        }
+    }
+}
+
 pub fn routes() -> Vec<rocket::Route> {
-    routes![get_users]
+    routes![get_users, get_user]
 }

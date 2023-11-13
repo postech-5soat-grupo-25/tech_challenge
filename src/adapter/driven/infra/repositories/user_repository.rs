@@ -1,5 +1,5 @@
 
-use crate::core::domain::base::domain_exception::Result;
+use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::usuario::Usuario;
 use crate::core::domain::value_objects::cpf::Cpf;
 use crate::core::domain::value_objects::endereco::Endereco;
@@ -11,6 +11,7 @@ pub struct UserRepository {
 impl UserRepository {
   pub fn new() -> Self {
     let user = Usuario::new(
+      1,
       "Albert Dias Moreira".to_string(),
       "contato@albert-dm.dev".to_string(),
       "melhor_projeto".to_string(),
@@ -24,7 +25,16 @@ impl UserRepository {
 }
 
 impl UserRepositoryInterface for UserRepository {
-  fn get_users(&self) -> Result<Vec<Usuario>> {
+  fn get_users(&self) -> Result<Vec<Usuario>, DomainError> {
     Ok(self._users.clone())
+  }
+
+  fn get_user_by_id(&self, id: i32) -> Result<Usuario, DomainError> {
+    for user in &self._users {
+      if user.id == id {
+        return Ok(user.clone());
+      }
+    }
+    Err(DomainError::NotFound)
   }
 }
