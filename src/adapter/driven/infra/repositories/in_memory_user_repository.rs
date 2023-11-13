@@ -1,4 +1,6 @@
 
+use rocket::tokio::time::{sleep, Duration};
+
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::usuario::Usuario;
 use crate::core::domain::value_objects::cpf::Cpf;
@@ -24,12 +26,16 @@ impl InMemoryUserRepository {
   }
 }
 
+#[async_trait]
 impl UserRepository for InMemoryUserRepository {
-  fn get_users(&self) -> Result<Vec<Usuario>, DomainError> {
-    Ok(self._users.clone())
+  async fn get_users(&self) -> Result<Vec<Usuario>, DomainError> {
+    let users = self._users.clone();
+    sleep(Duration::from_secs(1)).await;
+    Ok(users)
   }
 
-  fn get_user_by_id(&self, id: i32) -> Result<Usuario, DomainError> {
+  async fn get_user_by_id(&self, id: i32) -> Result<Usuario, DomainError> {
+    sleep(Duration::from_secs(1)).await;
     for user in &self._users {
       if user.id == id {
         return Ok(user.clone());
