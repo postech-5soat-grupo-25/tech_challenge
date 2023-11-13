@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize, Serializer};
-#[derive(Clone, Deserialize)]
+use schemars::JsonSchema;
+#[derive(Clone, Deserialize, JsonSchema)]
 pub struct Cpf {
     pub numero: String,
 }

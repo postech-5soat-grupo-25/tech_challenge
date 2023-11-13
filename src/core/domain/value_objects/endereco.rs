@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-#[derive(Clone, Deserialize, Serialize)]
+use schemars::JsonSchema;
+#[derive(Clone, Deserialize, Serialize, JsonSchema)]
 pub struct Endereco {
   pub cep: String,
 }

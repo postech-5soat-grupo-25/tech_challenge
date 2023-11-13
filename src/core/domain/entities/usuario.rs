@@ -1,10 +1,11 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::core::domain::base::aggregate_root::AggregateRoot;
 use crate::core::domain::value_objects::{ cpf, endereco };
 use crate::core::domain::base::assertion_concern;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Usuario {
   pub id: i32,
   pub nome: String,

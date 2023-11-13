@@ -1,1 +1,1 @@
-pub mod usuarios_controller;
+pub mod user_controller;
