@@ -1,12 +1,15 @@
+use serde::{Deserialize, Serialize};
+
 use crate::core::domain::base::aggregate_root::AggregateRoot;
 use crate::core::domain::value_objects::{ cpf, endereco };
 use crate::core::domain::base::assertion_concern;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Usuario {
   pub id: i32,
   pub nome: String,
   email: String,
+  #[serde(skip_serializing)]
   senha: String,
   cpf: cpf::Cpf,
   endereco: endereco::Endereco,
