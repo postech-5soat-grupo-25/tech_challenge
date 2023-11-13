@@ -2,7 +2,7 @@ use rocket::State;
 use crate::core::application::use_cases::user_use_case::UserUseCase;
 
 #[get("/")]
-pub fn get_users(state: State<UserUseCase>) -> Result<&'static str, ()> {
+pub fn get_users(state: &State<UserUseCase>) -> Result<&'static str, ()> {
     let users = state.get_users();
     match users {
         Ok(users) => {
@@ -23,7 +23,7 @@ pub fn get_users(state: State<UserUseCase>) -> Result<&'static str, ()> {
 }
 
 #[get("/<id>")]
-pub fn get_user(state: State<UserUseCase>, id: i32) -> Result<String, ()> {
+pub fn get_user(state: &State<UserUseCase>, id: i32) -> Result<String, ()> {
     let user = state.get_user_by_id(id);
     match user {
         Ok(user) => {
