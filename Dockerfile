@@ -1,8 +1,11 @@
-FROM rust:1.67
+FROM rust:latest
 
 WORKDIR /usr/src/myapp
 COPY . .
 
+RUN rustup default nightly
 RUN cargo install --path .
 
-CMD ["rust_project"]
+EXPOSE 8000
+
+CMD ["rust_ddd_template"]

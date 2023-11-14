@@ -27,6 +27,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     )
         .mount("/users", user_controller::routes())
         .manage(user_use_case)
+        .configure(rocket::Config::figment().merge(("port", 3000)))
         .launch()
         .await?;
 
