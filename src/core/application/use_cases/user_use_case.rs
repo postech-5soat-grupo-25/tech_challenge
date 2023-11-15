@@ -81,7 +81,8 @@ impl UserUseCase {
 
     pub async fn delete_user(&self, id: usize) -> Result<(), DomainError> {
         let mut user_repository = self.user_repository.lock().await;
-        user_repository.delete_user(id).await
+        user_repository.delete_user(id).await?;
+        Ok(())
     }
 }
 

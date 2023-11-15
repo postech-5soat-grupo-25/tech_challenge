@@ -64,7 +64,7 @@ impl UserRepository for InMemoryUserRepository {
   }
 
   async fn update_user(&mut self, new_user_data: Usuario) -> Result<Usuario, DomainError> {
-    let mut user_list = &mut self._users;
+    let user_list = &mut self._users;
     for user in &mut user_list.iter_mut() {
       if user.id == new_user_data.id {
         *user = new_user_data.clone();
@@ -75,7 +75,7 @@ impl UserRepository for InMemoryUserRepository {
   }
 
   async fn delete_user(&mut self, id: usize) -> Result<(), DomainError> {
-    let mut user_list = &mut self._users;
+    let user_list = &mut self._users;
     for (index, user) in user_list.iter_mut().enumerate() {
       if user.id == id {
         user_list.remove(index);

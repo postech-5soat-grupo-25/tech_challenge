@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
-use crate::adapter::driven::infra::repositories::in_memory_user_repository::InMemoryUserRepository;
+use crate::{adapter::driven::infra::repositories::in_memory_user_repository::InMemoryUserRepository, core::domain::base::domain_error::DomainError};
 use crate::core::application::use_cases::user_use_case::UserUseCase;
 use rocket::futures::lock::Mutex;
 use rocket::response::Redirect;
 use rocket_okapi::swagger_ui::*;
 use rocket_okapi::settings::UrlObject;
-use rocket;
 
 use super::controllers::user_controller;
 
@@ -29,6 +28,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         }),
     )
         .mount("/users", user_controller::routes())
+        .register("/users", user_controller::catchers())
         .manage(user_use_case)
         .configure(rocket::Config::figment().merge(("port", 3000)))
         .launch()
