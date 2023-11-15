@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum DomainError {
-    NotFound,
+    AlreadyExists,
     Empty,
+    NotFound,
 }

@@ -5,6 +5,13 @@ pub struct Cpf {
     pub numero: String,
 }
 
+impl Cpf {
+    pub fn new(numero: String) -> Self {
+        // TODO: validar cpf
+        Cpf { numero }
+    }
+}
+
 impl Serialize for Cpf {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

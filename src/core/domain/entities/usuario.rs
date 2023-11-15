@@ -7,7 +7,7 @@ use crate::core::domain::base::assertion_concern;
 
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 pub struct Usuario {
-  pub id: i32,
+  pub id: usize,
   pub nome: String,
   email: String,
   #[serde(skip_serializing)]
@@ -18,8 +18,8 @@ pub struct Usuario {
 
 impl AggregateRoot for Usuario {}
 
-impl Usuario {  
-  pub fn new(id: i32, nome: String, email: String, senha: String, cpf: cpf::Cpf, endereco: endereco::Endereco) -> Self {
+impl Usuario {
+  pub fn new(id: usize, nome: String, email: String, senha: String, cpf: cpf::Cpf, endereco: endereco::Endereco) -> Self {
     Usuario {id, nome, email, senha, cpf, endereco }
   }
 
@@ -32,8 +32,16 @@ impl Usuario {
     &self.nome
   }
 
+  pub fn set_nome(&mut self, nome: String) {
+    self.nome = nome;
+  }
+
   pub fn email(&self) -> &String {
     &self.email
+  }
+
+  pub fn set_email(&mut self, email: String) {
+    self.email = email;
   }
 
   pub fn senha(&self) -> &String {
@@ -46,5 +54,9 @@ impl Usuario {
 
   pub fn endereco(&self) -> &endereco::Endereco {
     &self.endereco
+  }
+
+  pub fn set_endereco(&mut self, endereco: endereco::Endereco) {
+    self.endereco = endereco;
   }
 }

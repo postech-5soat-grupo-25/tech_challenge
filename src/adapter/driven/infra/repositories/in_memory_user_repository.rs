@@ -6,6 +6,8 @@ use crate::core::domain::entities::usuario::Usuario;
 use crate::core::domain::value_objects::cpf::Cpf;
 use crate::core::domain::value_objects::endereco::Endereco;
 use crate ::core::domain::repositories::user_repository::UserRepository;
+
+#[derive(Clone)]
 pub struct InMemoryUserRepository {
   _users: Vec<Usuario>,
 }
@@ -34,7 +36,7 @@ impl UserRepository for InMemoryUserRepository {
     Ok(users)
   }
 
-  async fn get_user_by_id(&self, id: i32) -> Result<Usuario, DomainError> {
+  async fn get_user_by_id(&self, id: usize) -> Result<Usuario, DomainError> {
     sleep(Duration::from_secs(1)).await;
     for user in &self._users {
       if user.id == id {
@@ -43,4 +45,47 @@ impl UserRepository for InMemoryUserRepository {
     }
     Err(DomainError::NotFound)
   }
+
+  async fn create_user(&mut self, user: Usuario) -> Result<Usuario, DomainError> {
+    sleep(Duration::from_secs(1)).await;
+    let existing_user = self.get_user_by_id(user.id).await;
+
+    if existing_user.is_ok() {
+      return Err(DomainError::AlreadyExists);
+    }
+
+    let mut user_list = self._users.clone();
+    user_list.push(user.clone());
+
+    self._users = user_list;
+
+
+    Ok(user.clone())
+  }
+
+  async fn update_user(&mut self, new_user_data: Usuario) -> Result<Usuario, DomainError> {
+    let mut user_list = &mut self._users;
+    for user in &mut user_list.iter_mut() {
+      if user.id == new_user_data.id {
+        *user = new_user_data.clone();
+        return Ok(user.clone());
+      }
+    }
+    Err(DomainError::NotFound)
+  }
+
+  async fn delete_user(&mut self, id: usize) -> Result<(), DomainError> {
+    let mut user_list = &mut self._users;
+    for (index, user) in user_list.iter_mut().enumerate() {
+      if user.id == id {
+        user_list.remove(index);
+        return Ok(());
+      }
+    }
+    Err(DomainError::NotFound)
+  }
 }
+
+unsafe impl Sync for InMemoryUserRepository {}
+
+unsafe impl Send for InMemoryUserRepository {}

@@ -11,7 +11,29 @@
 
 - Criar um modelo de projeto rust utilizando boas práticas e DDD
 
-## Usando docker
+## Uso básico
+
+Versão utilizada do Rust: v1.75.0-nightly
+
+- Clone o repositório
+
+```bash
+git clone git@github.com:albert-dm/rust_ddd_template.git
+```
+
+- Entre na pasta do projeto
+
+```bash
+cd rust_ddd_template
+```
+
+- Execute o projeto
+
+```bash
+cargo run
+```
+
+## Usando docker (ainda não funciona)
 
 - Crie a imagem
 
