@@ -39,7 +39,17 @@ impl UserRepository for InMemoryUserRepository {
   async fn get_user_by_id(&self, id: usize) -> Result<Usuario, DomainError> {
     sleep(Duration::from_secs(1)).await;
     for user in &self._users {
-      if user.id == id {
+      if user.id().to_owned() == id {
+        return Ok(user.clone());
+      }
+    }
+    Err(DomainError::NotFound)
+  }
+
+  async fn get_user_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError> {
+    sleep(Duration::from_secs(1)).await;
+    for user in &self._users {
+      if user.cpf().to_owned().numero == cpf.numero {
         return Ok(user.clone());
       }
     }
@@ -48,7 +58,7 @@ impl UserRepository for InMemoryUserRepository {
 
   async fn create_user(&mut self, user: Usuario) -> Result<Usuario, DomainError> {
     sleep(Duration::from_secs(1)).await;
-    let existing_user = self.get_user_by_id(user.id).await;
+    let existing_user = self.get_user_by_id(user.id().to_owned()).await;
 
     if existing_user.is_ok() {
       return Err(DomainError::AlreadyExists);
@@ -66,7 +76,7 @@ impl UserRepository for InMemoryUserRepository {
   async fn update_user(&mut self, new_user_data: Usuario) -> Result<Usuario, DomainError> {
     let user_list = &mut self._users;
     for user in &mut user_list.iter_mut() {
-      if user.id == new_user_data.id {
+      if user.id() == new_user_data.id() {
         *user = new_user_data.clone();
         return Ok(user.clone());
       }
@@ -77,7 +87,7 @@ impl UserRepository for InMemoryUserRepository {
   async fn delete_user(&mut self, id: usize) -> Result<(), DomainError> {
     let user_list = &mut self._users;
     for (index, user) in user_list.iter_mut().enumerate() {
-      if user.id == id {
+      if user.id().to_owned() == id {
         user_list.remove(index);
         return Ok(());
       }

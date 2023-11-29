@@ -5,10 +5,10 @@ use crate::core::domain::base::aggregate_root::AggregateRoot;
 use crate::core::domain::value_objects::{ cpf, endereco };
 use crate::core::domain::base::assertion_concern;
 
-#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Usuario {
-  pub id: usize,
-  pub nome: String,
+  id: usize,
+  nome: String,
   email: String,
   #[serde(skip_serializing)]
   senha: String,
@@ -28,6 +28,10 @@ impl Usuario {
     assertion_concern::assert_argument_not_empty(self.email.clone(), "Email não pode ser vazio".to_string());
   }
 
+  pub fn id(&self) -> &usize {
+    &self.id
+  }
+
   pub fn nome(&self) -> &String {
     &self.nome
   }
@@ -44,8 +48,8 @@ impl Usuario {
     self.email = email;
   }
 
-  pub fn senha(&self) -> &String {
-    &self.senha
+  pub fn validate_senha(&self, senha: &String) -> bool {
+    &self.senha == senha
   }
 
   pub fn cpf(&self) -> &cpf::Cpf {

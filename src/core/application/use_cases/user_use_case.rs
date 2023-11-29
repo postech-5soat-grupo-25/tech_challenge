@@ -27,7 +27,6 @@ pub struct UpdateUserInput {
     endereco: Option<String>,
 }
 
-
 #[derive(Clone)]
 pub struct UserUseCase {
     user_repository: Arc<Mutex<dyn UserRepository + Sync + Send>>,
@@ -46,6 +45,11 @@ impl UserUseCase {
     pub async fn get_user_by_id(&self, id: usize) -> Result<Usuario, DomainError> {
         let user_repository = self.user_repository.lock().await;
         user_repository.get_user_by_id(id).await
+    }
+
+    pub async fn get_user_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError> {
+        let user_repository = self.user_repository.lock().await;
+        user_repository.get_user_by_cpf(cpf).await
     }
 
     pub async fn create_user(&self, user: CreateUserInput) -> Result<Usuario, DomainError> {

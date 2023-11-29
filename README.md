@@ -13,7 +13,7 @@
 
 ## Uso básico
 
-Versão utilizada do Rust: v1.75.0-nightly
+**Versão utilizada do Rust: v1.75.0-nightly**
 
 - Clone o repositório
 
@@ -46,3 +46,27 @@ docker build -t rust_ddd_template .
 ```bash
 docker run -it --rm -p 3000:8000 --name rust_ddd_template-container rust_ddd_template
 ```
+
+## Roadmap
+
+### Fase 1
+
+- [x] Rotas
+- [x] Injeção de dependências
+- [x] Async
+- [x] Serializaçao e Deserializaçao
+- [x] Error Handling
+- [x] Swagger
+- [ ] User CRUD
+- [ ] Autenticação e Autorização (+ Midlewares and Guards)
+- [ ] Variaveis de ambiente
+- [ ] Docker e Docker Compose
+- [ ] Postgres
+- [ ] Validação de Objetos de Valor
+- [ ] Testes unitarios
+- [ ] Testes de integração
+- [ ] Documentação
+
+### Desejável
+
+- [ ] Logging

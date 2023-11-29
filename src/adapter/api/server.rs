@@ -7,7 +7,7 @@ use rocket::response::Redirect;
 use rocket_okapi::swagger_ui::*;
 use rocket_okapi::settings::UrlObject;
 
-use super::controllers::user_controller;
+use super::controllers::{user_controller, auth_controller};
 
 #[get("/")]
 fn redirect_to_docs() -> Redirect {
@@ -23,16 +23,20 @@ pub async fn main() -> Result<(), rocket::Error> {
     .mount(
         "/docs/",
         make_swagger_ui(&SwaggerUIConfig {
-            urls: vec![UrlObject::new("Users", "/users/openapi.json")],
+            urls: vec![
+                UrlObject::new("Auth", "/auth/openapi.json"),
+                UrlObject::new("Users", "/users/openapi.json")
+            ],
             ..Default::default()
         }),
     )
-        .mount("/users", user_controller::routes())
-        .register("/users", user_controller::catchers())
-        .manage(user_use_case)
-        .configure(rocket::Config::figment().merge(("port", 3000)))
-        .launch()
-        .await?;
+    .mount("/auth", auth_controller::routes())
+    .mount("/users", user_controller::routes())
+    .register("/users", user_controller::catchers())
+    .manage(user_use_case)
+    .configure(rocket::Config::figment().merge(("port", 3000)))
+    .launch()
+    .await?;
 
     Ok(())
 }
