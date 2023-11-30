@@ -57,8 +57,8 @@ docker run -it --rm -p 3000:8000 --name rust_ddd_template-container rust_ddd_tem
 - [x] Serializaçao e Deserializaçao
 - [x] Error Handling
 - [x] Swagger
-- [ ] User CRUD
-- [ ] Autenticação e Autorização (+ Midlewares and Guards)
+- [x] User CRUD
+- [x] Autenticação e Autorização (+ Midlewares and Guards)
 - [ ] Variaveis de ambiente
 - [ ] Docker e Docker Compose
 - [ ] Postgres
@@ -66,7 +66,8 @@ docker run -it --rm -p 3000:8000 --name rust_ddd_template-container rust_ddd_tem
 - [ ] Testes unitarios
 - [ ] Testes de integração
 - [ ] Documentação
+- [ ] Usar pasta `bin` para executaveis (/bin/api  ---  cargo run api)
 
 ### Desejável
 
-- [ ] Logging
+- [ ] Logging/Tracing

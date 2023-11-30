@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize, Serializer};
 use schemars::JsonSchema;
-#[derive(Clone, Deserialize, Debug, JsonSchema)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct Cpf {
     pub numero: String,
 }
@@ -18,5 +18,15 @@ impl Serialize for Cpf {
         S: Serializer,
     {
         serializer.serialize_str(&self.numero)
+    }
+}
+
+impl JsonSchema for Cpf {
+    fn schema_name() -> String {
+        "Cpf".to_owned()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        String::json_schema(gen)
     }
 }
