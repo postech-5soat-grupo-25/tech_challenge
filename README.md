@@ -59,14 +59,14 @@ docker run -it --rm -p 3000:8000 --name rust_ddd_template-container rust_ddd_tem
 - [x] Swagger
 - [x] User CRUD
 - [x] Autenticação e Autorização (+ Midlewares and Guards)
-- [ ] Variaveis de ambiente
+- [x] Variaveis de ambiente
 - [ ] Docker e Docker Compose
 - [ ] Postgres
 - [ ] Validação de Objetos de Valor
 - [ ] Testes unitarios
 - [ ] Testes de integração
 - [ ] Documentação
-- [ ] Usar pasta `bin` para executaveis (/bin/api  ---  cargo run api)
+- [ ] Usar pasta `bin` para executaveis (/bin/server  ---  cargo run server)
 
 ### Desejável
 
