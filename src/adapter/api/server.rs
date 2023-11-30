@@ -1,3 +1,4 @@
+use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 
 use crate::adapter::driven::infra::repositories::in_memory_user_repository::InMemoryUserRepository;
@@ -19,6 +20,11 @@ fn redirect_to_docs() -> Redirect {
 pub async fn main() -> Result<(), rocket::Error> {
     let user_repository = Arc::new(Mutex::new(InMemoryUserRepository::new()));
     let user_use_case = UserUseCase::new(user_repository);
+
+    let server_config = rocket::Config::figment()
+        .merge(("address", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))))
+        .merge(("port", 3000));
+
     rocket::build()
     .mount("/", routes![redirect_to_docs])
     .register("/", generic_catchers())
@@ -36,7 +42,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     .mount("/users", user_controller::routes())
     .register("/users", user_controller::catchers())
     .manage(user_use_case)
-    .configure(rocket::Config::figment().merge(("port", 3000)))
+    .configure(server_config)
     .launch()
     .await?;
 

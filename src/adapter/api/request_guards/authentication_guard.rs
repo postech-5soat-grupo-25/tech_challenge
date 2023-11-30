@@ -44,9 +44,9 @@ impl<'r> FromRequest<'r> for AuthenticatedUser {
 
 impl<'a> OpenApiFromRequest<'a> for AuthenticatedUser {
   fn from_request_input(
-      gen: &mut OpenApiGenerator,
-      name: String,
-      required: bool,
+      _gen: &mut OpenApiGenerator,
+      _name: String,
+      _required: bool,
   ) -> Result<RequestHeaderInput, OpenApiError> {
       let security_scheme = SecurityScheme {
           description: Some(

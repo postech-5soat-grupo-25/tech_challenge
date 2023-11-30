@@ -20,7 +20,6 @@ pub fn get_token(user: Usuario) -> Result<String, Status> {
 
     let header = Header::new(Algorithm::HS512);
     let secret = Config::build().secret;
-    println!("secret: {}", secret);
     let token = encode(&header, &my_claims, &EncodingKey::from_secret(secret.as_ref()));
     match token {
         Ok(t) => Ok(t),
