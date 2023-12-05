@@ -3,8 +3,4 @@
 #[macro_use] extern crate rocket;
 
 mod core;
-mod adapter;
-
-fn main() {
-    adapter::api::server::main();
-}
+pub mod adapter;
