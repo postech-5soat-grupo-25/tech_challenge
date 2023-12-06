@@ -4,13 +4,13 @@ RUN rustup update nightly && \
 
 RUN rustup default nightly
 
-WORKDIR /rust_ddd_template
+WORKDIR /app
 
 COPY . .
 
 RUN cargo build --release --target=x86_64-unknown-linux-musl
 
 FROM scratch
-COPY --from=builder /rust_ddd_template/target/x86_64-unknown-linux-musl/release/rust_ddd_template /
-ENTRYPOINT [ "/rust_ddd_template" ]
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/rust_ddd_template /
+ENTRYPOINT [ "/api" ]
 EXPOSE 3000

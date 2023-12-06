@@ -1,0 +1,18 @@
+FROM messense/rust-musl-cross:x86_64-musl as builder
+RUN rustup update nightly && \
+    rustup target add --toolchain nightly x86_64-unknown-linux-musl
+
+RUN rustup default nightly
+
+RUN cargo install cargo-watch
+
+WORKDIR /app
+
+# COPY ../Cargo.toml .
+# COPY ../Cargo.lock .
+
+# create a volume for src
+RUN mkdir src
+VOLUME ["/app"]
+
+RUN cargo watch -x "run api --path ./src"

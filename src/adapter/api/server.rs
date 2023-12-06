@@ -46,5 +46,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     .launch()
     .await?;
 
+    println!("Server started at http://localhost:3000");
+
     Ok(())
 }

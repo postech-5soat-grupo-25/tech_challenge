@@ -33,18 +33,18 @@ cd rust_ddd_template
 cargo run
 ```
 
-## Usando docker (ainda não funciona)
+## Usando docker
 
-- Crie a imagem
+- Produção
 
 ```bash
-docker build -t rust_ddd_template .
+docker-compose up
 ```
 
-- Execute o container
+- Desenvolvimento
 
 ```bash
-docker run -it --rm -p 3000:8000 --name rust_ddd_template-container rust_ddd_template
+docker-compose -f docker-compose.dev.yml up
 ```
 
 ## Roadmap
@@ -61,13 +61,14 @@ docker run -it --rm -p 3000:8000 --name rust_ddd_template-container rust_ddd_tem
 - [x] Autenticação e Autorização (+ Midlewares and Guards)
 - [x] Variaveis de ambiente
 - [x] Docker e Docker Compose
+- [x] Usar pasta `bin` para executaveis (/bin/server  ---  cargo run api)
 - [ ] Postgres
 - [ ] Validação de Objetos de Valor
 - [ ] Testes unitarios
 - [ ] Testes de integração
 - [ ] Documentação
-- [ ] Usar pasta `bin` para executaveis (/bin/server  ---  cargo run server)
 
 ### Desejável
 
 - [ ] Logging/Tracing
+- [ ] User Roles
