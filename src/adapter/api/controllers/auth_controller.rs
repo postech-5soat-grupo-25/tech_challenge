@@ -30,7 +30,7 @@ async fn login(
     login_input: Json<LoginInput>,
 ) -> Result<Json<AuthenticationResponse>, Status> {
     let login_input = login_input.into_inner();
-    let cpf = Cpf::new(login_input.cpf.clone());
+    let cpf = Cpf::new(login_input.cpf.clone())?;
     let user = user_use_case.get_user_by_cpf(cpf).await;
     match user {
         Ok(user) => {

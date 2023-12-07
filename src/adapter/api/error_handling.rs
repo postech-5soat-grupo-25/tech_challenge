@@ -9,6 +9,8 @@ impl From<DomainError> for Status {
         match error {
             DomainError::AlreadyExists => Status::Conflict,
             DomainError::NotFound => Status::NotFound,
+            DomainError::Empty => Status::BadRequest,
+            DomainError::Invalid(_) => Status::BadRequest,
             _ => Status::InternalServerError,
         }
     }
@@ -18,6 +20,15 @@ impl From<DomainError> for Status {
 pub struct ErrorResponse {
     pub msg: String,
     pub status: usize,
+}
+
+#[catch(400)]
+fn bad_request() -> Json<ErrorResponse> {
+    let error = ErrorResponse {
+        msg: "Input inválido".to_string(),
+        status: 401,
+    };
+    Json(error)
 }
 
 #[catch(401)]
@@ -39,5 +50,5 @@ fn internal() -> Json<ErrorResponse> {
 }
 
 pub fn generic_catchers() -> Vec<rocket::Catcher> {
-    catchers![unauthorized, internal]
+    catchers![bad_request, unauthorized, internal]
 }

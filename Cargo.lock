@@ -1100,6 +1100,7 @@ name = "rust_ddd_template"
 version = "0.1.0"
 dependencies = [
  "jsonwebtoken",
+ "regex",
  "rocket",
  "rocket_okapi",
  "schemars",

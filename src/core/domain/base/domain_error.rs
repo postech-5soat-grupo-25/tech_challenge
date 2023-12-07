@@ -3,4 +3,5 @@ pub enum DomainError {
     AlreadyExists,
     Empty,
     NotFound,
+    Invalid(String),
 }

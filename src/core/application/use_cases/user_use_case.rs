@@ -54,10 +54,8 @@ impl UserUseCase {
 
     pub async fn create_user(&self, user: CreateUserInput) -> Result<Usuario, DomainError> {
         let mut user_repository = self.user_repository.lock().await;
-        // TODO: mover geracao de id pro repositorio (?)
-        let new_id = user_repository.get_users().await?.len() + 1;
-        // TODO: devo validar aqui ou na entidade?
-        let valid_cpf = Cpf::new(user.cpf.clone());
+        let new_id = 0;
+        let valid_cpf = Cpf::new(user.cpf.clone())?;
         let valid_endereco = Endereco::new(user.endereco.clone());
 
         let user = user_repository

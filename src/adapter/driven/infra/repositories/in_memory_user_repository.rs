@@ -19,7 +19,7 @@ impl InMemoryUserRepository {
       "Albert Dias Moreira".to_string(),
       "contato@albert-dm.dev".to_string(),
       "melhor_projeto".to_string(),
-      Cpf { numero: "000.000.000-00".to_string() },
+      Cpf::new("000.000.000-00".to_string()).unwrap(),
       Endereco { cep: "00000-000".to_string() }
     );
     InMemoryUserRepository {
@@ -49,7 +49,7 @@ impl UserRepository for InMemoryUserRepository {
   async fn get_user_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError> {
     sleep(Duration::from_secs(1)).await;
     for user in &self._users {
-      if user.cpf().to_owned().numero == cpf.numero {
+      if user.cpf().to_owned() == cpf {
         return Ok(user.clone());
       }
     }

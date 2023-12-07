@@ -62,13 +62,16 @@ docker-compose -f docker-compose.dev.yml up
 - [x] Variaveis de ambiente
 - [x] Docker e Docker Compose
 - [x] Usar pasta `bin` para executaveis (/bin/server  ---  cargo run api)
+- [x] Validação de Objetos de Valor - CPF (remover a prop numero do cpf sem remover a validação)
 - [ ] Postgres
-- [ ] Validação de Objetos de Valor
 - [ ] Testes unitarios
 - [ ] Testes de integração
 - [ ] Documentação
 
-### Desejável
+#### Desejável
 
 - [ ] Logging/Tracing
+- [ ] Validação de Objetos de Valor - Endereço
 - [ ] User Roles
+- [ ] Renderização de templates
+- [ ] Uso de HTMX
