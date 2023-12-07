@@ -30,7 +30,7 @@ cd rust_ddd_template
 - Execute o projeto
 
 ```bash
-cargo run
+just dev
 ```
 
 ## Usando docker
@@ -41,10 +41,22 @@ cargo run
 docker-compose up
 ```
 
+ou
+
+```bash
+just prod-docker
+```
+
 - Desenvolvimento
 
 ```bash
 docker-compose -f docker-compose.dev.yml up
+```
+
+ou
+
+```bash
+just dev-docker
 ```
 
 ## Roadmap
@@ -75,3 +87,4 @@ docker-compose -f docker-compose.dev.yml up
 - [ ] User Roles
 - [ ] Renderização de templates
 - [ ] Uso de HTMX
+- [ ] Docker pra rodar testes unitário e testes de integração (adicionar variavel de ambiente com tipo de ambiente)

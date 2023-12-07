@@ -8,6 +8,7 @@ services:
     environment:
       DB_URL: "postgres://postgres:postgres@db:5432"
       SECRET: "secret_from_docker"
+      ENV: "dev"
     depends_on:
       - db
     volumes:

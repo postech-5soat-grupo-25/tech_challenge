@@ -2,6 +2,7 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 
 use crate::adapter::driven::infra::repositories::in_memory_user_repository::InMemoryUserRepository;
+use crate::adapter::api::config::Config;
 use crate::core::application::use_cases::user_use_case::UserUseCase;
 use rocket::futures::lock::Mutex;
 use rocket::response::Redirect;
@@ -18,6 +19,7 @@ fn redirect_to_docs() -> Redirect {
 
 #[rocket::main]
 pub async fn main() -> Result<(), rocket::Error> {
+    let config = Config::build();
     let user_repository = Arc::new(Mutex::new(InMemoryUserRepository::new()));
     let user_use_case = UserUseCase::new(user_repository);
 
@@ -46,7 +48,6 @@ pub async fn main() -> Result<(), rocket::Error> {
     .launch()
     .await?;
 
-    println!("Server started at http://localhost:3000");
-
+    print!("Server running on {}", config.env.to_string());
     Ok(())
 }
