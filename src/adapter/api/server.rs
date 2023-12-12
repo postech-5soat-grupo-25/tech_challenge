@@ -1,8 +1,10 @@
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 
-use crate::adapter::driven::infra::repositories::in_memory_user_repository::InMemoryUserRepository;
-use crate::adapter::api::config::Config;
+use crate::adapter::driven::infra::{repositories, postgres};
+use crate::core::domain::repositories::user_repository::UserRepository;
+use repositories::{in_memory_user_repository::InMemoryUserRepository, postgres_user_repository::PostgresUserRepository};
+use crate::adapter::api::config::{Config, Env};
 use crate::core::application::use_cases::user_use_case::UserUseCase;
 use rocket::futures::lock::Mutex;
 use rocket::response::Redirect;
@@ -20,7 +22,20 @@ fn redirect_to_docs() -> Redirect {
 #[rocket::main]
 pub async fn main() -> Result<(), rocket::Error> {
     let config = Config::build();
-    let user_repository = Arc::new(Mutex::new(InMemoryUserRepository::new()));
+
+    println!("Loading environment variables...");
+    let user_repository: Arc<Mutex<dyn UserRepository + Sync + Send>> =
+    if config.env == Env::Test {
+        println!("Using in memory database");
+        Arc::new(Mutex::new(InMemoryUserRepository::new()))
+    } else {
+        println!("Connecting to database: {}", config.db_url);
+        let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url).await.unwrap();
+        let tables = postgres::get_tables();
+
+        Arc::new(Mutex::new(PostgresUserRepository::new(postgres_connection_manager.client, tables).await))
+    };
+
     let user_use_case = UserUseCase::new(user_repository);
 
     let server_config = rocket::Config::figment()
@@ -48,6 +63,6 @@ pub async fn main() -> Result<(), rocket::Error> {
     .launch()
     .await?;
 
-    print!("Server running on {}", config.env.to_string());
+    println!("Server running on {}", config.env.to_string());
     Ok(())
 }

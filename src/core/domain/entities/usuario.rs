@@ -48,6 +48,10 @@ impl Usuario {
     self.email = email;
   }
 
+  pub fn senha(&self) -> &String {
+    &self.senha
+  }
+
   pub fn validate_senha(&self, senha: &String) -> bool {
     &self.senha == senha
   }

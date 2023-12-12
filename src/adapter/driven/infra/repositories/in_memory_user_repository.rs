@@ -22,6 +22,9 @@ impl InMemoryUserRepository {
       Cpf::new("000.000.000-00".to_string()).unwrap(),
       Endereco { cep: "00000-000".to_string() }
     );
+
+    println!("Usando repositório em memória!");
+
     InMemoryUserRepository {
       _users: vec![user],
     }

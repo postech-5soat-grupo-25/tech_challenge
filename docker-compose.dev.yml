@@ -1,18 +1,16 @@
 version: '3'
 services:
-  api:
-    build: ./docker/Dockerfile.dev
-    restart: always
-    ports:
-      - 3000:3000
-    environment:
-      DB_URL: "postgres://postgres:postgres@db:5432"
-      SECRET: "secret_from_docker"
-      ENV: "dev"
-    depends_on:
-      - db
-    volumes:
-      - .:/app
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/Dockerfile.dev
+  #   restart: always
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - db
+  #   # volumes:
+  #   #   - .:/app
   db:
     image: postgres:15.2-alpine
     restart: always
@@ -23,8 +21,8 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - db:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
 
 volumes:
-  db:
+  db-data:
     driver: local

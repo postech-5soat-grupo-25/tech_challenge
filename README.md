@@ -59,6 +59,9 @@ ou
 just dev-docker
 ```
 
+Ainda nao foi possível configurar Docker do Postgres + App. Por enquanto o docker executa apenas o postgres.
+Em seguida é necessário executar o projeto localmente.
+
 ## Roadmap
 
 ### Fase 1
@@ -75,10 +78,11 @@ just dev-docker
 - [x] Docker e Docker Compose
 - [x] Usar pasta `bin` para executaveis (/bin/server  ---  cargo run api)
 - [x] Validação de Objetos de Valor - CPF (remover a prop numero do cpf sem remover a validação)
-- [ ] Postgres
+- [x] Postgres
 - [ ] Testes unitarios
 - [ ] Testes de integração
 - [ ] Documentação
+- [ ] Corrigir erro de compilação do projeto com o docker
 
 #### Desejável
 

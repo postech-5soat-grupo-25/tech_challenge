@@ -5,7 +5,7 @@ use regex::Regex;
 use crate::core::domain::base::domain_error::DomainError;
 
 #[derive(Clone, Deserialize, Debug, JsonSchema, Serialize)]
-pub struct Cpf(String);
+pub struct Cpf(pub String);
 
 impl Cpf {
     pub fn new(codigo: String) -> Result<Self, DomainError> {

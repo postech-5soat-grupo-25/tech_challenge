@@ -1,4 +1,9 @@
 FROM messense/rust-musl-cross:x86_64-musl as builder
+
+ENV DB_URL=postgres://postgres:postgres@db:5432
+ENV SECRET=secret_from_docker
+ENV ENV=prod
+
 RUN rustup update nightly && \
     rustup target add --toolchain nightly x86_64-unknown-linux-musl
 
