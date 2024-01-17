@@ -52,14 +52,6 @@ impl Produto {
             data_atualizacao,
         }
     }
-    
-    fn validate_entity(&self) -> Result<(), String> {
-        assertion_concern::assert_argument_not_empty(self.nome.clone(), "Nome não pode ser vazio".to_string());
-        assertion_concern::assert_argument_not_empty(self.preco.clone().to_string(), "Preço não pode ser vazio".to_string());
-        assertion_concern::assert_argument_date_format(&self.data_criacao, "Data de criação não está no formato correto (YYYY-MM-DD)".to_string());
-        assertion_concern::assert_argument_date_format(&self.data_atualizacao, "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string());
-        Ok(())
-    }
 
     // Getters
     pub fn id(&self) -> &usize {
@@ -86,10 +78,6 @@ impl Produto {
         self.preco
     }
 
-    pub fn ingredientes(&self) -> &Ingredientes {
-        &self.ingredientes
-    }
-
     pub fn data_criacao(&self) -> &String {
         &self.data_criacao
     }
@@ -99,23 +87,24 @@ impl Produto {
     }
 
     // Setters
+
     pub fn set_nome(&mut self, nome: String) {
+        assertion_concern::assert_argument_not_empty(nome.clone(), "Nome não pode ser vazio".to_string());
         self.nome = nome;
     }
 
     pub fn set_foto(&mut self, foto: String) {
+        assertion_concern::assert_argument_not_empty(foto.clone(), "Foto não pode ser vazio".to_string());
         self.foto = foto;
     }
 
     pub fn set_descricao(&mut self, descricao: String) {
+        assertion_concern::assert_argument_not_empty(descricao.clone(), "Descrição não pode ser vazio".to_string());
         self.descricao = descricao;
     }
 
-    pub fn set_categoria(&mut self, categoria: Categoria) {
-        self.categoria = categoria;
-    }
-
     pub fn set_preco(&mut self, preco: f32) {
+        assertion_concern::assert_argument_not_negative(preco.clone(), "Preço não pode ser negativo".to_string());
         self.preco = preco;
     }
 
@@ -124,18 +113,21 @@ impl Produto {
     }
 
     pub fn set_data_criacao(&mut self, data_criacao: String) {
+        assertion_concern::assert_argument_date_format(data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string());
         self.data_criacao = data_criacao;
     }
 
     pub fn set_data_atualizacao(&mut self, data_atualizacao: String) {
+        assertion_concern::assert_argument_date_format(data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string());
         self.data_atualizacao = data_atualizacao;
     }
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use crate::core::domain::value_objects::ingredientes::Ingredientes;
     #[test]
     fn test_produto_creation_valid() {
         let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
@@ -150,7 +142,6 @@ mod tests {
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
-
         assert_eq!(produto.id(), &1);
         assert_eq!(produto.nome(), "Cheeseburger");
         assert_eq!(produto.foto(), "cheeseburger.png");
@@ -160,60 +151,96 @@ mod tests {
         assert_eq!(produto.data_criacao(), "2024-01-16");
         assert_eq!(produto.data_atualizacao(), "2024-01-16");
     }
-
     #[test]
-    fn test_produto_validate_entity_valid() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let produto = Produto::new(
+    fn test_produto_setters_valid() {
+        let mut produto = Produto::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            ingredientes,
+            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
-
-        assert!(produto.validate_entity().is_ok());
+        produto.set_nome("Salada Burger".to_string());
+        produto.set_foto("salada_burguer.png".to_string());
+        produto.set_descricao("Delicioso hambúrguer com salada fresca!".to_string());
+        produto.set_preco(10.99);
+        produto.set_data_criacao("2024-02-17".to_string());
+        produto.set_data_atualizacao("2024-02-18".to_string());
+        assert_eq!(produto.nome(), "Salada Burger");
+        assert_eq!(produto.foto(), "salada_burguer.png");
+        assert_eq!(produto.descricao(), "Delicioso hambúrguer com salada fresca!");
+        assert_eq!(produto.preco(), 10.99);
+        assert_eq!(produto.data_criacao(), "2024-02-17");
+        assert_eq!(produto.data_atualizacao(), "2024-02-18");
     }
-
+    
     #[test]
     #[should_panic(expected = "Nome não pode ser vazio")]
-    fn test_produto_validate_entity_invalid_nome() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let produto = Produto::new(
+    fn test_produto_set_nome_empty() {
+        let mut produto = Produto::new(
             1,
-            "".to_string(),
+            "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            ingredientes,
+            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
-
-        produto.validate_entity();
+        produto.set_nome("".to_string());
+    }
+    #[test]
+    #[should_panic(expected = "Preço não pode ser negativo")]
+    fn test_produto_set_preco_negative() {
+        let mut produto = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            "2024-01-16".to_string(),
+            "2024-01-16".to_string(),
+        );
+        produto.set_preco(-1.0);
     }
 
     #[test]
     #[should_panic(expected = "Data de criação não está no formato correto (YYYY-MM-DD)")]
-    fn test_produto_validate_entity_invalid_data_criacao() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let produto = Produto::new(
+    fn test_produto_set_data_criacao_invalid_format() {
+        let mut produto = Produto::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
-            "O clássico pão-carne-queijo!".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            ingredientes,
-            "16-01-2024".to_string(),
+            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
-
-        produto.validate_entity();
+        produto.set_data_criacao("17-01-2024".to_string());
+    }
+    #[test]
+    #[should_panic(expected = "Data de atualização não está no formato correto (YYYY-MM-DD)")]
+    fn test_produto_set_data_atualizacao_invalid_format() {
+        let mut produto = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            "2024-01-16".to_string(),
+            "2024-01-16".to_string(),
+        );
+        produto.set_data_atualizacao("18-02-2024".to_string());
     }
 }
