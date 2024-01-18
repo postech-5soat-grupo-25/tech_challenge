@@ -89,22 +89,30 @@ impl Produto {
     // Setters
 
     pub fn set_nome(&mut self, nome: String) {
-        assertion_concern::assert_argument_not_empty(nome.clone(), "Nome não pode ser vazio".to_string());
+        assertion_concern::assert_argument_not_empty(
+            nome.clone(), "Nome não pode ser vazio".to_string()
+        );
         self.nome = nome;
     }
 
     pub fn set_foto(&mut self, foto: String) {
-        assertion_concern::assert_argument_not_empty(foto.clone(), "Foto não pode ser vazio".to_string());
+        assertion_concern::assert_argument_not_empty(
+            foto.clone(), "Foto não pode ser vazio".to_string()
+        );
         self.foto = foto;
     }
 
     pub fn set_descricao(&mut self, descricao: String) {
-        assertion_concern::assert_argument_not_empty(descricao.clone(), "Descrição não pode ser vazio".to_string());
+        assertion_concern::assert_argument_not_empty(
+            descricao.clone(), "Descrição não pode ser vazio".to_string()
+        );
         self.descricao = descricao;
     }
 
     pub fn set_preco(&mut self, preco: f32) {
-        assertion_concern::assert_argument_not_negative(preco.clone(), "Preço não pode ser negativo".to_string());
+        assertion_concern::assert_argument_not_negative(
+            preco.clone(), "Preço não pode ser negativo".to_string()
+        );
         self.preco = preco;
     }
 
@@ -113,12 +121,16 @@ impl Produto {
     }
 
     pub fn set_data_criacao(&mut self, data_criacao: String) {
-        assertion_concern::assert_argument_date_format(data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string());
+        assertion_concern::assert_argument_date_format(
+            data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
+        );
         self.data_criacao = data_criacao;
     }
 
     pub fn set_data_atualizacao(&mut self, data_atualizacao: String) {
-        assertion_concern::assert_argument_date_format(data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string());
+        assertion_concern::assert_argument_date_format(
+            data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
+        );
         self.data_atualizacao = data_atualizacao;
     }
 }
@@ -130,7 +142,9 @@ mod tests {
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
     #[test]
     fn test_produto_creation_valid() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
+        let ingredientes = Ingredientes::new(
+            vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
+        ).unwrap();
         let produto = Produto::new(
             1,
             "Cheeseburger".to_string(),
@@ -160,7 +174,9 @@ mod tests {
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            Ingredientes::new(
+                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
+            ).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
@@ -188,7 +204,9 @@ mod tests {
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            Ingredientes::new(
+                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
+            ).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
@@ -204,7 +222,9 @@ mod tests {
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            Ingredientes::new(
+                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
+            ).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
@@ -221,7 +241,9 @@ mod tests {
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            Ingredientes::new(
+                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
+            ).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
@@ -237,7 +259,9 @@ mod tests {
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            Ingredientes::new(
+                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
+            ).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
