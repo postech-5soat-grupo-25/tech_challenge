@@ -36,6 +36,22 @@ impl Cliente {
         }
     }
 
+    pub fn validate_entity(&self) -> Result<(), String> {
+        assertion_concern::assert_argument_not_empty(
+            self.nome.clone(), "Nome não pode ser vazio".to_string()
+        );
+        assertion_concern::assert_argument_not_empty(
+            self.email.clone(), "Email não pode ser vazio".to_string()
+        );
+        assertion_concern::assert_argument_date_format(
+            self.data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
+        );
+        assertion_concern::assert_argument_date_format(
+            self.data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
+        );
+        Ok(())
+    }
+
     // Getters
     pub fn id(&self) -> &usize {
         &self.id
@@ -63,12 +79,16 @@ impl Cliente {
 
     // Setters
     pub fn set_nome(&mut self, nome: String) {
-        assertion_concern::assert_argument_not_empty(nome.clone(), "Nome não pode ser vazio".to_string());
+        assertion_concern::assert_argument_not_empty(
+            nome.clone(), "Nome não pode ser vazio".to_string()
+        );
         self.nome = nome;
     }
 
     pub fn set_email(&mut self, email: String) {
-        assertion_concern::assert_argument_not_empty(email.clone(), "Email não pode ser vazio".to_string());
+        assertion_concern::assert_argument_not_empty(
+            email.clone(), "Email não pode ser vazio".to_string()
+        );
         self.email = email;
     }
 
@@ -77,16 +97,21 @@ impl Cliente {
     }
 
     pub fn set_data_criacao(&mut self, data_criacao: String) {
-        assertion_concern::assert_argument_date_format(data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string());
+        assertion_concern::assert_argument_date_format(
+            data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
+        );
         self.data_criacao = data_criacao;
     }
 
     pub fn set_data_atualizacao(&mut self, data_atualizacao: String) {
-        assertion_concern::assert_argument_date_format(data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string());
+        assertion_concern::assert_argument_date_format(
+            data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
+        );
         self.data_atualizacao = data_atualizacao;
     }
 }
 
+// Unit Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,6 +134,80 @@ mod tests {
         assert_eq!(cliente.email(), "fulano.silva@exemplo.com");
         assert_eq!(cliente.data_criacao(), "2024-01-17");
         assert_eq!(cliente.data_atualizacao(), "2024-01-17");
+    }
+
+    #[test]
+    fn test_cliente_validate_entity_valid() {
+        let cliente = Cliente::new(
+            1,
+            "Fulano da Silva".to_string(),
+            "fulano.silva@exemplo.com".to_string(),
+            Cpf::new("123.456.789-09".to_string()).unwrap(),
+            "2024-01-17".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        assert!(cliente.validate_entity().is_ok());
+    }
+
+    #[test]
+    #[should_panic(expected = "Nome não pode ser vazio")]
+    fn test_cliente_validate_entity_empty_nome() {
+        let cliente = Cliente::new(
+            1,
+            "".to_string(),
+            "fulano.silva@exemplo.com".to_string(),
+            Cpf::new("123.456.789-09".to_string()).unwrap(),
+            "2024-01-17".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        cliente.validate_entity().unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Email não pode ser vazio")]
+    fn test_cliente_validate_entity_empty_email() {
+        let cliente = Cliente::new(
+            1,
+            "Fulano da Silva".to_string(),
+            "".to_string(),
+            Cpf::new("123.456.789-09".to_string()).unwrap(),
+            "2024-01-17".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        cliente.validate_entity().unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Data de criação não está no formato correto (YYYY-MM-DD)")]
+    fn test_cliente_validate_entity_invalid_data_criacao() {
+        let cliente = Cliente::new(
+            1,
+            "Fulano da Silva".to_string(),
+            "fulano.silva@exemplo.com".to_string(),
+            Cpf::new("123.456.789-09".to_string()).unwrap(),
+            "17-01-2024".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        cliente.validate_entity().unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Data de atualização não está no formato correto (YYYY-MM-DD)")]
+    fn test_cliente_validate_entity_invalid_data_atualizacao() {
+        let cliente = Cliente::new(
+            1,
+            "Fulano da Silva".to_string(),
+            "fulano.silva@exemplo.com".to_string(),
+            Cpf::new("123.456.789-09".to_string()).unwrap(),
+            "2024-01-17".to_string(),
+            "18-02-2024".to_string(),
+        );
+
+        cliente.validate_entity().unwrap();
     }
 
     #[test]

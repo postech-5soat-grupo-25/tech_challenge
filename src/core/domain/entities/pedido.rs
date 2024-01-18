@@ -6,7 +6,7 @@ use crate::core::domain::entities::cliente::Cliente;
 use crate::core::domain::entities::produto::Produto;
 use crate::core::domain::base::assertion_concern;
 
-#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Status {
     Recebido,
     EmPreparacao,
@@ -148,12 +148,13 @@ impl Pedido {
     }
 }
 
+// Unit Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::core::domain::value_objects::cpf::Cpf;
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
-    use crate::core::domain::value_objects::ingredientes::Categoria;
+    use crate::core::domain::entities::produto::Categoria;
 
     #[test]
     fn test_pedido_creation_valid() {
@@ -269,31 +270,74 @@ mod tests {
     #[test]
     #[should_panic(expected = "Data de criação não está no formato correto (YYYY-MM-DD)")]
     fn test_pedido_set_data_criacao_invalid_format() {
-        let pedido = Pedido::new(
+        let cliente = Cliente::new(
+            1,
+            "Fulano da Silva".to_string(),
+            "fulano.silva@exemplo.com".to_string(),
+            Cpf::new("123.456.789-09".to_string()).unwrap(),
+            "2024-01-17".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        let lanche = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            "2024-01-17".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        let mut pedido = Pedido::new(
             1,
             Some(cliente),
             Some(lanche),
             None,
             None,
-            "Cartão de Crédito".to_string(),
+            "Mercado Pago".to_string(),
             Status::Recebido,
             "2024-01-17".to_string(),
             "2024-01-17".to_string(),
         );
 
         pedido.set_data_criacao("17-01-2024".to_string());
+
     }
 
     #[test]
     #[should_panic(expected = "Data de atualização não está no formato correto (YYYY-MM-DD)")]
     fn test_pedido_set_data_atualizacao_invalid_format() {
-        let pedido = Pedido::new(
+        let cliente = Cliente::new(
+            1,
+            "Fulano da Silva".to_string(),
+            "fulano.silva@exemplo.com".to_string(),
+            Cpf::new("123.456.789-09".to_string()).unwrap(),
+            "2024-01-17".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        let lanche = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            "2024-01-17".to_string(),
+            "2024-01-17".to_string(),
+        );
+
+        let mut pedido = Pedido::new(
             1,
             Some(cliente),
             Some(lanche),
             None,
             None,
-            "Cartão de Crédito".to_string(),
+            "Mercado Pago".to_string(),
             Status::Recebido,
             "2024-01-17".to_string(),
             "2024-01-17".to_string(),

@@ -53,6 +53,29 @@ impl Produto {
         }
     }
 
+    pub fn validate_entity(&self) -> Result<(), String> {
+        match self.categoria {
+            Categoria::Lanche | Categoria::Acompanhamento | Categoria::Bebida | Categoria::Sobremesa => (),
+            _ => return Err("Categoria do Produto é inválida".to_string()),
+        };
+        assertion_concern::assert_argument_not_empty(
+            self.nome.clone(), "Nome não pode ser vazio".to_string()
+        );
+        assertion_concern::assert_argument_not_empty(
+            self.descricao.clone(), "Descrição não pode ser vazio".to_string()
+        );
+        assertion_concern::assert_argument_not_negative(
+            self.preco.clone(), "Preço não pode ser negativo".to_string()
+        );
+        assertion_concern::assert_argument_date_format(
+            self.data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
+        );
+        assertion_concern::assert_argument_date_format(
+            self.data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
+        );
+        Ok(())
+    }
+
     // Getters
     pub fn id(&self) -> &usize {
         &self.id
@@ -87,7 +110,6 @@ impl Produto {
     }
 
     // Setters
-
     pub fn set_nome(&mut self, nome: String) {
         assertion_concern::assert_argument_not_empty(
             nome.clone(), "Nome não pode ser vazio".to_string()
@@ -96,9 +118,6 @@ impl Produto {
     }
 
     pub fn set_foto(&mut self, foto: String) {
-        assertion_concern::assert_argument_not_empty(
-            foto.clone(), "Foto não pode ser vazio".to_string()
-        );
         self.foto = foto;
     }
 
@@ -107,6 +126,10 @@ impl Produto {
             descricao.clone(), "Descrição não pode ser vazio".to_string()
         );
         self.descricao = descricao;
+    }
+
+    pub fn set_categoria(&mut self, categoria: Categoria) {
+        self.categoria = categoria;
     }
 
     pub fn set_preco(&mut self, preco: f32) {
@@ -135,11 +158,12 @@ impl Produto {
     }
 }
 
-
+// Unit Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
+
     #[test]
     fn test_produto_creation_valid() {
         let ingredientes = Ingredientes::new(
@@ -165,6 +189,65 @@ mod tests {
         assert_eq!(produto.data_criacao(), "2024-01-16");
         assert_eq!(produto.data_atualizacao(), "2024-01-16");
     }
+
+    #[test]
+    fn test_produto_validate_entity_valid() {
+        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
+        let produto = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            ingredientes,
+            "2024-01-16".to_string(),
+            "2024-01-16".to_string(),
+        );
+
+        assert!(produto.validate_entity().is_ok());
+    }
+
+    #[test]
+    #[should_panic(expected = "Nome não pode ser vazio")]
+    fn test_produto_validate_entity_empty_nome() {
+        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
+        let mut produto = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            ingredientes,
+            "2024-01-16".to_string(),
+            "2024-01-16".to_string(),
+        );
+
+        produto.nome = "".to_string();
+        produto.validate_entity().unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "Preço não pode ser negativo")]
+    fn test_produto_validate_entity_negative_preco() {
+        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
+        let mut produto = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            ingredientes,
+            "2024-01-16".to_string(),
+            "2024-01-16".to_string(),
+        );
+
+        produto.preco = -10.0;
+        produto.validate_entity().unwrap();
+    }
+
     #[test]
     fn test_produto_setters_valid() {
         let mut produto = Produto::new(
@@ -195,6 +278,25 @@ mod tests {
     }
     
     #[test]
+    fn test_produto_set_categoria_valid() {
+        let mut produto = Produto::new(
+            1,
+            "Cheeseburger".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            Ingredientes::new(
+                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
+            ).unwrap(),
+            "2024-01-16".to_string(),
+            "2024-01-16".to_string(),
+        );
+        produto.set_categoria(Categoria::Bebida);
+        assert_eq!(produto.categoria(), &Categoria::Bebida);
+    }
+
+    #[test]
     #[should_panic(expected = "Nome não pode ser vazio")]
     fn test_produto_set_nome_empty() {
         let mut produto = Produto::new(
@@ -212,6 +314,7 @@ mod tests {
         );
         produto.set_nome("".to_string());
     }
+
     #[test]
     #[should_panic(expected = "Preço não pode ser negativo")]
     fn test_produto_set_preco_negative() {
