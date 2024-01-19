@@ -4,4 +4,5 @@ pub enum DomainError {
     Empty,
     NotFound,
     Invalid(String),
+    NonPositive
 }

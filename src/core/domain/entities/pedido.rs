@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::core::domain::base::aggregate_root::AggregateRoot;
+use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::cliente::Cliente;
 use crate::core::domain::entities::produto::Produto;
 use crate::core::domain::base::assertion_concern;
@@ -12,6 +13,7 @@ pub enum Status {
     EmPreparacao,
     Pronto,
     Finalizado,
+    Cancelado,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
@@ -54,20 +56,16 @@ impl Pedido {
         }
     }
 
-    pub fn validate_entity(&self) -> Result<(), String> {
+    pub fn validate_entity(&self) -> Result<(), DomainError> {
         if self.lanche.is_none() && self.acompanhamento.is_none() && self.bebida.is_none() {
-            return Err("Pedido deve conter pelo menos um item entre Lanche, Acompanhamento ou Bebida".to_string());
+            return Err(DomainError::Invalid("Pedido deve conter pelo menos um item entre Lanche, Acompanhamento ou Bebida".to_string()));
         };
         match self.status {
-            Status::Recebido | Status::EmPreparacao | Status::Pronto | Status::Finalizado => (),
-            _ => return Err("Status do Pedido é inválido".to_string()),
+            Status::Recebido | Status::EmPreparacao | Status::Pronto | Status::Finalizado | Status::Cancelado => (),
+            _ => return Err(DomainError::Invalid("Status do Pedido é inválido".to_string())),
         };
-        assertion_concern::assert_argument_date_format(
-            self.data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
-        );
-        assertion_concern::assert_argument_date_format(
-            self.data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
-        );
+        assertion_concern::assert_argument_date_format(self.data_criacao.clone())?;
+        assertion_concern::assert_argument_date_format(self.data_atualizacao.clone())?;
         Ok(())
     }
 
@@ -133,18 +131,16 @@ impl Pedido {
         self.status = status;
     }
 
-    pub fn set_data_criacao(&mut self, data_criacao: String) {
-        assertion_concern::assert_argument_date_format(
-            data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
-        );
+    pub fn set_data_criacao(&mut self, data_criacao: String) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_date_format(data_criacao.clone())?;
         self.data_criacao = data_criacao;
+        Ok(())
     }
 
-    pub fn set_data_atualizacao(&mut self, data_atualizacao: String) {
-        assertion_concern::assert_argument_date_format(
-            data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
-        );
+    pub fn set_data_atualizacao(&mut self, data_atualizacao: String) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_date_format(data_atualizacao.clone())?;
         self.data_atualizacao = data_atualizacao;
+        Ok(())
     }
 }
 
@@ -152,22 +148,25 @@ impl Pedido {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::domain::entities::cliente::Cliente;
+    use crate::core::domain::entities::produto::Produto;
+    use crate::core::domain::entities::produto::Categoria;
     use crate::core::domain::value_objects::cpf::Cpf;
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
-    use crate::core::domain::entities::produto::Categoria;
 
-    #[test]
-    fn test_pedido_creation_valid() {
-        let cliente = Cliente::new(
+    fn create_valid_cliente() -> Cliente {
+        Cliente::new(
             1,
             "Fulano da Silva".to_string(),
             "fulano.silva@exemplo.com".to_string(),
             Cpf::new("123.456.789-09".to_string()).unwrap(),
             "2024-01-17".to_string(),
             "2024-01-17".to_string(),
-        );
+        )
+    }
 
-        let lanche = Produto::new(
+    fn create_valid_produto() -> Produto {
+        Produto::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
@@ -177,20 +176,29 @@ mod tests {
             Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
             "2024-01-17".to_string(),
             "2024-01-17".to_string(),
-        );
+        )
+    }
 
-        let pedido = Pedido::new(
+    fn create_valid_pedido() -> Pedido {
+        let cliente = create_valid_cliente();
+        let produto = create_valid_produto();
+        Pedido::new(
             1,
             Some(cliente),
-            Some(lanche),
+            Some(produto),
             None,
             None,
             "Cartão de Crédito".to_string(),
             Status::Recebido,
             "2024-01-17".to_string(),
             "2024-01-17".to_string(),
-        );
+        )
 
+    }
+
+    #[test]
+    fn test_pedido_creation_valid() {
+        let pedido = create_valid_pedido();
         assert_eq!(pedido.id(), &1);
         assert!(pedido.cliente().is_some());
         assert!(pedido.lanche().is_some());
@@ -204,54 +212,13 @@ mod tests {
 
     #[test]
     fn test_pedido_validate_entity_valid() {
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let lanche = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let pedido = Pedido::new(
-            1,
-            Some(cliente),
-            Some(lanche),
-            None,
-            None,
-            "Mercado Pago".to_string(),
-            Status::Recebido,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
+        let pedido = create_valid_pedido();
         assert!(pedido.validate_entity().is_ok());
     }
 
     #[test]
-    #[should_panic(expected = "Pedido deve conter pelo menos um item entre Lanche, Acompanhamento ou Bebida")]
     fn test_pedido_validate_entity_no_items() {
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
+        let cliente = create_valid_cliente();
         let pedido = Pedido::new(
             1,
             Some(cliente),
@@ -263,86 +230,22 @@ mod tests {
             "2024-01-17".to_string(),
             "2024-01-17".to_string(),
         );
-
-        pedido.validate_entity().unwrap();
+        let result = pedido.validate_entity();
+        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
     }
 
     #[test]
-    #[should_panic(expected = "Data de criação não está no formato correto (YYYY-MM-DD)")]
     fn test_pedido_set_data_criacao_invalid_format() {
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let lanche = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let mut pedido = Pedido::new(
-            1,
-            Some(cliente),
-            Some(lanche),
-            None,
-            None,
-            "Mercado Pago".to_string(),
-            Status::Recebido,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        pedido.set_data_criacao("17-01-2024".to_string());
+        let mut pedido = create_valid_pedido();
+        let result = pedido.set_data_criacao("17-01-2024".to_string());
+        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
 
     }
 
     #[test]
-    #[should_panic(expected = "Data de atualização não está no formato correto (YYYY-MM-DD)")]
     fn test_pedido_set_data_atualizacao_invalid_format() {
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let lanche = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let mut pedido = Pedido::new(
-            1,
-            Some(cliente),
-            Some(lanche),
-            None,
-            None,
-            "Mercado Pago".to_string(),
-            Status::Recebido,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        pedido.set_data_atualizacao("18-02-2024".to_string());
+        let mut pedido = create_valid_pedido();
+        let result = pedido.set_data_atualizacao("18-02-2024".to_string());
+        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
     }
 }

@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::core::domain::base::aggregate_root::AggregateRoot;
+use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::value_objects::ingredientes::Ingredientes;
 use crate::core::domain::base::assertion_concern;
 
@@ -53,26 +54,16 @@ impl Produto {
         }
     }
 
-    pub fn validate_entity(&self) -> Result<(), String> {
+    pub fn validate_entity(&self) -> Result<(), DomainError> {
         match self.categoria {
             Categoria::Lanche | Categoria::Acompanhamento | Categoria::Bebida | Categoria::Sobremesa => (),
-            _ => return Err("Categoria do Produto é inválida".to_string()),
+            _ => return Err(DomainError::Invalid("Categoria do Produto é inválida".to_string())),
         };
-        assertion_concern::assert_argument_not_empty(
-            self.nome.clone(), "Nome não pode ser vazio".to_string()
-        );
-        assertion_concern::assert_argument_not_empty(
-            self.descricao.clone(), "Descrição não pode ser vazio".to_string()
-        );
-        assertion_concern::assert_argument_not_negative(
-            self.preco.clone(), "Preço não pode ser negativo".to_string()
-        );
-        assertion_concern::assert_argument_date_format(
-            self.data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
-        );
-        assertion_concern::assert_argument_date_format(
-            self.data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
-        );
+        assertion_concern::assert_argument_not_empty(self.nome.clone())?;
+        assertion_concern::assert_argument_not_empty(self.descricao.clone())?;
+        assertion_concern::assert_argument_not_negative(self.preco.clone())?;
+        assertion_concern::assert_argument_date_format(self.data_criacao.clone())?;
+        assertion_concern::assert_argument_date_format(self.data_atualizacao.clone())?;
         Ok(())
     }
 
@@ -110,51 +101,46 @@ impl Produto {
     }
 
     // Setters
-    pub fn set_nome(&mut self, nome: String) {
-        assertion_concern::assert_argument_not_empty(
-            nome.clone(), "Nome não pode ser vazio".to_string()
-        );
+    pub fn set_nome(&mut self, nome: String) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_not_empty(nome.clone())?;
         self.nome = nome;
+        Ok(())
     }
 
     pub fn set_foto(&mut self, foto: String) {
         self.foto = foto;
     }
 
-    pub fn set_descricao(&mut self, descricao: String) {
-        assertion_concern::assert_argument_not_empty(
-            descricao.clone(), "Descrição não pode ser vazio".to_string()
-        );
+    pub fn set_descricao(&mut self, descricao: String) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_not_empty(descricao.clone())?;
         self.descricao = descricao;
+        Ok(())
     }
 
     pub fn set_categoria(&mut self, categoria: Categoria) {
         self.categoria = categoria;
     }
 
-    pub fn set_preco(&mut self, preco: f32) {
-        assertion_concern::assert_argument_not_negative(
-            preco.clone(), "Preço não pode ser negativo".to_string()
-        );
+    pub fn set_preco(&mut self, preco: f32) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_not_negative(preco.clone())?;
         self.preco = preco;
+        Ok(())
     }
 
     pub fn set_ingredientes(&mut self, ingredientes: Ingredientes) {
         self.ingredientes = ingredientes;
     }
 
-    pub fn set_data_criacao(&mut self, data_criacao: String) {
-        assertion_concern::assert_argument_date_format(
-            data_criacao.clone(), "Data de criação não está no formato correto (YYYY-MM-DD)".to_string()
-        );
+    pub fn set_data_criacao(&mut self, data_criacao: String) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_date_format(data_criacao.clone())?;
         self.data_criacao = data_criacao;
+        Ok(())
     }
 
-    pub fn set_data_atualizacao(&mut self, data_atualizacao: String) {
-        assertion_concern::assert_argument_date_format(
-            data_atualizacao.clone(), "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string()
-        );
+    pub fn set_data_atualizacao(&mut self, data_atualizacao: String) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_date_format(data_atualizacao.clone())?;
         self.data_atualizacao = data_atualizacao;
+        Ok(())
     }
 }
 
@@ -164,22 +150,24 @@ mod tests {
     use super::*;
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
 
-    #[test]
-    fn test_produto_creation_valid() {
-        let ingredientes = Ingredientes::new(
-            vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
-        ).unwrap();
-        let produto = Produto::new(
+    fn create_valid_produto() -> Produto {
+        Produto::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            ingredientes,
+            Ingredientes::new(
+            vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
-        );
+        )
+    }
+
+    #[test]
+    fn test_produto_creation_valid() {
+        let produto= create_valid_produto();
         assert_eq!(produto.id(), &1);
         assert_eq!(produto.nome(), "Cheeseburger");
         assert_eq!(produto.foto(), "cheeseburger.png");
@@ -192,83 +180,55 @@ mod tests {
 
     #[test]
     fn test_produto_validate_entity_valid() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
+        let produto= create_valid_produto();
+        assert!(produto.validate_entity().is_ok());
+    }
+
+    #[test]
+    fn test_produto_validate_entity_empty_nome() {
+        let produto = Produto::new(
+            1,
+            "".to_string(),
+            "cheeseburger.png".to_string(),
+            "O clássico pão, carne e queijo!".to_string(),
+            Categoria::Lanche,
+            9.99,
+            Ingredientes::new(
+            vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            "2024-01-16".to_string(),
+            "2024-01-16".to_string(),
+        );
+        let result = produto.validate_entity();
+        assert!(matches!(result, Err(DomainError::Empty)), "Esperado Err(DomainError::Empty), obtido {:?}", result);
+    }
+
+    #[test]
+    fn test_produto_validate_entity_negative_preco() {
         let produto = Produto::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
-            9.99,
-            ingredientes,
+            -10.0,
+            Ingredientes::new(
+            vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
             "2024-01-16".to_string(),
             "2024-01-16".to_string(),
         );
-
-        assert!(produto.validate_entity().is_ok());
-    }
-
-    #[test]
-    #[should_panic(expected = "Nome não pode ser vazio")]
-    fn test_produto_validate_entity_empty_nome() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            ingredientes,
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-
-        produto.nome = "".to_string();
-        produto.validate_entity().unwrap();
-    }
-
-    #[test]
-    #[should_panic(expected = "Preço não pode ser negativo")]
-    fn test_produto_validate_entity_negative_preco() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            ingredientes,
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-
-        produto.preco = -10.0;
-        produto.validate_entity().unwrap();
+        let result = produto.validate_entity();
+        assert!(matches!(result, Err(DomainError::NonPositive)), "Esperado Err(DomainError::NonPositive), obtido {:?}", result);
     }
 
     #[test]
     fn test_produto_setters_valid() {
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
-            ).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-        produto.set_nome("Salada Burger".to_string());
-        produto.set_foto("salada_burguer.png".to_string());
-        produto.set_descricao("Delicioso hambúrguer com salada fresca!".to_string());
-        produto.set_preco(10.99);
-        produto.set_data_criacao("2024-02-17".to_string());
-        produto.set_data_atualizacao("2024-02-18".to_string());
+        let mut produto= create_valid_produto();
+        let _ = produto.set_nome("Salada Burger".to_string());
+        let _ = produto.set_foto("salada_burguer.png".to_string());
+        let _ = produto.set_descricao("Delicioso hambúrguer com salada fresca!".to_string());
+        let _ = produto.set_preco(10.99);
+        let _ = produto.set_data_criacao("2024-02-17".to_string());
+        let _ = produto.set_data_atualizacao("2024-02-18".to_string());
         assert_eq!(produto.nome(), "Salada Burger");
         assert_eq!(produto.foto(), "salada_burguer.png");
         assert_eq!(produto.descricao(), "Delicioso hambúrguer com salada fresca!");
@@ -279,95 +239,36 @@ mod tests {
     
     #[test]
     fn test_produto_set_categoria_valid() {
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
-            ).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
+        let mut produto= create_valid_produto();
         produto.set_categoria(Categoria::Bebida);
         assert_eq!(produto.categoria(), &Categoria::Bebida);
     }
 
     #[test]
-    #[should_panic(expected = "Nome não pode ser vazio")]
     fn test_produto_set_nome_empty() {
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
-            ).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-        produto.set_nome("".to_string());
+        let mut produto= create_valid_produto();
+        let result = produto.set_nome("".to_string());
+        assert!(matches!(result, Err(DomainError::Empty)), "Esperado Err(DomainError::Empty), obtido {:?}", result);
     }
 
     #[test]
-    #[should_panic(expected = "Preço não pode ser negativo")]
     fn test_produto_set_preco_negative() {
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
-            ).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-        produto.set_preco(-1.0);
+        let mut produto= create_valid_produto();
+        let result = produto.set_preco(-1.0);
+        assert!(matches!(result, Err(DomainError::NonPositive)), "Esperado Err(DomainError::NonPositive), obtido {:?}", result);
     }
 
     #[test]
-    #[should_panic(expected = "Data de criação não está no formato correto (YYYY-MM-DD)")]
     fn test_produto_set_data_criacao_invalid_format() {
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
-            ).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-        produto.set_data_criacao("17-01-2024".to_string());
+        let mut produto= create_valid_produto();
+        let result = produto.set_data_criacao("17-01-2024".to_string());
+        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
     }
+
     #[test]
-    #[should_panic(expected = "Data de atualização não está no formato correto (YYYY-MM-DD)")]
     fn test_produto_set_data_atualizacao_invalid_format() {
-        let mut produto = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-                vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]
-            ).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-        produto.set_data_atualizacao("18-02-2024".to_string());
+        let mut produto= create_valid_produto();
+        let result = produto.set_data_atualizacao("18-02-2024".to_string());
+        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
     }
 }
