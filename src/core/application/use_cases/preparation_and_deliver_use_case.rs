@@ -9,16 +9,6 @@ use crate::core::domain::entities::pedido::{ Pedido, Status };
 use crate::core::domain::repositories::order_repository::OrderRepository;
 
 
-#[derive(Clone, Debug, Deserialize, JsonSchema)]
-pub struct UpdateOrderInput {
-    cliente: Option<Cliente>,
-    lanche: Option<Produto>,
-    acompanhamento: Option<Produto>,
-    bebida: Option<Produto>,
-    pagamento: String,
-    status: Status
-}
-
 impl PreparationAndDeliverUseCase {
     pub fn new(order_repository: Arc<Mutex<dyn OrderRepository + Sync + Send>>) -> Self {
         PreparationAndDeliverUseCase { order_repository }
