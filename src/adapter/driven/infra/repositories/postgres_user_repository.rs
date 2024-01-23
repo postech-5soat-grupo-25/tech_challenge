@@ -1,10 +1,10 @@
 use crate::{core::domain::{repositories::user_repository::UserRepository, base::domain_error::DomainError, entities::usuario::Usuario, value_objects::{cpf::Cpf, endereco::{Endereco, self}}}, adapter::driven::infra::postgres::users};
 use postgres_from_row::FromRow;
 use tokio_postgres::Client;
-
+use std::sync::Arc;
 use super::super::postgres::table::Table;
 pub struct PostgresUserRepository {
-  client: Client,
+  client: Arc<Client>,
   tables: Vec<Table>,
 }
 
@@ -16,7 +16,7 @@ const UPDATE_USER: &str = "UPDATE users SET nome = $1, email = $2, senha = $3, c
 const DELETE_USER: &str = "DELETE FROM users WHERE id = $1";
 
 impl PostgresUserRepository {
-  pub async fn new(client: Client, tables: Vec<Table>) -> Self {
+  pub async fn new(client: Arc<Client>, tables: Vec<Table>) -> Self {
     let mut repo = PostgresUserRepository { client, tables };
 
     repo.check_for_tables().await;
@@ -27,8 +27,10 @@ impl PostgresUserRepository {
 
   async fn check_for_tables(&self) {
     for table in self.tables.iter() {
-      let query = table.get_create_if_not_exists_query();
-      self.client.execute(query.as_str(), &[]).await.unwrap();
+      let queries = table.get_create_if_not_exists_query();
+      for query in queries {
+        self.client.execute(query.as_str(), &[]).await.unwrap();
+    }
     };
   }
 

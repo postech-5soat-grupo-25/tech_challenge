@@ -1,2 +1,2 @@
 pub mod usuario;
-pub mod produto;
+pub mod product;

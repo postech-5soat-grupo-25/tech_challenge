@@ -1,9 +1,12 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
+
 
 use crate::core::domain::base::aggregate_root::AggregateRoot;
 use crate::core::domain::value_objects::ingredientes::Ingredientes;
 use crate::core::domain::base::assertion_concern;
+
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Categoria {
@@ -13,8 +16,23 @@ pub enum Categoria {
     Sobremesa,
 }
 
+impl FromStr for Categoria {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Lanche" => Ok(Categoria::Lanche),
+            "Bebida" => Ok(Categoria::Bebida),
+            "Acompanhamento" => Ok(Categoria::Acompanhamento),
+            "Sobremesa" => Ok(Categoria::Sobremesa),
+            _ => Err(()),
+        }
+    }
+}
+
+
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
-pub struct Produto {
+pub struct Product {
     id: usize,
     nome: String,
     foto: String,
@@ -22,13 +40,13 @@ pub struct Produto {
     categoria: Categoria,
     preco: f32,
     ingredientes: Ingredientes,
-    data_criacao: String,
-    data_atualizacao: String,
+    created_at: String,
+    updated_at: String,
 }
 
-impl AggregateRoot for Produto {}
+impl AggregateRoot for Product {}
 
-impl Produto {
+impl Product {
     pub fn new(
         id: usize,
         nome: String,
@@ -37,10 +55,10 @@ impl Produto {
         categoria: Categoria,
         preco: f32,
         ingredientes: Ingredientes,
-        data_criacao: String,
-        data_atualizacao: String,
+        created_at: String,
+        updated_at: String,
     ) -> Self {
-        Produto {
+        Product {
             id,
             nome,
             foto,
@@ -48,16 +66,16 @@ impl Produto {
             categoria,
             preco,
             ingredientes,
-            data_criacao,
-            data_atualizacao,
+            created_at,
+            updated_at,
         }
     }
     
     fn validate_entity(&self) -> Result<(), String> {
         assertion_concern::assert_argument_not_empty(self.nome.clone(), "Nome não pode ser vazio".to_string());
         assertion_concern::assert_argument_not_empty(self.preco.clone().to_string(), "Preço não pode ser vazio".to_string());
-        assertion_concern::assert_argument_date_format(&self.data_criacao, "Data de criação não está no formato correto (YYYY-MM-DD)".to_string());
-        assertion_concern::assert_argument_date_format(&self.data_atualizacao, "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string());
+        assertion_concern::assert_argument_date_format(&self.created_at, "Data de criação não está no formato correto (YYYY-MM-DD)".to_string());
+        assertion_concern::assert_argument_date_format(&self.updated_at, "Data de atualização não está no formato correto (YYYY-MM-DD)".to_string());
         Ok(())
     }
 
@@ -90,12 +108,12 @@ impl Produto {
         &self.ingredientes
     }
 
-    pub fn data_criacao(&self) -> &String {
-        &self.data_criacao
+    pub fn created_at(&self) -> &String {
+        &self.created_at
     }
 
-    pub fn data_atualizacao(&self) -> &String {
-        &self.data_atualizacao
+    pub fn updated_at(&self) -> &String {
+        &self.updated_at
     }
 
     // Setters
@@ -123,12 +141,12 @@ impl Produto {
         self.ingredientes = ingredientes;
     }
 
-    pub fn set_data_criacao(&mut self, data_criacao: String) {
-        self.data_criacao = data_criacao;
+    pub fn set_created_at(&mut self, created_at: String) {
+        self.created_at = created_at;
     }
 
-    pub fn set_data_atualizacao(&mut self, data_atualizacao: String) {
-        self.data_atualizacao = data_atualizacao;
+    pub fn set_updated_at(&mut self, updated_at: String) {
+        self.updated_at = updated_at;
     }
 }
 
@@ -137,9 +155,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_produto_creation_valid() {
+    fn test_product_creation_valid() {
         let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let produto = Produto::new(
+        let product = Product::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
@@ -151,20 +169,20 @@ mod tests {
             "2024-01-16".to_string(),
         );
 
-        assert_eq!(produto.id(), &1);
-        assert_eq!(produto.nome(), "Cheeseburger");
-        assert_eq!(produto.foto(), "cheeseburger.png");
-        assert_eq!(produto.descricao(), "O clássico pão, carne e queijo!");
-        assert_eq!(produto.categoria(), &Categoria::Lanche);
-        assert_eq!(produto.preco(), 9.99);
-        assert_eq!(produto.data_criacao(), "2024-01-16");
-        assert_eq!(produto.data_atualizacao(), "2024-01-16");
+        assert_eq!(product.id(), &1);
+        assert_eq!(product.nome(), "Cheeseburger");
+        assert_eq!(product.foto(), "cheeseburger.png");
+        assert_eq!(product.descricao(), "O clássico pão, carne e queijo!");
+        assert_eq!(product.categoria(), &Categoria::Lanche);
+        assert_eq!(product.preco(), 9.99);
+        assert_eq!(product.created_at(), "2024-01-16");
+        assert_eq!(product.updated_at(), "2024-01-16");
     }
 
     #[test]
-    fn test_produto_validate_entity_valid() {
+    fn test_product_validate_entity_valid() {
         let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let produto = Produto::new(
+        let product = Product::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
@@ -176,14 +194,14 @@ mod tests {
             "2024-01-16".to_string(),
         );
 
-        assert!(produto.validate_entity().is_ok());
+        assert!(product.validate_entity().is_ok());
     }
 
     #[test]
     #[should_panic(expected = "Nome não pode ser vazio")]
-    fn test_produto_validate_entity_invalid_nome() {
+    fn test_product_validate_entity_invalid_nome() {
         let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let produto = Produto::new(
+        let product = Product::new(
             1,
             "".to_string(),
             "cheeseburger.png".to_string(),
@@ -195,14 +213,14 @@ mod tests {
             "2024-01-16".to_string(),
         );
 
-        produto.validate_entity();
+        product.validate_entity();
     }
 
     #[test]
     #[should_panic(expected = "Data de criação não está no formato correto (YYYY-MM-DD)")]
-    fn test_produto_validate_entity_invalid_data_criacao() {
+    fn test_product_validate_entity_invalid_created_at() {
         let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap();
-        let produto = Produto::new(
+        let product = Product::new(
             1,
             "Cheeseburger".to_string(),
             "cheeseburger.png".to_string(),
@@ -214,6 +232,6 @@ mod tests {
             "2024-01-16".to_string(),
         );
 
-        produto.validate_entity();
+        product.validate_entity();
     }
 }
