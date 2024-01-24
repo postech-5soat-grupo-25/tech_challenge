@@ -12,6 +12,7 @@ pub enum Status {
     Recebido,
     EmPreparacao,
     Pronto,
+    Pendente,
     Finalizado,
     Cancelado,
 }
@@ -19,7 +20,7 @@ pub enum Status {
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Pedido {
     id: usize,
-    cliente: Option<Cliente>,
+    cliente: Cliente,
     lanche: Option<Produto>,
     acompanhamento: Option<Produto>,
     bebida: Option<Produto>,
@@ -34,7 +35,7 @@ impl AggregateRoot for Pedido {}
 impl Pedido {
     pub fn new(
         id: usize,
-        cliente: Option<Cliente>,
+        cliente: Cliente,
         lanche: Option<Produto>,
         acompanhamento: Option<Produto>,
         bebida: Option<Produto>,
@@ -42,7 +43,7 @@ impl Pedido {
         status: Status,
         data_criacao: String,
         data_atualizacao: String,
-    ) -> Self { 
+    ) -> Self {
         Pedido {
             id,
             cliente,
@@ -74,8 +75,8 @@ impl Pedido {
         &self.id
     }
 
-    pub fn cliente(&self) -> Option<&Cliente> {
-        self.cliente.as_ref()
+    pub fn cliente(&self) -> &Cliente {
+        &self.cliente
     }
 
     pub fn lanche(&self) -> Option<&Produto> {
@@ -107,7 +108,7 @@ impl Pedido {
     }
 
     // Setters
-    pub fn set_cliente(&mut self, cliente: Option<Cliente>) {
+    pub fn set_cliente(&mut self, cliente: Cliente) {
         self.cliente = cliente;
     }
 
@@ -184,7 +185,7 @@ mod tests {
         let produto = create_valid_produto();
         Pedido::new(
             1,
-            Some(cliente),
+            cliente,
             Some(produto),
             None,
             None,
@@ -200,7 +201,6 @@ mod tests {
     fn test_pedido_creation_valid() {
         let pedido = create_valid_pedido();
         assert_eq!(pedido.id(), &1);
-        assert!(pedido.cliente().is_some());
         assert!(pedido.lanche().is_some());
         assert!(pedido.acompanhamento().is_none());
         assert!(pedido.bebida().is_none());
@@ -221,7 +221,7 @@ mod tests {
         let cliente = create_valid_cliente();
         let pedido = Pedido::new(
             1,
-            Some(cliente),
+            cliente,
             None,
             None,
             None,

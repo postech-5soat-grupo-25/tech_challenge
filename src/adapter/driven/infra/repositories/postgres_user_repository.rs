@@ -1,4 +1,4 @@
-use crate::{core::domain::{repositories::user_repository::UserRepository, base::domain_error::DomainError, entities::usuario::Usuario, value_objects::{cpf::Cpf, endereco::{Endereco, self}}}, adapter::driven::infra::postgres::users};
+use crate::{core::domain::{repositories::usuario_repository::UsuarioRepository, base::domain_error::DomainError, entities::usuario::Usuario, value_objects::{cpf::Cpf, endereco::{Endereco, self}}}, adapter::driven::infra::postgres::users};
 use postgres_from_row::FromRow;
 use tokio_postgres::Client;
 
@@ -34,7 +34,7 @@ impl PostgresUserRepository {
 
   async fn check_for_admin_user(&mut self) {
     let admin_cpf = Cpf::new("000.000.000-00".to_string()).unwrap();
-    let admin_user = self.get_user_by_cpf(admin_cpf).await;
+    let admin_user = self.get_usuario_by_cpf(admin_cpf).await;
     match admin_user {
       Ok(user) => {
         println!("Admin user found: {:?}", user);
@@ -49,15 +49,15 @@ impl PostgresUserRepository {
           Cpf::new("000.000.000-00".to_string()).unwrap(),
           Endereco { cep: "00000-000".to_string() }
         );
-        self.create_user(admin_user).await.unwrap();
+        self.create_usuario(admin_user).await.unwrap();
       }
     }
   }
 }
 
 #[async_trait]
-impl UserRepository for PostgresUserRepository {
-  async fn get_users(&self) -> Result<Vec<Usuario>, DomainError>{
+impl UsuarioRepository for PostgresUserRepository {
+  async fn get_usuarios(&self) -> Result<Vec<Usuario>, DomainError>{
     let users = self.client.query(QUERY_USERS, &[]).await.unwrap();
     let mut users_vec = Vec::new();
     for user in users {
@@ -66,7 +66,7 @@ impl UserRepository for PostgresUserRepository {
     Ok(users_vec)
   }
 
-  async fn get_user_by_id(&self, id: usize) -> Result<Usuario, DomainError>{
+  async fn get_usuario_by_id(&self, id: usize) -> Result<Usuario, DomainError>{
     let id = id as i32;
     let user = self.client.query_one(QUERY_USER_BY_ID, &[&id]).await;
     match user {
@@ -79,7 +79,7 @@ impl UserRepository for PostgresUserRepository {
     }
   }
 
-  async fn get_user_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError> {
+  async fn get_usuario_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError> {
     let user = self.client.query_one(QUERY_USER_BY_CPF, &[&cpf.0]).await;
     match user {
       Ok(user) => {
@@ -91,7 +91,7 @@ impl UserRepository for PostgresUserRepository {
     }
   }
 
-  async fn create_user(&mut self, user: Usuario) -> Result<Usuario, DomainError> {
+  async fn create_usuario(&mut self, user: Usuario) -> Result<Usuario, DomainError> {
     let endereco = user.endereco();
     let endereco_json = tokio_postgres::types::Json(endereco);
     let new_user = self.client.query(CREATE_USER, &[
@@ -115,7 +115,7 @@ impl UserRepository for PostgresUserRepository {
 
   }
 
-  async fn update_user(&mut self, new_user_data: Usuario) -> Result<Usuario, DomainError> {
+  async fn update_usuario(&mut self, new_user_data: Usuario) -> Result<Usuario, DomainError> {
     let endereco = new_user_data.endereco();
     let endereco_json = tokio_postgres::types::Json(endereco);
     let id = new_user_data.id().clone() as i32;
@@ -139,7 +139,7 @@ impl UserRepository for PostgresUserRepository {
     }
   }
 
-  async fn delete_user(&mut self, id: usize) -> Result<(), DomainError> {
+  async fn delete_usuario(&mut self, id: usize) -> Result<(), DomainError> {
     let id = id as i32;
     let deleted_user = self.client.query_one(DELETE_USER, &[&id]).await;
     match deleted_user {
