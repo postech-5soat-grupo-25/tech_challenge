@@ -1,13 +1,13 @@
 
 pub mod table;
-pub mod users;
+pub mod usuarios;
 pub mod clientes;
 
 use tokio_postgres::{NoTls, Error, Client};
 use rocket::tokio;
 
 use self::table::{Table, TablesNames};
-use self::users::get_users_table_columns;
+use self::usuarios::get_usuarios_table_columns;
 use self::clientes::get_clientes_table_columns;
 pub struct PgConnectionManager {
   pub client: Client,
@@ -29,8 +29,8 @@ impl PgConnectionManager {
 pub fn get_tables() -> Vec<Table> {
   vec![
     Table {
-      name: TablesNames::Users,
-      columns: get_users_table_columns(),
+      name: TablesNames::Usuarios,
+      columns: get_usuarios_table_columns(),
     },
     Table {
       name: TablesNames::Clientes,
