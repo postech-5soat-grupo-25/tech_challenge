@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::core::domain::base::aggregate_root::AggregateRoot;
+use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::value_objects::{ cpf, endereco };
 use crate::core::domain::base::assertion_concern;
 
@@ -23,9 +24,10 @@ impl Usuario {
     Usuario {id, nome, email, senha, cpf, endereco }
   }
 
-  fn validate_entity(&self) {
-    assertion_concern::assert_argument_not_empty(self.nome.clone(), "Nome não pode ser vazio".to_string());
-    assertion_concern::assert_argument_not_empty(self.email.clone(), "Email não pode ser vazio".to_string());
+  fn validate_entity(&self) -> Result<(), DomainError> {
+    assertion_concern::assert_argument_not_empty(self.nome.clone())?;
+    assertion_concern::assert_argument_not_empty(self.email.clone())?;
+    Ok(())
   }
 
   pub fn id(&self) -> &usize {
