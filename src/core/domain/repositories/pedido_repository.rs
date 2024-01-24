@@ -4,7 +4,9 @@ use crate::core::domain::entities::pedido::Status;
 
 #[async_trait]
 pub trait PedidoRepository {
-  
+
+  async fn create_pedido(&mut self, pedido: Pedido) -> Result<Pedido, DomainError>;
+
   async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError>;
 
   async fn atualizar_status_pedido(&mut self, id: usize, status :String) -> Result<Pedido, DomainError>;
