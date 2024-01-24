@@ -11,5 +11,5 @@ pub trait ClienteRepository {
   
   async fn create_cliente(&mut self, cliente: Cliente) -> Result<Cliente, DomainError>;
   
-  async fn delete_cliente(&mut self, id: usize) -> Result<(), DomainError>;
+  async fn delete_cliente(&mut self, cpf: Cpf) -> Result<(), DomainError>;
 }

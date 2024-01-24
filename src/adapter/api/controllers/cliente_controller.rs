@@ -51,13 +51,13 @@ async fn create_cliente(
 }
 
 #[openapi(tag = "Clientes")]
-#[delete("/<id>")]
+#[delete("/<cpf>")]
 async fn delete_cliente(
     cliente_use_case: &State<ClienteUseCase>,
-    id: usize,
+    cpf: Cpf,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<String>, Status> {
-    cliente_use_case.delete_cliente(id).await?;
+    cliente_use_case.delete_cliente(cpf).await?;
     Ok(Json("success".to_string()))
 }
 

@@ -60,9 +60,9 @@ impl ClienteUseCase {
         Ok(cliente.clone())
     }
 
-    pub async fn delete_cliente(&self, id: usize) -> Result<(), DomainError> {
+    pub async fn delete_cliente(&self, cpf: Cpf) -> Result<(), DomainError> {
         let mut cliente_repository = self.cliente_repository.lock().await;
-        cliente_repository.delete_cliente(id).await?;
+        cliente_repository.delete_cliente(cpf).await?;
         Ok(())
     }
 }

@@ -12,7 +12,7 @@ use super::super::postgres::table::Table;
 const CREATE_CLIENTE: &str = "INSERT INTO clientes (nome, email, cpf, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5) RETURNING *";
 const QUERY_CLIENTE_BY_CPF: &str = "SELECT * FROM clientes WHERE cpf = $1";
 const QUERY_CLIENTES: &str = "SELECT * FROM clientes";
-const DELETE_CLIENTE: &str = "DELETE FROM clientes WHERE id = $1";
+const DELETE_CLIENTE: &str = "DELETE FROM clientes WHERE cpf = $1";
 
 pub struct PostgresClienteRepository {
     client: Client,
@@ -78,9 +78,8 @@ impl ClienteRepository for PostgresClienteRepository {
         }
     }
 
-    async fn delete_cliente(&mut self, id: usize) -> Result<(), DomainError> {
-        let id = id as i32;
-        let deleted_cliente = self.client.query_one(DELETE_CLIENTE, &[&id]).await;
+    async fn delete_cliente(&mut self, cpf: Cpf) -> Result<(), DomainError> {
+        let deleted_cliente = self.client.query_one(DELETE_CLIENTE, &[&cpf.0]).await;
         match deleted_cliente {
             Ok(_) => Ok(()),
             _ => Err(DomainError::NotFound),
