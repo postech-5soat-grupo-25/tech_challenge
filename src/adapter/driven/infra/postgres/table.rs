@@ -5,12 +5,14 @@ use crate::adapter::driven::infra::postgres::users::get_users_table_columns;
 #[derive(Clone)]
 pub enum TablesNames {
   Users,
+  Clientes,
 }
 
 impl TablesNames {
   pub fn to_string(&self) -> String {
     match self {
       TablesNames::Users => "users".to_string(),
+      TablesNames::Clientes => "clientes".to_string(),
     }
   }
 }
