@@ -1,4 +1,4 @@
-use rust_ddd_template::adapter::api;
+use tech_challenge::adapter::api;
 
 fn main() {
   match api::server::main() {

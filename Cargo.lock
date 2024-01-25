@@ -1560,24 +1560,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_ddd_template"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "jsonwebtoken",
- "just",
- "postgres-from-row",
- "regex",
- "rocket",
- "rocket_okapi",
- "schemars",
- "serde",
- "serde_json",
- "serde_with",
- "tokio-postgres",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1947,6 +1929,24 @@ name = "target"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba852e71502340e2eaf2fa51f9b3ec6aa25750da1aa65771491c69d67789b05c"
+
+[[package]]
+name = "tech_challenge"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "jsonwebtoken",
+ "just",
+ "postgres-from-row",
+ "regex",
+ "rocket",
+ "rocket_okapi",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio-postgres",
+]
 
 [[package]]
 name = "tempfile"
