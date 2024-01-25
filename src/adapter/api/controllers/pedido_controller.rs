@@ -28,14 +28,7 @@ async fn update_status_pedido(
     status: String,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Pedido>, Status> {
-    let pedido;
-    match status.as_str() {
-        "em_preparacao" => pedido = preparation_and_deliver_use_case.set_pedido_em_preparacao(id).await?,
-        "pronto" => pedido = preparation_and_deliver_use_case.set_pedido_pronto(id).await?,
-        "finalizado" => pedido = preparation_and_deliver_use_case.set_pedido_finalizado(id).await?,
-        "set_pedido_cancelado" => pedido = preparation_and_deliver_use_case.set_pedido_cancelado(id).await?,
-        &_ => todo!(),
-    };
+    let pedido = preparation_and_deliver_use_case.set_pedido_status(id, status).await?;
     Ok(Json(pedido))
 }
 

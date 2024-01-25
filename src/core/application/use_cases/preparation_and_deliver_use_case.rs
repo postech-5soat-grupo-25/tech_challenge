@@ -25,24 +25,9 @@ impl PreparationAndDeliverUseCase {
         pedido_repository.get_pedidos_novos().await
     }
 
-    pub async fn set_pedido_em_preparacao(&self,  id: usize) -> Result<Pedido, DomainError> {
+    pub async fn set_pedido_status(&self,  id: usize, status : String) -> Result<Pedido, DomainError> {
         let mut pedido_repository = self.pedido_repository.lock().await;
-        pedido_repository.set_pedido_em_preparacao(id).await
-    }
-
-    pub async fn set_pedido_pronto(&self,  id: usize) -> Result<Pedido, DomainError> {
-        let mut pedido_repository = self.pedido_repository.lock().await;
-        pedido_repository.set_pedido_pronto(id).await
-    }
-
-    pub async fn set_pedido_finalizado(&self,  id: usize) -> Result<Pedido, DomainError> {
-        let mut pedido_repository = self.pedido_repository.lock().await;
-        pedido_repository.set_pedido_finalizado(id).await
-    }
-
-    pub async fn set_pedido_cancelado(&self,  id: usize) -> Result<Pedido, DomainError> {
-        let mut pedido_repository = self.pedido_repository.lock().await;
-        pedido_repository.set_pedido_cancelado(id).await
+        pedido_repository.set_pedido_status(id, status).await
     }
 }
 

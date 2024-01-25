@@ -60,61 +60,45 @@ impl InMemoryPedidoRepository {
     }
 }
 
+async fn get_status_by_string(status : String) -> Status {
+    let mut status_enum : Status = Status::Recebido;
+    match status.as_str() {
+        "em_preparacao" => status_enum = Status::EmPreparacao,
+        "pronto" => status_enum = Status::Pronto,
+        "finalizado" => status_enum = Status::Finalizado,
+        "set_pedido_cancelado" => status_enum = Status::Cancelado,
+        &_ => todo!(),
+    };
+    return status_enum.clone();
+}
+
 
 #[async_trait]
 impl PedidoRepository for InMemoryPedidoRepository {
     async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
         let mut pedidos : Vec<Pedido> = Vec::new();
         for pedido in &self._pedidos {
-            pedidos.push(pedido.clone());
+            if (*pedido.status() == Status::Recebido){
+                pedidos.push(pedido.clone());
+            }
         }
         sleep(Duration::from_secs(1)).await;
         Ok(pedidos)
     }
 
-    async fn set_pedido_em_preparacao(&mut self, id: usize) -> Result<Pedido, DomainError> {
-        let pedidos = &mut self._pedidos;
-        for pedido in &mut pedidos.iter_mut() {
-            if *pedido.id() == id {
-              pedido.set_status(Status::EmPreparacao);
-              return Ok(pedido.clone());
-            }
-        }
-        Err(DomainError::NotFound)
-    }
 
-    async fn set_pedido_pronto(&mut self, id: usize) -> Result<Pedido, DomainError> {
+    async fn set_pedido_status(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
-        for pedido in &mut pedidos.iter_mut() {
+        let status_enum = get_status_by_string(status).await;
+        for pedido in pedidos.iter_mut() {
             if *pedido.id() == id {
-             pedido.set_status(Status::Pronto);
-              return Ok(pedido.clone());
-            }
-        }
-        Err(DomainError::NotFound)
-    }
-
-    async fn set_pedido_finalizado(&mut self,id: usize) -> Result<Pedido, DomainError> {
-        let pedidos = &mut self._pedidos;
-        for pedido in &mut pedidos.iter_mut() {
-            if *pedido.id() == id {
-                pedido.set_status(Status::Finalizado);
+                pedido.set_status(status_enum.clone());
                 return Ok(pedido.clone());
             }
         }
         Err(DomainError::NotFound)
     }
 
-    async fn set_pedido_cancelado(&mut self, id: usize) -> Result<Pedido, DomainError> {
-        let pedidos = &mut self._pedidos;
-        for pedido in &mut pedidos.iter_mut() {
-            if *pedido.id() == id {
-              pedido.set_status(Status::Cancelado);
-              return Ok(pedido.clone());
-            }
-        }
-        Err(DomainError::NotFound)
-    }
 }
 
 unsafe impl Sync for InMemoryPedidoRepository {}
