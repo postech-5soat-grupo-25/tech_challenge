@@ -20,7 +20,7 @@ pub enum Status {
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Pedido {
     id: usize,
-    cliente: Cliente,
+    cliente: Option<Cliente>,
     lanche: Option<Produto>,
     acompanhamento: Option<Produto>,
     bebida: Option<Produto>,
@@ -35,7 +35,7 @@ impl AggregateRoot for Pedido {}
 impl Pedido {
     pub fn new(
         id: usize,
-        cliente: Cliente,
+        cliente: Option<Cliente>,
         lanche: Option<Produto>,
         acompanhamento: Option<Produto>,
         bebida: Option<Produto>,
@@ -75,8 +75,8 @@ impl Pedido {
         &self.id
     }
 
-    pub fn cliente(&self) -> &Cliente {
-        &self.cliente
+    pub fn cliente(&self) -> Option<&Cliente> {
+        self.cliente.as_ref()
     }
 
     pub fn lanche(&self) -> Option<&Produto> {
@@ -108,7 +108,7 @@ impl Pedido {
     }
 
     // Setters
-    pub fn set_cliente(&mut self, cliente: Cliente) {
+    pub fn set_cliente(&mut self, cliente: Option<Cliente>) {
         self.cliente = cliente;
     }
 
@@ -185,7 +185,7 @@ mod tests {
         let produto = create_valid_produto();
         Pedido::new(
             1,
-            cliente,
+            Some(cliente),
             Some(produto),
             None,
             None,
@@ -221,7 +221,7 @@ mod tests {
         let cliente = create_valid_cliente();
         let pedido = Pedido::new(
             1,
-            cliente,
+            Some(cliente),
             None,
             None,
             None,
