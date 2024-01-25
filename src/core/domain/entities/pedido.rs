@@ -14,6 +14,7 @@ pub enum Status {
     Pronto,
     Finalizado,
     Cancelado,
+    Invalido,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]

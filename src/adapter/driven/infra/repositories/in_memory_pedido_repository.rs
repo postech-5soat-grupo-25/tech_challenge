@@ -63,11 +63,12 @@ impl InMemoryPedidoRepository {
 async fn get_status_by_string(status : String) -> Status {
     let mut status_enum : Status = Status::Recebido;
     match status.as_str() {
+        "recebido" => status_enum = Status::Recebido,
         "em_preparacao" => status_enum = Status::EmPreparacao,
         "pronto" => status_enum = Status::Pronto,
         "finalizado" => status_enum = Status::Finalizado,
         "set_pedido_cancelado" => status_enum = Status::Cancelado,
-        &_ => todo!(),
+        &_ => status_enum = Status::Invalido,
     };
     return status_enum.clone();
 }
@@ -90,12 +91,16 @@ impl PedidoRepository for InMemoryPedidoRepository {
     async fn set_pedido_status(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
         let status_enum = get_status_by_string(status).await;
+        if (status_enum == Status::Invalido){
+            return Err::<Pedido, _>(DomainError::Invalid("status".to_string()));
+        }
         for pedido in pedidos.iter_mut() {
             if *pedido.id() == id {
                 pedido.set_status(status_enum.clone());
                 return Ok(pedido.clone());
             }
         }
+        
         Err(DomainError::NotFound)
     }
 
