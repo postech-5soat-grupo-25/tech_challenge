@@ -1,43 +1,48 @@
 use std::sync::Arc;
 
 use rocket::futures::lock::Mutex;
+use rocket::http::Status;
 use schemars::JsonSchema;
 use serde::Deserialize;
 
 use crate::core::domain::base::domain_error::DomainError;
-use crate::core::domain::entities::pedido::{ Pedido, Status };
-use crate::core::domain::repositories::order_repository::OrderRepository;
+use crate::core::domain::entities::pedido::Pedido;
 
+use crate::core::domain::repositories::pedido_repository::PedidoRepository;
+
+#[derive(Clone)]
+pub struct PreparationAndDeliverUseCase {
+    pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
+}
 
 impl PreparationAndDeliverUseCase {
-    pub fn new(order_repository: Arc<Mutex<dyn OrderRepository + Sync + Send>>) -> Self {
-        PreparationAndDeliverUseCase { order_repository }
+    pub fn new(pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>) -> Self {
+        PreparationAndDeliverUseCase { pedido_repository }
     }
 
-    pub async fn get_new_orders(&self) -> Result<Vec<Pedido>, DomainError> {
-        let order_repository = self.order_repository.lock().await;
-        order_repository.get_new_orders().await
+    pub async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
+        let pedido_repository = self.pedido_repository.lock().await;
+        pedido_repository.get_pedidos_novos().await
     }
 
-    pub async fn set_order_to_ready(&self,  id: usize) -> Result<Json<Usuario>, Status> {
-        let mut order_repository = self.order_repository.lock().await;
-        let mut order = order_repository.get_order_by_id(id).await?;
-        order.set_status(Status::Pronto)
-        order_repository.update_order(order).await
+    pub async fn set_pedido_em_preparacao(&self,  id: usize) -> Result<Pedido, DomainError> {
+        let mut pedido_repository = self.pedido_repository.lock().await;
+        pedido_repository.set_pedido_em_preparacao(id).await
     }
 
-    pub async fn set_order_to_finished(&self,  id: usize) -> Result<Json<Usuario>, Status> {
-        let mut order_repository = self.order_repository.lock().await;
-        let mut order = order_repository.get_order_by_id(id).await?;
-        order.set_status(Status::Finalizado)
-        order_repository.update_order(order).await
+    pub async fn set_pedido_pronto(&self,  id: usize) -> Result<Pedido, DomainError> {
+        let mut pedido_repository = self.pedido_repository.lock().await;
+        pedido_repository.set_pedido_pronto(id).await
     }
 
-    pub async fn set_order_to_canceled(&self,  id: usize) -> Result<Json<Usuario>, Status> {
-        let mut order_repository = self.order_repository.lock().await;
-        let mut order = order_repository.get_order_by_id(id).await?;
-        order.set_status(Status::Cancelado)
-        order_repository.update_order(order).await
+    pub async fn set_pedido_finalizado(&self,  id: usize) -> Result<Pedido, DomainError> {
+        let mut pedido_repository = self.pedido_repository.lock().await;
+        pedido_repository.set_pedido_finalizado(id).await
+    }
+
+    pub async fn set_pedido_cancelado(&self,  id: usize) -> Result<Pedido, DomainError> {
+        let mut pedido_repository = self.pedido_repository.lock().await;
+        pedido_repository.set_pedido_cancelado(id).await
     }
 }
 
