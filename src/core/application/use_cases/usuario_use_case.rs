@@ -57,24 +57,23 @@ impl UsuarioUseCase {
         usuario: CreateUsuarioInput,
     ) -> Result<Usuario, DomainError> {
         let mut usuario_repository = self.usuario_repository.lock().await;
-        let new_id = 0;
+        let _id= 0;
         let valid_cpf = Cpf::new(usuario.cpf.clone())?;
         let valid_tipo: Tipo = usuario.tipo.parse().unwrap();
         let valid_status: Status = usuario.status.parse().unwrap();
-        let current_date = Utc::now().naive_utc();
-        let formatted_date = current_date.format("%Y-%m-%d").to_string();
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
 
         let usuario = usuario_repository
             .create_usuario(Usuario::new(
-                new_id,
+                _id,
                 usuario.nome,
                 usuario.email,
                 valid_cpf,
                 usuario.senha,
                 valid_tipo,
                 valid_status,
-                formatted_date.clone(),
-                formatted_date,
+                _now.clone(),
+                _now,
             ))
             .await?;
 

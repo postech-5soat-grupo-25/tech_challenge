@@ -1,18 +1,16 @@
 use std::collections::HashMap;
 
-use crate::adapter::driven::infra::postgres::usuarios::get_usuarios_table_columns;
-
 #[derive(Clone)]
 pub enum TablesNames {
-  Usuarios,
-  Clientes,
+  Usuario,
+  Cliente,
 }
 
 impl TablesNames {
   pub fn to_string(&self) -> String {
     match self {
-      TablesNames::Usuarios => "usuarios".to_string(),
-      TablesNames::Clientes => "clientes".to_string(),
+      TablesNames::Usuario => "usuario".to_string(),
+      TablesNames::Cliente => "cliente".to_string(),
     }
   }
 }
@@ -25,7 +23,6 @@ pub enum ColumnTypes {
   Float,
   Boolean,
   Timestamp,
-  Date,
   JSON,
   Char(usize),
   VARCHAR(usize),
@@ -40,7 +37,6 @@ impl ColumnTypes {
       ColumnTypes::Integer => "INTEGER".to_string(),
       ColumnTypes::Text => "TEXT".to_string(),
       ColumnTypes::Timestamp => "TIMESTAMP".to_string(),
-      ColumnTypes::Date => "DATE".to_string(),
       ColumnTypes::JSON => "JSON".to_string(),
       ColumnTypes::Char(size) => format!("CHAR({})", size),
       ColumnTypes::VARCHAR(size) => format!("VARCHAR({})", size),

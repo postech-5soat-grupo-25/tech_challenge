@@ -13,17 +13,18 @@ pub struct InMemoryUsuarioRepository {
 
 impl InMemoryUsuarioRepository {
     pub fn new() -> Self {
-        let formatted_date = Utc::now().naive_utc().format("%Y-%m-%d").to_string();
+        let _id = 0;
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let usuario = Usuario::new(
-            1,
+            _id,
             "Administrador".to_string(),
             "admin@fastfood.com.br".to_string(),
             Cpf::new("000.000.000-00".to_string()).unwrap(),
             "melhor_projeto".to_string(),
             "Admin".parse().unwrap(),
             "Ativo".parse().unwrap(),
-            formatted_date.clone(),
-            formatted_date,
+            _now.clone(),
+            _now,
         );
 
         println!("Usando repositório em memória!");
