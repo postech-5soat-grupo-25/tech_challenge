@@ -9,14 +9,7 @@ use rocket_okapi::{
   okapi::openapi3::{SecurityScheme, SecuritySchemeData, Object, SecurityRequirement}
 };
 
-use crate::adapter::api::helpers::auth_helper::validate_token;
-
-
-#[derive(Debug)]
-pub enum AuthError {
-  InvalidToken,
-  MissingToken,
-}
+use crate::adapter::api::helpers::auth_helper::{validate_token, AuthError};
 
 pub struct AuthenticatedUser {
   user_id: String,

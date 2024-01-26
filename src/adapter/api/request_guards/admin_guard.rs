@@ -9,14 +9,7 @@ use rocket_okapi::{
   okapi::openapi3::{SecurityScheme, SecuritySchemeData, Object, SecurityRequirement}
 };
 
-use crate::adapter::api::helpers::auth_helper::validate_token;
-
-
-#[derive(Debug)]
-pub enum AuthError {
-  InvalidToken,
-  MissingToken,
-}
+use crate::{adapter::api::helpers::auth_helper::{validate_token, AuthError}, core::domain::entities::usuario::Tipo};
 
 pub struct AdminUser {
   user_id: String,
@@ -30,7 +23,7 @@ impl<'r> FromRequest<'r> for AdminUser {
       match req.headers().get_one("Authorization") {
           Some(token) => {
               let token = token.replace("Bearer ", "");
-              match validate_token(token.to_string(), Some(usuario::Tipo::Admin)) {
+              match validate_token(token.to_string(), Some(Tipo::Admin)) {
                   Ok(user_id) => Outcome::Success(AdminUser {
                       user_id,
                   }),

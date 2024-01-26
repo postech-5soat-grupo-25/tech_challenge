@@ -32,7 +32,6 @@ async fn lista_clientes(
 async fn busca_cliente_por_cpf(
     cliente_use_case: &State<ClienteUseCase>,
     cpf: Cpf,
-    _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Cliente>, Status> {
     let cliente = cliente_use_case.get_cliente_by_cpf(cpf).await?;
     Ok(Json(cliente))
@@ -43,7 +42,6 @@ async fn busca_cliente_por_cpf(
 async fn cadastro_cliente(
     cliente_use_case: &State<ClienteUseCase>,
     cliente_input: Json<CreateClienteInput>,
-    _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Cliente>, Status> {
     let cliente_input = cliente_input.into_inner();
     let cliente = cliente_use_case.create_cliente(cliente_input).await?;

@@ -5,7 +5,11 @@ use crate::core::domain::entities::usuario;
 use usuario::Usuario;
 use crate::adapter::api::config::Config;
 
-
+#[derive(Debug)]
+pub enum AuthError {
+  InvalidToken,
+  MissingToken,
+}
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
     sub: String,
@@ -55,6 +59,8 @@ pub fn validate_token(token: String, role: Option<usuario::Tipo>) -> Result<Stri
 
 #[cfg(test)]
 mod tests {
+    use chrono::Utc;
+
     use crate::core::domain::entities::usuario::{Usuario, Tipo, Status};
     use crate::adapter::api::helpers::auth_helper::{get_token, validate_token};
     use crate::core::domain::value_objects::cpf::Cpf;
@@ -63,6 +69,7 @@ mod tests {
     #[test]
     fn should_generate_token() {
         let cpf = Cpf::new("123.456.789-09".to_string()).unwrap();
+        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let user = Usuario::new(
             1,
             "Teste".to_string(),
@@ -71,8 +78,8 @@ mod tests {
             "senha_segura".to_string(),
             Tipo::Admin,
             Status::Ativo,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
+            now.clone(),
+            now,
         );
         let token = get_token(user);
         assert!(token.is_ok());
@@ -81,6 +88,7 @@ mod tests {
     #[test]
     fn should_validate_token_for_any_user() {
         let cpf = Cpf::new("123.456.789-09".to_string()).unwrap();
+        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let user = Usuario::new(
             1,
             "Teste".to_string(),
@@ -89,8 +97,8 @@ mod tests {
             "senha_segura".to_string(),
             Tipo::Cozinha,
             Status::Ativo,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
+            now.clone(),
+            now,
         );
         let token = get_token(user.clone());
         assert!(token.is_ok());
@@ -103,6 +111,7 @@ mod tests {
     #[test]
     fn should_validate_token_for_admin_user() {
         let cpf = Cpf::new("123.456.789-09".to_string()).unwrap();
+        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let user = Usuario::new(
             1,
             "Teste".to_string(),
@@ -111,8 +120,8 @@ mod tests {
             "senha_segura".to_string(),
             Tipo::Admin,
             Status::Ativo,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
+            now.clone(),
+            now,
         );
         let token = get_token(user.clone());
         assert!(token.is_ok());
@@ -125,6 +134,7 @@ mod tests {
     #[test]
     fn should_block_token_for_non_admin_user() {
         let cpf = Cpf::new("123.456.789-09".to_string()).unwrap();
+        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let user = Usuario::new(
             1,
             "Teste".to_string(),
@@ -133,8 +143,8 @@ mod tests {
             "senha_segura".to_string(),
             Tipo::Cozinha,
             Status::Ativo,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
+            now.clone(),
+            now,
         );
         let token = get_token(user.clone());
         assert!(token.is_ok());
