@@ -1,7 +1,8 @@
-use std::str::FromStr;
-use std::fmt;
+use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::str::FromStr;
 
 use crate::core::domain::base::aggregate_root::AggregateRoot;
 use crate::core::domain::base::assertion_concern;
@@ -15,24 +16,28 @@ pub enum Status {
 }
 
 impl FromStr for Status {
-  type Err = ();
+    type Err = ();
 
-  fn from_str(input: &str) -> Result<Status, Self::Err> {
-      match input {
-          "Ativo" => Ok(Status::Ativo),
-          "Inativo" => Ok(Status::Inativo),
-          _ => Err(()),
-      }
-  }
+    fn from_str(input: &str) -> Result<Status, Self::Err> {
+        match input {
+            "Ativo" => Ok(Status::Ativo),
+            "Inativo" => Ok(Status::Inativo),
+            _ => Err(()),
+        }
+    }
 }
 
 impl fmt::Display for Status {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-      write!(f, "{}", match self {
-          Status::Ativo => "Ativo",
-          Status::Inativo => "Inativo",
-      })
-  }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Status::Ativo => "Ativo",
+                Status::Inativo => "Inativo",
+            }
+        )
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
@@ -42,24 +47,28 @@ pub enum Tipo {
 }
 
 impl FromStr for Tipo {
-  type Err = ();
+    type Err = ();
 
-  fn from_str(input: &str) -> Result<Tipo, Self::Err> {
-      match input {
-          "Admin" => Ok(Tipo::Admin),
-          "Cozinha" => Ok(Tipo::Cozinha),
-          _ => Err(()),
-      }
-  }
+    fn from_str(input: &str) -> Result<Tipo, Self::Err> {
+        match input {
+            "Admin" => Ok(Tipo::Admin),
+            "Cozinha" => Ok(Tipo::Cozinha),
+            _ => Err(()),
+        }
+    }
 }
 
 impl fmt::Display for Tipo {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-      write!(f, "{}", match self {
-          Tipo::Admin => "Admin",
-          Tipo::Cozinha => "Cozinha",
-      })
-  }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Tipo::Admin => "Admin",
+                Tipo::Cozinha => "Cozinha",
+            }
+        )
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
@@ -87,9 +96,8 @@ impl Usuario {
         senha: String,
         tipo: Tipo,
         status: Status,
-        data_criacao: String,
-        data_atualizacao: String,
     ) -> Self {
+        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f").to_string();
         Usuario {
             id,
             nome,
@@ -98,8 +106,8 @@ impl Usuario {
             senha,
             tipo,
             status,
-            data_criacao,
-            data_atualizacao,
+            data_criacao: now.clone(),
+            data_atualizacao: now,
         }
     }
 
@@ -123,8 +131,8 @@ impl Usuario {
         assertion_concern::assert_argument_not_empty(self.nome.clone())?;
         assertion_concern::assert_argument_not_empty(self.email.clone())?;
         assertion_concern::assert_argument_not_empty(self.senha.clone())?;
-        assertion_concern::assert_argument_date_format(self.data_criacao.clone())?;
-        assertion_concern::assert_argument_date_format(self.data_atualizacao.clone())?;
+        assertion_concern::assert_argument_timestamp_format(self.data_criacao.clone())?;
+        assertion_concern::assert_argument_timestamp_format(self.data_atualizacao.clone())?;
         Ok(())
     }
 
@@ -200,14 +208,8 @@ impl Usuario {
         self.status = status;
     }
 
-    pub fn set_data_criacao(&mut self, data_criacao: String) -> Result<(), DomainError> {
-        assertion_concern::assert_argument_date_format(data_criacao.clone())?;
-        self.data_criacao = data_criacao;
-        Ok(())
-    }
-
     pub fn set_data_atualizacao(&mut self, data_atualizacao: String) -> Result<(), DomainError> {
-        assertion_concern::assert_argument_date_format(data_atualizacao.clone())?;
+        assertion_concern::assert_argument_timestamp_format(data_atualizacao.clone())?;
         self.data_atualizacao = data_atualizacao;
         Ok(())
     }
@@ -227,8 +229,6 @@ mod tests {
             "senha_segura".to_string(),
             Tipo::Admin,
             Status::Ativo,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
         )
     }
 
@@ -240,8 +240,6 @@ mod tests {
         assert_eq!(usuario.email(), "fulano.silva@exemplo.com");
         assert_eq!(usuario.tipo(), &Tipo::Admin);
         assert_eq!(usuario.status(), &Status::Ativo);
-        assert_eq!(usuario.data_criacao(), "2024-01-17");
-        assert_eq!(usuario.data_atualizacao(), "2024-01-17");
     }
 
     #[test]
@@ -258,50 +256,54 @@ mod tests {
         let _ = usuario.set_senha("nova_senha_segura".to_string());
         usuario.set_tipo(Tipo::Cozinha);
         usuario.set_status(Status::Inativo);
-        let _ = usuario.set_data_criacao("2024-02-17".to_string());
-        let _ = usuario.set_data_atualizacao("2024-02-18".to_string());
-
         assert_eq!(usuario.nome(), "Ciclano de Almeida");
         assert_eq!(usuario.email(), "ciclano.almeida@exemplo.com");
         assert!(usuario.validate_senha(&"nova_senha_segura".to_string()));
         assert_eq!(usuario.tipo(), &Tipo::Cozinha);
         assert_eq!(usuario.status(), &Status::Inativo);
-        assert_eq!(usuario.data_criacao(), "2024-02-17");
-        assert_eq!(usuario.data_atualizacao(), "2024-02-18");
     }
 
     #[test]
     fn test_usuario_set_nome_empty() {
         let mut usuario = create_valid_usuario();
         let result = usuario.set_nome("".to_string());
-        assert!(matches!(result, Err(DomainError::Empty)), "Esperado Err(DomainError::Empty), obtido {:?}", result);
+        assert!(
+            matches!(result, Err(DomainError::Empty)),
+            "Esperado Err(DomainError::Empty), obtido {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_usuario_set_email_empty() {
         let mut usuario = create_valid_usuario();
         let result = usuario.set_email("".to_string());
-        assert!(matches!(result, Err(DomainError::Empty)), "Esperado Err(DomainError::Empty), obtido {:?}", result);
+        assert!(
+            matches!(result, Err(DomainError::Empty)),
+            "Esperado Err(DomainError::Empty), obtido {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_usuario_set_senha_empty() {
         let mut usuario = create_valid_usuario();
         let result = usuario.set_senha("".to_string());
-        assert!(matches!(result, Err(DomainError::Empty)), "Esperado Err(DomainError::Empty), obtido {:?}", result);
-    }
-
-    #[test]
-    fn test_usuario_set_data_criacao_invalid_format() {
-        let mut usuario = create_valid_usuario();
-        let result = usuario.set_data_criacao("17-01-2024".to_string());
-        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
+        assert!(
+            matches!(result, Err(DomainError::Empty)),
+            "Esperado Err(DomainError::Empty), obtido {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_usuario_set_data_atualizacao_invalid_format() {
         let mut usuario = create_valid_usuario();
         let result = usuario.set_data_atualizacao("18-02-2024".to_string());
-        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
+        assert!(
+            matches!(result, Err(DomainError::Invalid(_))),
+            "Esperado Err(DomainError::Invalid), obtido {:?}",
+            result
+        );
     }
 }

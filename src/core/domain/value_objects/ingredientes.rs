@@ -10,12 +10,10 @@ impl Ingredientes {
     pub fn new(ingredientes: Vec<String>) -> Result<Self, DomainError> {
         if ingredientes.is_empty() {
             return Err(DomainError::Empty);
-        }
-        else {
+        } else {
             return Ok(Ingredientes(ingredientes));
         }
     }
-
 }
 
 #[cfg(test)]
@@ -24,7 +22,11 @@ mod tests {
 
     #[test]
     fn test_ingredientes_valid() {
-        let ingredientes = Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]);
+        let ingredientes = Ingredientes::new(vec![
+            "Pão".to_string(),
+            "Hambúrguer".to_string(),
+            "Queijo".to_string(),
+        ]);
         assert!(ingredientes.is_ok());
     }
 

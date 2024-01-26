@@ -6,7 +6,7 @@ use crate::core::domain::value_objects::cpf::Cpf;
 
 use super::table::{ColumnDefault, ColumnNullable, ColumnTypes};
 
-pub fn get_usuarios_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
+pub fn get_usuario_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
 {
     let mut columns = HashMap::new();
     columns.insert(
@@ -68,17 +68,17 @@ pub fn get_usuarios_table_columns() -> HashMap<String, (ColumnTypes, ColumnNulla
     columns.insert(
         "data_criacao".to_string(),
         (
-            ColumnTypes::Date,
+            ColumnTypes::Timestamp,
             ColumnNullable(true),
-            ColumnDefault(Some("CURRENT_DATE".to_string())),
+            ColumnDefault(Some("CURRENT_TIMESTAMP".to_string())),
         ),
     );
     columns.insert(
         "data_atualizacao".to_string(),
         (
-            ColumnTypes::Date,
+            ColumnTypes::Timestamp,
             ColumnNullable(true),
-            ColumnDefault(Some("CURRENT_DATE".to_string())),
+            ColumnDefault(Some("CURRENT_TIMESTAMP".to_string())),
         ),
     );
 
@@ -97,8 +97,6 @@ impl FromRow for Usuario {
             row.get("senha"),
             row.get::<_, &str>("tipo").parse::<Tipo>().unwrap(),
             row.get::<_, &str>("status").parse::<Status>().unwrap(),
-            row.get("data_criacao"),
-            row.get("data_atualizacao"),
         )
     }
 
@@ -112,8 +110,6 @@ impl FromRow for Usuario {
             row.try_get("senha")?,
             (row.try_get::<_, &str>("tipo")?).parse::<Tipo>().unwrap(),
             (row.try_get::<_, &str>("status")?).parse::<Status>().unwrap(),
-            row.try_get("data_criacao")?,
-            row.try_get("data_atualizacao")?,
         ))
     }
 }

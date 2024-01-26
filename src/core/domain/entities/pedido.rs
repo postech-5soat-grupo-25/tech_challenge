@@ -1,11 +1,12 @@
+use ::chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::core::domain::base::aggregate_root::AggregateRoot;
+use crate::core::domain::base::assertion_concern;
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::cliente::Cliente;
 use crate::core::domain::entities::produto::Produto;
-use crate::core::domain::base::assertion_concern;
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Status {
@@ -40,9 +41,8 @@ impl Pedido {
         bebida: Option<Produto>,
         pagamento: String,
         status: Status,
-        data_criacao: String,
-        data_atualizacao: String,
-    ) -> Self { 
+    ) -> Self {
+        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f").to_string();
         Pedido {
             id,
             cliente,
@@ -51,21 +51,32 @@ impl Pedido {
             bebida,
             pagamento,
             status,
-            data_criacao,
-            data_atualizacao,
+            data_criacao: now.clone(),
+            data_atualizacao: now,
         }
     }
 
     pub fn validate_entity(&self) -> Result<(), DomainError> {
         if self.lanche.is_none() && self.acompanhamento.is_none() && self.bebida.is_none() {
-            return Err(DomainError::Invalid("Pedido deve conter pelo menos um item entre Lanche, Acompanhamento ou Bebida".to_string()));
+            return Err(DomainError::Invalid(
+                "Pedido deve conter pelo menos um item entre Lanche, Acompanhamento ou Bebida"
+                    .to_string(),
+            ));
         };
         match self.status {
-            Status::Recebido | Status::EmPreparacao | Status::Pronto | Status::Finalizado | Status::Cancelado => (),
-            _ => return Err(DomainError::Invalid("Status do Pedido é inválido".to_string())),
+            Status::Recebido
+            | Status::EmPreparacao
+            | Status::Pronto
+            | Status::Finalizado
+            | Status::Cancelado => (),
+            _ => {
+                return Err(DomainError::Invalid(
+                    "Status do Pedido é inválido".to_string(),
+                ))
+            }
         };
-        assertion_concern::assert_argument_date_format(self.data_criacao.clone())?;
-        assertion_concern::assert_argument_date_format(self.data_atualizacao.clone())?;
+        assertion_concern::assert_argument_timestamp_format(self.data_criacao.clone())?;
+        assertion_concern::assert_argument_timestamp_format(self.data_atualizacao.clone())?;
         Ok(())
     }
 
@@ -131,14 +142,8 @@ impl Pedido {
         self.status = status;
     }
 
-    pub fn set_data_criacao(&mut self, data_criacao: String) -> Result<(), DomainError> {
-        assertion_concern::assert_argument_date_format(data_criacao.clone())?;
-        self.data_criacao = data_criacao;
-        Ok(())
-    }
-
     pub fn set_data_atualizacao(&mut self, data_atualizacao: String) -> Result<(), DomainError> {
-        assertion_concern::assert_argument_date_format(data_atualizacao.clone())?;
+        assertion_concern::assert_argument_timestamp_format(data_atualizacao.clone())?;
         self.data_atualizacao = data_atualizacao;
         Ok(())
     }
@@ -149,8 +154,8 @@ impl Pedido {
 mod tests {
     use super::*;
     use crate::core::domain::entities::cliente::Cliente;
-    use crate::core::domain::entities::produto::Produto;
     use crate::core::domain::entities::produto::Categoria;
+    use crate::core::domain::entities::produto::Produto;
     use crate::core::domain::value_objects::cpf::Cpf;
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
 
@@ -160,8 +165,6 @@ mod tests {
             "Fulano da Silva".to_string(),
             "fulano.silva@exemplo.com".to_string(),
             Cpf::new("123.456.789-09".to_string()).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
         )
     }
 
@@ -173,9 +176,12 @@ mod tests {
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
+            Ingredientes::new(vec![
+                "Pão".to_string(),
+                "Hambúrguer".to_string(),
+                "Queijo".to_string(),
+            ])
+            .unwrap(),
         )
     }
 
@@ -190,10 +196,7 @@ mod tests {
             None,
             "Cartão de Crédito".to_string(),
             Status::Recebido,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
         )
-
     }
 
     #[test]
@@ -206,8 +209,6 @@ mod tests {
         assert!(pedido.bebida().is_none());
         assert_eq!(pedido.pagamento(), "Cartão de Crédito");
         assert_eq!(pedido.status(), &Status::Recebido);
-        assert_eq!(pedido.data_criacao(), "2024-01-17");
-        assert_eq!(pedido.data_atualizacao(), "2024-01-17");
     }
 
     #[test]
@@ -227,25 +228,23 @@ mod tests {
             None,
             "Mercado Pago".to_string(),
             Status::Recebido,
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
         );
         let result = pedido.validate_entity();
-        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
-    }
-
-    #[test]
-    fn test_pedido_set_data_criacao_invalid_format() {
-        let mut pedido = create_valid_pedido();
-        let result = pedido.set_data_criacao("17-01-2024".to_string());
-        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
-
+        assert!(
+            matches!(result, Err(DomainError::Invalid(_))),
+            "Esperado Err(DomainError::Invalid), obtido {:?}",
+            result
+        );
     }
 
     #[test]
     fn test_pedido_set_data_atualizacao_invalid_format() {
         let mut pedido = create_valid_pedido();
         let result = pedido.set_data_atualizacao("18-02-2024".to_string());
-        assert!(matches!(result, Err(DomainError::Invalid(_))), "Esperado Err(DomainError::Invalid), obtido {:?}", result);
+        assert!(
+            matches!(result, Err(DomainError::Invalid(_))),
+            "Esperado Err(DomainError::Invalid), obtido {:?}",
+            result
+        );
     }
 }

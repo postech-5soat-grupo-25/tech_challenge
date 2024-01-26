@@ -1,4 +1,3 @@
-use chrono::Utc;
 use rocket::futures::lock::Mutex;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -61,8 +60,6 @@ impl UsuarioUseCase {
         let valid_cpf = Cpf::new(usuario.cpf.clone())?;
         let valid_tipo: Tipo = usuario.tipo.parse().unwrap();
         let valid_status: Status = usuario.status.parse().unwrap();
-        let current_date = Utc::now().naive_utc();
-        let formatted_date = current_date.format("%Y-%m-%d").to_string();
 
         let usuario = usuario_repository
             .create_usuario(Usuario::new(
@@ -73,8 +70,6 @@ impl UsuarioUseCase {
                 usuario.senha,
                 valid_tipo,
                 valid_status,
-                formatted_date.clone(),
-                formatted_date,
             ))
             .await?;
 

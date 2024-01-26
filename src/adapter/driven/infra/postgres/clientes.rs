@@ -6,7 +6,7 @@ use crate::core::domain::value_objects::cpf::Cpf;
 
 use super::table::{ColumnDefault, ColumnNullable, ColumnTypes};
 
-pub fn get_clientes_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
+pub fn get_cliente_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
 {
     let mut columns = HashMap::new();
     columns.insert(
@@ -44,17 +44,17 @@ pub fn get_clientes_table_columns() -> HashMap<String, (ColumnTypes, ColumnNulla
     columns.insert(
         "data_criacao".to_string(),
         (
-            ColumnTypes::Date,
+            ColumnTypes::Timestamp,
             ColumnNullable(true),
-            ColumnDefault(Some("CURRENT_DATE".to_string())),
+            ColumnDefault(Some("CURRENT_TIMESTAMP".to_string())),
         ),
     );
     columns.insert(
         "data_atualizacao".to_string(),
         (
-            ColumnTypes::Date,
+            ColumnTypes::Timestamp,
             ColumnNullable(true),
-            ColumnDefault(Some("CURRENT_DATE".to_string())),
+            ColumnDefault(Some("CURRENT_TIMESTAMP".to_string())),
         ),
     );
 
@@ -70,8 +70,6 @@ impl FromRow for Cliente {
             row.get("nome"),
             row.get("email"),
             Cpf::new(row.get("cpf")).unwrap(),
-            row.get("data_criacao"),
-            row.get("data_atualizacao"),
         )
     }
 
@@ -82,8 +80,6 @@ impl FromRow for Cliente {
             row.try_get("nome")?,
             row.try_get("email")?,
             Cpf::new(row.try_get("cpf")?).unwrap(),
-            row.try_get("data_criacao")?,
-            row.try_get("data_atualizacao")?,
         ))
     }
 }

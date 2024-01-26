@@ -1,4 +1,3 @@
-use chrono::Utc;
 use rocket::futures::lock::Mutex;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -43,17 +42,12 @@ impl ClienteUseCase {
         let mut cliente_repository = self.cliente_repository.lock().await;
         let new_id = 0;
         let cpf = Cpf::new(cliente.cpf.clone())?;
-        let current_date = Utc::now().naive_utc();
-        let formatted_date = current_date.format("%Y-%m-%d").to_string();
-
         let cliente = cliente_repository
             .create_cliente(Cliente::new(
                 new_id,
                 cliente.nome,
                 cliente.email,
                 cpf,
-                formatted_date.clone(),
-                formatted_date,
             ))
             .await?;
 

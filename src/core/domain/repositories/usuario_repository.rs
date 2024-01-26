@@ -4,13 +4,13 @@ use crate::core::domain::value_objects::cpf::Cpf;
 
 #[async_trait]
 pub trait UsuarioRepository {
-  async fn get_usuarios(&self) -> Result<Vec<Usuario>, DomainError>;
+    async fn get_usuarios(&self) -> Result<Vec<Usuario>, DomainError>;
 
-  async fn get_usuario_by_id(&self, id: usize) -> Result<Usuario, DomainError>;
+    async fn get_usuario_by_id(&self, id: usize) -> Result<Usuario, DomainError>;
 
-  async fn get_usuario_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError>;
+    async fn get_usuario_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError>;
 
-  async fn create_usuario(&mut self, user: Usuario) -> Result<Usuario, DomainError>;
+    async fn create_usuario(&mut self, user: Usuario) -> Result<Usuario, DomainError>;
 
-  async fn delete_usuario(&mut self, cpf: Cpf) -> Result<(), DomainError>;
+    async fn delete_usuario(&mut self, cpf: Cpf) -> Result<(), DomainError>;
 }

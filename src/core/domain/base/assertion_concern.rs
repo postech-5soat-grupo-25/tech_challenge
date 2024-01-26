@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::DateTime;
 
 use crate::core::domain::base::domain_error::DomainError;
 
@@ -10,8 +10,9 @@ pub fn assert_argument_not_empty(value: String) -> Result<(), DomainError> {
     }
 }
 
-pub fn assert_argument_date_format(value: String) -> Result<(), DomainError> {
-    match NaiveDate::parse_from_str(&value, "%Y-%m-%d") {
+pub fn assert_argument_timestamp_format(value: String) -> Result<(), DomainError> {
+    let format = "%Y-%m-%d %H:%M:%S%.6f";
+    match DateTime::parse_from_str(&value, format) {
         Ok(_) => Ok(()),
         Err(_) => Err(DomainError::Invalid(value)),
     }
