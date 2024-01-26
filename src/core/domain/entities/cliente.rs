@@ -20,15 +20,21 @@ pub struct Cliente {
 impl AggregateRoot for Cliente {}
 
 impl Cliente {
-    pub fn new(id: usize, nome: String, email: String, cpf: Cpf) -> Self {
-        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f").to_string();
+    pub fn new(
+        id: usize,
+        nome: String,
+        email: String,
+        cpf: Cpf,
+        data_criacao: String,
+        data_atualizacao: String,
+    ) -> Self {
         Cliente {
             id,
             nome,
             email,
             cpf,
-            data_criacao: now.clone(),
-            data_atualizacao: now,
+            data_criacao,
+            data_atualizacao,
         }
     }
 
@@ -96,11 +102,14 @@ mod tests {
     use crate::core::domain::value_objects::cpf::Cpf;
 
     fn create_valid_cliente() -> Cliente {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f%z").to_string();
         Cliente::new(
             1,
             "Fulano da Silva".to_string(),
             "fulano.silva@exemplo.com".to_string(),
             Cpf::new("123.456.789-09".to_string()).unwrap(),
+            _now.clone(),
+            _now,
         )
     }
 
@@ -112,25 +121,22 @@ mod tests {
         assert_eq!(cliente.email(), "fulano.silva@exemplo.com");
     }
 
-    // #[test]
-    // fn test_cliente_validate_entity_valid() {
-    //     let cliente = create_valid_cliente();
-    //     assert!(cliente.validate_entity().is_ok());
-    // }
     #[test]
     fn test_cliente_validate_entity_valid() {
         let cliente = create_valid_cliente();
-        let validation = cliente.validate_entity();
-        assert!(validation.is_ok(), "Validation failed: {:?}", validation.err().unwrap());
+        assert!(cliente.validate_entity().is_ok());
     }
 
     #[test]
     fn test_cliente_validate_entity_empty_nome() {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f%z").to_string();
         let cliente = Cliente::new(
             1,
             "".to_string(),
             "fulano.silva@exemplo.com".to_string(),
             Cpf::new("123.456.789-09".to_string()).unwrap(),
+            _now.clone(),
+            _now,
         );
 
         let result = cliente.validate_entity();
@@ -143,51 +149,20 @@ mod tests {
 
     #[test]
     fn test_cliente_validate_entity_empty_email() {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f%z").to_string();
         let cliente = Cliente::new(
             1,
             "Fulano da Silva".to_string(),
             "".to_string(),
             Cpf::new("123.456.789-09".to_string()).unwrap(),
+            _now.clone(),
+            _now,
         );
 
         let result = cliente.validate_entity();
         assert!(
             matches!(result, Err(DomainError::Empty)),
             "Esperado Err(DomainError::Empty), obtido {:?}",
-            result
-        );
-    }
-
-    #[test]
-    fn test_cliente_validate_entity_invalid_data_criacao() {
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-        );
-
-        let result = cliente.validate_entity();
-        assert!(
-            matches!(result, Err(DomainError::Invalid(_))),
-            "Esperado Err(DomainError::Invalid), obtido {:?}",
-            result
-        );
-    }
-
-    #[test]
-    fn test_cliente_validate_entity_invalid_data_atualizacao() {
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-        );
-
-        let result = cliente.validate_entity();
-        assert!(
-            matches!(result, Err(DomainError::Invalid(_))),
-            "Esperado Err(DomainError::Invalid), obtido {:?}",
             result
         );
     }

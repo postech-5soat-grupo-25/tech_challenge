@@ -1,3 +1,4 @@
+use chrono::Utc;
 use rocket::futures::lock::Mutex;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -40,14 +41,17 @@ impl ClienteUseCase {
         cliente: CreateClienteInput,
     ) -> Result<Cliente, DomainError> {
         let mut cliente_repository = self.cliente_repository.lock().await;
-        let new_id = 0;
+        let _id = 0;
         let cpf = Cpf::new(cliente.cpf.clone())?;
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let cliente = cliente_repository
             .create_cliente(Cliente::new(
-                new_id,
+                _id,
                 cliente.nome,
                 cliente.email,
                 cpf,
+                _now.clone(),
+                _now,
             ))
             .await?;
 

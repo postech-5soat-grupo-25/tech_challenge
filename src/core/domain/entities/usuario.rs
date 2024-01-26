@@ -96,8 +96,9 @@ impl Usuario {
         senha: String,
         tipo: Tipo,
         status: Status,
+        data_criacao: String,
+        data_atualizacao: String,
     ) -> Self {
-        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f").to_string();
         Usuario {
             id,
             nome,
@@ -106,8 +107,8 @@ impl Usuario {
             senha,
             tipo,
             status,
-            data_criacao: now.clone(),
-            data_atualizacao: now,
+            data_criacao,
+            data_atualizacao,
         }
     }
 
@@ -221,6 +222,7 @@ mod tests {
     use crate::core::domain::value_objects::cpf::Cpf;
 
     fn create_valid_usuario() -> Usuario {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         Usuario::new(
             1,
             "Fulano da Silva".to_string(),
@@ -229,6 +231,8 @@ mod tests {
             "senha_segura".to_string(),
             Tipo::Admin,
             Status::Ativo,
+            _now.clone(),
+            _now,
         )
     }
 

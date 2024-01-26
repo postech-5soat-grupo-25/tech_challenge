@@ -1,4 +1,4 @@
-use ::chrono::Utc;
+use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -41,8 +41,9 @@ impl Pedido {
         bebida: Option<Produto>,
         pagamento: String,
         status: Status,
+        data_criacao: String,
+        data_atualizacao: String,
     ) -> Self {
-        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f").to_string();
         Pedido {
             id,
             cliente,
@@ -51,8 +52,8 @@ impl Pedido {
             bebida,
             pagamento,
             status,
-            data_criacao: now.clone(),
-            data_atualizacao: now,
+            data_criacao,
+            data_atualizacao,
         }
     }
 
@@ -160,15 +161,19 @@ mod tests {
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
 
     fn create_valid_cliente() -> Cliente {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         Cliente::new(
             1,
             "Fulano da Silva".to_string(),
             "fulano.silva@exemplo.com".to_string(),
             Cpf::new("123.456.789-09".to_string()).unwrap(),
+            _now.clone(),
+            _now,
         )
     }
 
     fn create_valid_produto() -> Produto {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         Produto::new(
             1,
             "Cheeseburger".to_string(),
@@ -182,10 +187,13 @@ mod tests {
                 "Queijo".to_string(),
             ])
             .unwrap(),
+            _now.clone(),
+            _now,
         )
     }
 
     fn create_valid_pedido() -> Pedido {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let cliente = create_valid_cliente();
         let produto = create_valid_produto();
         Pedido::new(
@@ -196,6 +204,8 @@ mod tests {
             None,
             "Cartão de Crédito".to_string(),
             Status::Recebido,
+            _now.clone(),
+            _now,
         )
     }
 
@@ -219,6 +229,7 @@ mod tests {
 
     #[test]
     fn test_pedido_validate_entity_no_items() {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let cliente = create_valid_cliente();
         let pedido = Pedido::new(
             1,
@@ -228,6 +239,8 @@ mod tests {
             None,
             "Mercado Pago".to_string(),
             Status::Recebido,
+            _now.clone(),
+            _now,
         );
         let result = pedido.validate_entity();
         assert!(

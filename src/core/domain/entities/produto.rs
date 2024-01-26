@@ -39,8 +39,9 @@ impl Produto {
         categoria: Categoria,
         preco: f32,
         ingredientes: Ingredientes,
+        data_criacao: String,
+        data_atualizacao: String,
     ) -> Self {
-        let now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f").to_string();
         Produto {
             id,
             nome,
@@ -49,8 +50,8 @@ impl Produto {
             categoria,
             preco,
             ingredientes,
-            data_criacao: now.clone(),
-            data_atualizacao: now,
+            data_criacao,
+            data_atualizacao,
         }
     }
 
@@ -152,6 +153,7 @@ mod tests {
     use crate::core::domain::value_objects::ingredientes::Ingredientes;
 
     fn create_valid_produto() -> Produto {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         Produto::new(
             1,
             "Cheeseburger".to_string(),
@@ -165,6 +167,8 @@ mod tests {
                 "Queijo".to_string(),
             ])
             .unwrap(),
+            _now.clone(),
+            _now,
         )
     }
 
@@ -187,6 +191,7 @@ mod tests {
 
     #[test]
     fn test_produto_validate_entity_empty_nome() {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let produto = Produto::new(
             1,
             "".to_string(),
@@ -200,6 +205,8 @@ mod tests {
                 "Queijo".to_string(),
             ])
             .unwrap(),
+            _now.clone(),
+            _now,
         );
         let result = produto.validate_entity();
         assert!(
@@ -211,6 +218,7 @@ mod tests {
 
     #[test]
     fn test_produto_validate_entity_negative_preco() {
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let produto = Produto::new(
             1,
             "Cheeseburger".to_string(),
@@ -224,6 +232,8 @@ mod tests {
                 "Queijo".to_string(),
             ])
             .unwrap(),
+            _now.clone(),
+            _now,
         );
         let result = produto.validate_entity();
         assert!(

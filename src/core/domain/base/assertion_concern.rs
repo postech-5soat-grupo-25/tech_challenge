@@ -11,10 +11,10 @@ pub fn assert_argument_not_empty(value: String) -> Result<(), DomainError> {
 }
 
 pub fn assert_argument_timestamp_format(value: String) -> Result<(), DomainError> {
-    let format = "%Y-%m-%d %H:%M:%S%.6f";
+    let format = "%Y-%m-%d %H:%M:%S%.3f%z";
     match DateTime::parse_from_str(&value, format) {
         Ok(_) => Ok(()),
-        Err(_) => Err(DomainError::Invalid(value)),
+        Err(_) => Err(DomainError::Invalid(value))
     }
 }
 

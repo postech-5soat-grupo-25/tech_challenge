@@ -1,3 +1,4 @@
+use chrono::Utc;
 use rocket::tokio::time::{sleep, Duration};
 
 use crate::core::domain::base::domain_error::DomainError;
@@ -12,11 +13,15 @@ pub struct InMemoryClienteRepository {
 
 impl InMemoryClienteRepository {
     pub fn new() -> Self {
+        let _id = 0;
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let cliente = Cliente::new(
-            1,
+            _id,
             "Fulano da Silva".to_string(),
             "fulano.silva@exemplo.com".to_string(),
             Cpf::new("000.000.000-00".to_string()).unwrap(),
+            _now.clone(),
+            _now,
         );
 
         println!("Usando repositório em memória!");
