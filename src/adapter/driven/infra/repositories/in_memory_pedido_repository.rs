@@ -90,7 +90,7 @@ impl PedidoRepository for InMemoryPedidoRepository {
 
     async fn set_pedido_status(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
-        let status_enum = get_status_by_string(status).await;
+        let status_enum = Status::from_string(status);
         if (status_enum == Status::Invalido){
             return Err::<Pedido, _>(DomainError::Invalid("status".to_string()));
         }

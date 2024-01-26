@@ -6,6 +6,7 @@ use crate::adapter::driven::infra::postgres::users::get_users_table_columns;
 pub enum TablesNames {
   Users,
   Clientes,
+  Pedidos,
 }
 
 impl TablesNames {
@@ -13,6 +14,7 @@ impl TablesNames {
     match self {
       TablesNames::Users => "users".to_string(),
       TablesNames::Clientes => "clientes".to_string(),
+      TablesNames::Pedidos => "pedidos".to_string(),
     }
   }
 }

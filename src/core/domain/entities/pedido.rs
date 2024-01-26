@@ -17,6 +17,43 @@ pub enum Status {
     Invalido,
 }
 
+impl Status {
+    pub fn from_index(index: usize) -> Status {
+        match index {
+            0 => Status::Recebido,
+            1 => Status::EmPreparacao,
+            2 => Status::Pronto,
+            3 => Status::Finalizado,
+            4 => Status::Cancelado,
+            _ => Status::Invalido,
+        }
+    }
+
+    pub fn to_index(&self) -> usize {
+        match *self {
+            Status::Recebido => 0,
+            Status::EmPreparacao => 1,
+            Status::Pronto => 2,
+            Status::Finalizado => 3,
+            Status::Cancelado => 4,
+            Status::Invalido => 5,
+        }
+    }
+
+    pub fn from_string(string: String) -> Status {
+        let mut status_enum : Status = Status::Invalido;
+        match string.as_str() {
+            "recebido" => status_enum = Status::Recebido,
+            "em_preparacao" => status_enum = Status::EmPreparacao,
+            "pronto" => status_enum = Status::Pronto,
+            "finalizado" => status_enum = Status::Finalizado,
+            "set_pedido_cancelado" => status_enum = Status::Cancelado,
+            &_ => status_enum = Status::Invalido,
+        }
+        return status_enum.clone();
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Pedido {
     id: usize,
