@@ -8,18 +8,19 @@ use rocket_okapi::swagger_ui::*;
 use rocket_okapi::settings::UrlObject;
 
 use crate::adapter::driven::infra::{repositories, postgres};
-use crate::core::domain::repositories::user_repository::UserRepository;
+use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
 use crate::core::domain::repositories::cliente_repository::ClienteRepository;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
 use repositories::in_memory_pedido_repository::InMemoryPedidoRepository;
 use repositories::{in_memory_user_repository::InMemoryUserRepository, postgres_user_repository::PostgresUserRepository};
+use repositories::{in_memory_usuario_repository::InMemoryUsuarioRepository, postgres_usuario_repository::PostgresUsuarioRepository};
 use repositories::{in_memory_cliente_repository::InMemoryClienteRepository, postgres_cliente_repository::PostgresClienteRepository};
 use crate::adapter::api::config::{Config, Env};
-use crate::core::application::use_cases::user_use_case::UserUseCase;
+use crate::core::application::use_cases::usuario_use_case::UsuarioUseCase;
 use crate::core::application::use_cases::cliente_use_case::ClienteUseCase;
 use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
 
-use super::controllers::{auth_controller, user_controller, cliente_controller, pedido_controller};
+use super::controllers::{auth_controller, usuario_controller, cliente_controller, pedido_controller};
 use super::error_handling::generic_catchers;
 
 #[get("/")]
@@ -32,18 +33,18 @@ pub async fn main() -> Result<(), rocket::Error> {
     let config = Config::build();
 
     println!("Loading environment variables...");
-    let user_repository: Arc<Mutex<dyn UserRepository + Sync + Send>> =
+    let usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>> =
     if config.env == Env::Test {
         println!("Using in memory database");
-        Arc::new(Mutex::new(InMemoryUserRepository::new()))
+        Arc::new(Mutex::new(InMemoryUsuarioRepository::new()))
     } else {
         println!("Connecting to database: {}", config.db_url.clone());
         let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone()).await.unwrap();
         let tables = postgres::get_tables();
 
-        Arc::new(Mutex::new(PostgresUserRepository::new(postgres_connection_manager.client, tables).await))
+        Arc::new(Mutex::new(PostgresUsuarioRepository::new(postgres_connection_manager.client, tables).await))
     };
-    let user_use_case = UserUseCase::new(user_repository);
+    let usuario_use_case = UsuarioUseCase::new(usuario_repository);
 
     let cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>> =
     if config.env == Env::Test {
@@ -84,20 +85,20 @@ pub async fn main() -> Result<(), rocket::Error> {
         make_swagger_ui(&SwaggerUIConfig {
             urls: vec![
                 UrlObject::new("Auth", "/auth/openapi.json"),
-                UrlObject::new("Users", "/users/openapi.json"),
-                UrlObject::new("Clientes", "/clientes/openapi.json"),
+                UrlObject::new("Usuarios", "/usuarios/openapi.json"),
+                UrlObject::new("Clientes", "/clientes/openapi.json")
                 UrlObject::new("Pedido", "/pedido/openapi.json")
             ],
             ..Default::default()
         }),
     )
     .mount("/auth", auth_controller::routes())
-    .mount("/users", user_controller::routes())
+    .mount("/usuarios", usuario_controller::routes())
     .mount("/clientes", cliente_controller::routes())
     .mount("/pedido", pedido_controller::routes())
-    .register("/users", user_controller::catchers())
+    .register("/usuarios", usuario_controller::catchers())
     .register("/clientes", cliente_controller::catchers())
-    .manage(user_use_case)
+    .manage(usuario_use_case)
     .manage(cliente_use_case)
     .manage(preparacao_e_entrega_use_case)
     .configure(server_config)

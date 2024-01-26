@@ -1,7 +1,6 @@
 use postgres_from_row::FromRow;
 use tokio_postgres::Client;
 
-use crate::adapter::driven::infra::postgres::clientes;
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::cliente::Cliente;
 use crate::core::domain::repositories::cliente_repository::ClienteRepository;
