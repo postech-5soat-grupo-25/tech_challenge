@@ -12,7 +12,6 @@ use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
 use crate::core::domain::repositories::cliente_repository::ClienteRepository;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
 use repositories::in_memory_pedido_repository::InMemoryPedidoRepository;
-use repositories::{in_memory_user_repository::InMemoryUserRepository, postgres_user_repository::PostgresUserRepository};
 use repositories::{in_memory_usuario_repository::InMemoryUsuarioRepository, postgres_usuario_repository::PostgresUsuarioRepository};
 use repositories::{in_memory_cliente_repository::InMemoryClienteRepository, postgres_cliente_repository::PostgresClienteRepository};
 use crate::adapter::api::config::{Config, Env};
@@ -86,8 +85,8 @@ pub async fn main() -> Result<(), rocket::Error> {
             urls: vec![
                 UrlObject::new("Auth", "/auth/openapi.json"),
                 UrlObject::new("Usuarios", "/usuarios/openapi.json"),
-                UrlObject::new("Clientes", "/clientes/openapi.json")
-                UrlObject::new("Pedido", "/pedido/openapi.json")
+                UrlObject::new("Clientes", "/clientes/openapi.json"),
+                UrlObject::new("Pedido", "/pedido/openapi.json"),
             ],
             ..Default::default()
         }),

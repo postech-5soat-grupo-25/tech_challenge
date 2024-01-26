@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 #[derive(Clone)]
 pub enum TablesNames {
-  Usuarios,
-  Clientes,
+  Usuario,
+  Cliente,
   Pedidos,
 }
 
