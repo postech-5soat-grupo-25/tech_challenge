@@ -8,8 +8,8 @@ use tokio_postgres::{NoTls, Error, Client};
 use rocket::tokio;
 
 use self::table::{Table, TablesNames};
-use self::usuarios::get_usuarios_table_columns;
-use self::clientes::get_clientes_table_columns;
+use self::usuarios::get_usuario_table_columns;
+use self::clientes::get_cliente_table_columns;
 use self::pedidos::get_pedidos_table_columns;
 pub struct PgConnectionManager {
   pub client: Client,
@@ -31,12 +31,12 @@ impl PgConnectionManager {
 pub fn get_tables() -> Vec<Table> {
   vec![
     Table {
-      name: TablesNames::Usuarios,
-      columns: get_usuarios_table_columns(),
+      name: TablesNames::Usuario,
+      columns: get_usuario_table_columns(),
     },
     Table {
-      name: TablesNames::Clientes,
-      columns: get_clientes_table_columns(),
+      name: TablesNames::Cliente,
+      columns: get_cliente_table_columns(),
     },
     Table {
       name: TablesNames::Pedidos,

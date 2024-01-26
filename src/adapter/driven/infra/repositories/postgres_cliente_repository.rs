@@ -8,10 +8,10 @@ use crate::core::domain::value_objects::cpf::Cpf;
 
 use super::super::postgres::table::Table;
 
-const CREATE_CLIENTE: &str = "INSERT INTO clientes (nome, email, cpf, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5) RETURNING *";
-const QUERY_CLIENTE_BY_CPF: &str = "SELECT * FROM clientes WHERE cpf = $1";
-const QUERY_CLIENTES: &str = "SELECT * FROM clientes";
-const DELETE_CLIENTE: &str = "DELETE FROM clientes WHERE cpf = $1";
+const CREATE_CLIENTE: &str = "INSERT INTO cliente (nome, email, cpf) VALUES ($1, $2, $3) RETURNING *";
+const QUERY_CLIENTE_BY_CPF: &str = "SELECT * FROM cliente WHERE cpf = $1";
+const QUERY_CLIENTES: &str = "SELECT * FROM cliente";
+const DELETE_CLIENTE: &str = "DELETE FROM cliente WHERE cpf = $1";
 
 pub struct PostgresClienteRepository {
     client: Client,
@@ -57,13 +57,7 @@ impl ClienteRepository for PostgresClienteRepository {
             .client
             .query(
                 CREATE_CLIENTE,
-                &[
-                    &cliente.nome(),
-                    &cliente.email(),
-                    &cliente.cpf().0,
-                    &cliente.data_criacao(),
-                    &cliente.data_atualizacao(),
-                ],
+                &[&cliente.nome(), &cliente.email(), &cliente.cpf().0],
             )
             .await
             .unwrap();

@@ -1,3 +1,5 @@
+use chrono::{DateTime, Utc};
+
 use postgres_from_row::FromRow;
 use std::collections::HashMap;
 
@@ -6,7 +8,7 @@ use crate::core::domain::value_objects::cpf::Cpf;
 
 use super::table::{ColumnDefault, ColumnNullable, ColumnTypes};
 
-pub fn get_usuarios_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
+pub fn get_usuario_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
 {
     let mut columns = HashMap::new();
     columns.insert(
@@ -68,17 +70,17 @@ pub fn get_usuarios_table_columns() -> HashMap<String, (ColumnTypes, ColumnNulla
     columns.insert(
         "data_criacao".to_string(),
         (
-            ColumnTypes::Date,
+            ColumnTypes::Timestamp,
             ColumnNullable(true),
-            ColumnDefault(Some("CURRENT_DATE".to_string())),
+            ColumnDefault(Some("CURRENT_TIMESTAMP".to_string())),
         ),
     );
     columns.insert(
         "data_atualizacao".to_string(),
         (
-            ColumnTypes::Date,
+            ColumnTypes::Timestamp,
             ColumnNullable(true),
-            ColumnDefault(Some("CURRENT_DATE".to_string())),
+            ColumnDefault(Some("CURRENT_TIMESTAMP".to_string())),
         ),
     );
 
@@ -88,7 +90,10 @@ pub fn get_usuarios_table_columns() -> HashMap<String, (ColumnTypes, ColumnNulla
 impl FromRow for Usuario {
     fn from_row(row: &tokio_postgres::Row) -> Self {
         let id: i32 = row.get("id");
-
+        let data_criacao: std::time::SystemTime = row.get("data_criacao");
+        let data_criacao: DateTime<Utc> = data_criacao.into();
+        let data_atualizacao: std::time::SystemTime = row.get("data_atualizacao");
+        let data_atualizacao: DateTime<Utc> = data_atualizacao.into();
         Usuario::new(
             id as usize,
             row.get("nome"),
@@ -97,13 +102,19 @@ impl FromRow for Usuario {
             row.get("senha"),
             row.get::<_, &str>("tipo").parse::<Tipo>().unwrap(),
             row.get::<_, &str>("status").parse::<Status>().unwrap(),
-            row.get("data_criacao"),
-            row.get("data_atualizacao"),
+            data_criacao.format("%Y-%m-%d %H:%M:%S%.3f%z").to_string(),
+            data_atualizacao
+                .format("%Y-%m-%d %H:%M:%S%.3f%z")
+                .to_string(),
         )
     }
 
     fn try_from_row(row: &tokio_postgres::Row) -> Result<Self, tokio_postgres::Error> {
         let id: i32 = row.try_get("id")?;
+        let data_criacao: std::time::SystemTime = row.try_get("data_criacao")?;
+        let data_criacao: DateTime<Utc> = data_criacao.into();
+        let data_atualizacao: std::time::SystemTime = row.try_get("data_atualizacao")?;
+        let data_atualizacao: DateTime<Utc> = data_atualizacao.into();
         Ok(Usuario::new(
             id as usize,
             row.try_get("nome")?,
@@ -111,9 +122,13 @@ impl FromRow for Usuario {
             Cpf::new(row.try_get("cpf")?).unwrap(),
             row.try_get("senha")?,
             (row.try_get::<_, &str>("tipo")?).parse::<Tipo>().unwrap(),
-            (row.try_get::<_, &str>("status")?).parse::<Status>().unwrap(),
-            row.try_get("data_criacao")?,
-            row.try_get("data_atualizacao")?,
+            (row.try_get::<_, &str>("status")?)
+                .parse::<Status>()
+                .unwrap(),
+            data_criacao.format("%Y-%m-%d %H:%M:%S%.3f%z").to_string(),
+            data_atualizacao
+                .format("%Y-%m-%d %H:%M:%S%.3f%z")
+                .to_string(),
         ))
     }
 }

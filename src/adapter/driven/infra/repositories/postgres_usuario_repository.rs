@@ -13,11 +13,11 @@ pub struct PostgresUsuarioRepository {
     tables: Vec<Table>,
 }
 
-const CREATE_USUARIO: &str = "INSERT INTO usuarios (nome, email, cpf, senha, tipo, status, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
-const QUERY_USUARIO_BY_CPF: &str = "SELECT * FROM usuarios WHERE cpf = $1";
-const QUERY_USUARIO_BY_ID: &str = "SELECT * FROM usuarios WHERE id = $1";
-const QUERY_USUARIOS: &str = "SELECT * FROM usuarios";
-const DELETE_USUARIO: &str = "DELETE FROM usuarios WHERE cpf = $1";
+const CREATE_USUARIO: &str = "INSERT INTO usuario (nome, email, cpf, senha, tipo, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
+const QUERY_USUARIO_BY_CPF: &str = "SELECT * FROM usuario WHERE cpf = $1";
+const QUERY_USUARIO_BY_ID: &str = "SELECT * FROM usuario WHERE id = $1";
+const QUERY_USUARIOS: &str = "SELECT * FROM usuario";
+const DELETE_USUARIO: &str = "DELETE FROM usuario WHERE cpf = $1";
 
 impl PostgresUsuarioRepository {
     pub async fn new(client: Client, tables: Vec<Table>) -> Self {
@@ -45,17 +45,18 @@ impl PostgresUsuarioRepository {
             }
             _ => {
                 println!("Usuário Admin não encontrado. Criando...");
-                let formatted_date = Utc::now().naive_utc().format("%Y-%m-%d").to_string();
+                let _id = 0;
+                let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
                 let usuario_admin = Usuario::new(
-                    1,
+                    _id,
                     "Administrador".to_string(),
                     "admin@fastfood.com.br".to_string(),
                     Cpf::new("000.000.000-00".to_string()).unwrap(),
                     "melhor_projeto".to_string(),
                     "Admin".parse().unwrap(),
                     "Ativo".parse().unwrap(),
-                    formatted_date.clone(),
-                    formatted_date,
+                    _now.clone(),
+                    _now,
                 );
                 self.create_usuario(usuario_admin).await.unwrap();
             }
@@ -103,8 +104,6 @@ impl UsuarioRepository for PostgresUsuarioRepository {
                     &usuario.senha(),
                     &usuario.tipo().to_string(),
                     &usuario.status().to_string(),
-                    &usuario.data_criacao(),
-                    &usuario.data_atualizacao(),
                 ],
             )
             .await

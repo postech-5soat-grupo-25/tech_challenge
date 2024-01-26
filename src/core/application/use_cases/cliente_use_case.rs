@@ -41,19 +41,17 @@ impl ClienteUseCase {
         cliente: CreateClienteInput,
     ) -> Result<Cliente, DomainError> {
         let mut cliente_repository = self.cliente_repository.lock().await;
-        let new_id = 0;
+        let _id = 0;
         let cpf = Cpf::new(cliente.cpf.clone())?;
-        let current_date = Utc::now().naive_utc();
-        let formatted_date = current_date.format("%Y-%m-%d").to_string();
-
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let cliente = cliente_repository
             .create_cliente(Cliente::new(
-                new_id,
+                _id,
                 cliente.nome,
                 cliente.email,
                 cpf,
-                formatted_date.clone(),
-                formatted_date,
+                _now.clone(),
+                _now,
             ))
             .await?;
 
