@@ -17,7 +17,7 @@ use repositories::{in_memory_cliente_repository::InMemoryClienteRepository, post
 use crate::adapter::api::config::{Config, Env};
 use crate::core::application::use_cases::user_use_case::UserUseCase;
 use crate::core::application::use_cases::cliente_use_case::ClienteUseCase;
-use crate::core::application::use_cases::preparation_and_deliver_use_case::PreparationAndDeliverUseCase;
+use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
 
 use super::controllers::{auth_controller, user_controller, cliente_controller, pedido_controller};
 use super::error_handling::generic_catchers;
@@ -70,7 +70,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     // };
     Arc::new(Mutex::new(InMemoryPedidoRepository::new()));
 
-    let preparation_and_deliver_use_case = PreparationAndDeliverUseCase::new(pedido_repository);
+    let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);
 
     let server_config = rocket::Config::figment()
         .merge(("address", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))))
@@ -99,7 +99,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     .register("/clientes", cliente_controller::catchers())
     .manage(user_use_case)
     .manage(cliente_use_case)
-    .manage(preparation_and_deliver_use_case)
+    .manage(preparacao_e_entrega_use_case)
     .configure(server_config)
     .launch()
     .await?;

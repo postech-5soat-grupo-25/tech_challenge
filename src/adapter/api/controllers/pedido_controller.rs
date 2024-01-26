@@ -7,28 +7,28 @@ use rocket_okapi::{openapi, openapi_get_routes};
 
 use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::preparation_and_deliver_use_case::PreparationAndDeliverUseCase;
+use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
 use crate::core::domain::entities::pedido::Pedido;
 
 #[openapi(tag = "Pedidos")]
 #[get("/pedido_novos")]
 async fn get_pedidos_novos(
-    preparation_and_deliver_use_case: &State<PreparationAndDeliverUseCase>,
+    preparacao_e_entrega_use_case: &State<PreparacaoeEntregaUseCase>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Pedido>>, Status> {
-    let pedidos_novos = preparation_and_deliver_use_case.get_pedidos_novos().await?;
+    let pedidos_novos = preparacao_e_entrega_use_case.get_pedidos_novos().await?;
     Ok(Json(pedidos_novos))
 }
 
 #[openapi(tag = "Pedidos")]
 #[put("/<id>/status/<status>")]
 async fn update_status_pedido(
-    preparation_and_deliver_use_case: &State<PreparationAndDeliverUseCase>,
+    preparacao_e_entrega_use_case: &State<PreparacaoeEntregaUseCase>,
     id: usize,
     status: String,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Pedido>, Status> {
-    let pedido = preparation_and_deliver_use_case.set_pedido_status(id, status).await?;
+    let pedido = preparacao_e_entrega_use_case.atualizar_status_pedido(id, status).await?;
     Ok(Json(pedido))
 }
 

@@ -45,7 +45,7 @@ impl PedidoRepository for PostgresPedidoRepository {
         Ok(pedidos_vec)
     }
 
-    async fn set_pedido_status(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
+    async fn atualizar_status_pedido(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
         let status_enum = Status::from_string(status);
         if (status_enum == Status::Invalido){
             return Err::<Pedido, _>(DomainError::Invalid("status".to_string()));

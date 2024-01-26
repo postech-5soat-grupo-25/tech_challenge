@@ -11,13 +11,13 @@ use crate::core::domain::entities::pedido::Pedido;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
 
 #[derive(Clone)]
-pub struct PreparationAndDeliverUseCase {
+pub struct PreparacaoeEntregaUseCase {
     pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
 }
 
-impl PreparationAndDeliverUseCase {
+impl PreparacaoeEntregaUseCase {
     pub fn new(pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>) -> Self {
-        PreparationAndDeliverUseCase { pedido_repository }
+        PreparacaoeEntregaUseCase { pedido_repository }
     }
 
     pub async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
@@ -25,11 +25,11 @@ impl PreparationAndDeliverUseCase {
         pedido_repository.get_pedidos_novos().await
     }
 
-    pub async fn set_pedido_status(&self,  id: usize, status : String) -> Result<Pedido, DomainError> {
+    pub async fn atualizar_status_pedido(&self,  id: usize, status : String) -> Result<Pedido, DomainError> {
         let mut pedido_repository = self.pedido_repository.lock().await;
-        pedido_repository.set_pedido_status(id, status).await
+        pedido_repository.atualizar_status_pedido(id, status).await
     }
 }
 
-unsafe impl Send for PreparationAndDeliverUseCase {}
-unsafe impl Sync for PreparationAndDeliverUseCase {}
+unsafe impl Send for PreparacaoeEntregaUseCase {}
+unsafe impl Sync for PreparacaoeEntregaUseCase {}

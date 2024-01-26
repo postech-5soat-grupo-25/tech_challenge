@@ -7,6 +7,6 @@ pub trait PedidoRepository {
   
   async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError>;
 
-  async fn set_pedido_status(&mut self, id: usize, status :String) -> Result<Pedido, DomainError>;
+  async fn atualizar_status_pedido(&mut self, id: usize, status :String) -> Result<Pedido, DomainError>;
 
 }
