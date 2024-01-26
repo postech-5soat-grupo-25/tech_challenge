@@ -1,21 +1,23 @@
-FROM messense/rust-musl-cross:x86_64-musl as builder
+# Usando imagem alpine para diminuir o tamanho do container
+FROM rust:1.75-alpine3.19 as builder
 
-ENV DB_URL=postgres://postgres:postgres@db:5432
-ENV SECRET=secret_from_docker
-ENV ENV=prod
-
-RUN rustup update nightly && \
-    rustup target add --toolchain nightly x86_64-unknown-linux-musl
+# Feature apenas em nightly
+RUN rustup update nightly 
 
 RUN rustup default nightly
 
-WORKDIR /app
+# Definindo a pasta dentro do container onde
+WORKDIR /usr/src/tech-challenge
+
+RUN apk add --no-cache musl-dev
 
 COPY . .
 
-RUN cargo build --release --target=x86_64-unknown-linux-musl
+RUN cargo build --release
 
-FROM scratch
-COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/rust_ddd_template /
+# Criando um novo stage com imagem scratch e passando apenas os 
+# arquivos necessarios
+FROM scratch as production
+COPY --from=builder /usr/src/tech-challenge/target/release /
 ENTRYPOINT [ "/api" ]
 EXPOSE 3000
