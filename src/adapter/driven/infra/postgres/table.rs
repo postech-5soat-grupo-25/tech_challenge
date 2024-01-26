@@ -4,13 +4,15 @@ use std::collections::HashMap;
 pub enum TablesNames {
   Usuario,
   Cliente,
+  Pedidos,
 }
 
 impl TablesNames {
   pub fn to_string(&self) -> String {
-    match self {
+    match self {    
       TablesNames::Usuario => "usuario".to_string(),
       TablesNames::Cliente => "cliente".to_string(),
+      TablesNames::Pedidos => "pedidos".to_string(),
     }
   }
 }

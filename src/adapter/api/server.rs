@@ -1,5 +1,6 @@
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
+use std::process;
 
 use rocket::futures::lock::Mutex;
 use rocket::response::Redirect;
@@ -9,13 +10,16 @@ use rocket_okapi::settings::UrlObject;
 use crate::adapter::driven::infra::{repositories, postgres};
 use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
 use crate::core::domain::repositories::cliente_repository::ClienteRepository;
+use crate::core::domain::repositories::pedido_repository::PedidoRepository;
+use repositories::in_memory_pedido_repository::InMemoryPedidoRepository;
 use repositories::{in_memory_usuario_repository::InMemoryUsuarioRepository, postgres_usuario_repository::PostgresUsuarioRepository};
 use repositories::{in_memory_cliente_repository::InMemoryClienteRepository, postgres_cliente_repository::PostgresClienteRepository};
 use crate::adapter::api::config::{Config, Env};
 use crate::core::application::use_cases::usuario_use_case::UsuarioUseCase;
 use crate::core::application::use_cases::cliente_use_case::ClienteUseCase;
+use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
 
-use super::controllers::{auth_controller, usuario_controller, cliente_controller};
+use super::controllers::{auth_controller, usuario_controller, cliente_controller, pedido_controller};
 use super::error_handling::generic_catchers;
 
 #[get("/")]
@@ -55,6 +59,19 @@ pub async fn main() -> Result<(), rocket::Error> {
 
     let cliente_use_case = ClienteUseCase::new(cliente_repository);
 
+    let pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>> =
+    // TODO
+    // if config.env == Env::Test {
+    //     println!("Using in memory database");
+    //     Arc::new(Mutex::new(InMemoryPedidoRepository::new()))
+    // } else {
+    //     println!("MASSIVE FAILURE");
+    //     process::exit(1);
+    // };
+    Arc::new(Mutex::new(InMemoryPedidoRepository::new()));
+
+    let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);
+
     let server_config = rocket::Config::figment()
         .merge(("address", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))))
         .merge(("port", 3000));
@@ -68,7 +85,8 @@ pub async fn main() -> Result<(), rocket::Error> {
             urls: vec![
                 UrlObject::new("Auth", "/auth/openapi.json"),
                 UrlObject::new("Usuarios", "/usuarios/openapi.json"),
-                UrlObject::new("Clientes", "/clientes/openapi.json")
+                UrlObject::new("Clientes", "/clientes/openapi.json"),
+                UrlObject::new("Pedido", "/pedido/openapi.json"),
             ],
             ..Default::default()
         }),
@@ -76,10 +94,12 @@ pub async fn main() -> Result<(), rocket::Error> {
     .mount("/auth", auth_controller::routes())
     .mount("/usuarios", usuario_controller::routes())
     .mount("/clientes", cliente_controller::routes())
+    .mount("/pedido", pedido_controller::routes())
     .register("/usuarios", usuario_controller::catchers())
     .register("/clientes", cliente_controller::catchers())
     .manage(usuario_use_case)
     .manage(cliente_use_case)
+    .manage(preparacao_e_entrega_use_case)
     .configure(server_config)
     .launch()
     .await?;
