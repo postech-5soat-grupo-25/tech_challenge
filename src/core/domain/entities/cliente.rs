@@ -102,7 +102,7 @@ mod tests {
     use crate::core::domain::value_objects::cpf::Cpf;
 
     fn create_valid_cliente() -> Cliente {
-        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f%z").to_string();
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         Cliente::new(
             1,
             "Fulano da Silva".to_string(),
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn test_cliente_validate_entity_empty_nome() {
-        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f%z").to_string();
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let cliente = Cliente::new(
             1,
             "".to_string(),
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_cliente_validate_entity_empty_email() {
-        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.6f%z").to_string();
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
         let cliente = Cliente::new(
             1,
             "Fulano da Silva".to_string(),
