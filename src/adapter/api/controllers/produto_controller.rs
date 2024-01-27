@@ -22,7 +22,7 @@ async fn get_produto(
 
 #[openapi(tag = "Produto")]
 #[put("/<id>")]
-async fn update_status_pedido(
+async fn get_produto_by_id(
     produto_use_case: &State<ProductUseCaseUseCase>,
     id: usize,
     _logged_user_info: AuthenticatedUser,
@@ -57,18 +57,18 @@ async fn update_produto(
 }
 
 pub fn routes() -> Vec<rocket::Route> {
-    openapi_get_routes![get_pedidos_novos, update_status_pedido]
+    openapi_get_routes![get_produto, get_produto_by_id, create_produto, update_produto]
 }
 
 #[catch(404)]
-fn pedido_not_found() -> Json<ErrorResponse> {
+fn produto_not_found() -> Json<ErrorResponse> {
     let error = ErrorResponse {
-        msg: "Pedido não encontrado!".to_string(),
+        msg: "Produto não encontrado!".to_string(),
         status: 404,
     };
     Json(error)
 }
 
 pub fn catchers() -> Vec<rocket::Catcher> {
-    catchers![pedido_not_found]
+    catchers![produto_not_found]
 }
