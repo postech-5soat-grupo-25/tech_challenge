@@ -1,3 +1,4 @@
+-- Criacao da tabela de usuario
 CREATE TABLE IF NOT EXISTS usuario (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -10,8 +11,10 @@ CREATE TABLE IF NOT EXISTS usuario (
     data_atualizacao TIMESTAMP
 );
 
+-- Criacao do tipo enum para categoria
 CREATE TYPE CATEGORIA_ENUM AS ENUM ('lanche', 'bebida', 'acompanhamento', 'sobremesa');
 
+-- Criacao da tabela de produto
 CREATE TABLE IF NOT EXISTS produto (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -24,6 +27,7 @@ CREATE TABLE IF NOT EXISTS produto (
     data_atualizacao TIMESTAMP
 );
 
+-- Criacao da tabela de cliente
 CREATE TABLE IF NOT EXISTS cliente (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -33,6 +37,7 @@ CREATE TABLE IF NOT EXISTS cliente (
     data_atualizacao TIMESTAMP
 );
 
+-- Criacao da tabela de pedido
 CREATE TABLE IF NOT EXISTS pedido (
     id SERIAL PRIMARY KEY,
     cliente INT NOT NULL,
