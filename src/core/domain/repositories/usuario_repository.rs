@@ -12,5 +12,7 @@ pub trait UsuarioRepository {
 
     async fn create_usuario(&mut self, user: Usuario) -> Result<Usuario, DomainError>;
 
+    async fn update_usuario(&mut self, dados_usuario_atualizado: Usuario) -> Result<Usuario, DomainError>;
+
     async fn delete_usuario(&mut self, cpf: Cpf) -> Result<(), DomainError>;
 }

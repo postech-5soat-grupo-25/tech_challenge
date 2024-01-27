@@ -22,13 +22,13 @@ async fn get_usuarios(
 }
 
 #[openapi(tag = "Usuarios")]
-#[get("/<cpf>")]
+#[get("/<id>")]
 async fn get_usuario(
     usuario_use_case: &State<UsuarioUseCase>,
-    cpf: Cpf,
+    id: usize,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Usuario>, Status> {
-    let usuario = usuario_use_case.get_usuario_by_cpf(cpf).await?;
+    let usuario = usuario_use_case.get_usuario_by_id(id).await?;
     Ok(Json(usuario))
 }
 
@@ -45,6 +45,19 @@ async fn create_usuario(
 }
 
 #[openapi(tag = "Usuarios")]
+#[put("/<id>", data = "<usuario_input>")]
+async fn update_usuario(
+    usuario_use_case: &State<UsuarioUseCase>,
+    usuario_input: Json<CreateUsuarioInput>,
+    id: usize,
+    _logged_user_info: AuthenticatedUser,
+) -> Result<Json<Usuario>, Status> {
+    let usuario_input: CreateUsuarioInput = usuario_input.into_inner();
+    let usuario = usuario_use_case.update_usuario(id, usuario_input).await?;
+    Ok(Json(usuario))
+}
+
+#[openapi(tag = "Usuarios")]
 #[delete("/<cpf>")]
 async fn delete_usuario(
     usuario_use_case: &State<UsuarioUseCase>,
@@ -56,7 +69,7 @@ async fn delete_usuario(
 }
 
 pub fn routes() -> Vec<rocket::Route> {
-    openapi_get_routes![get_usuarios, get_usuario, create_usuario, delete_usuario]
+    openapi_get_routes![get_usuarios, get_usuario, create_usuario, update_usuario, delete_usuario]
 }
 
 #[catch(404)]

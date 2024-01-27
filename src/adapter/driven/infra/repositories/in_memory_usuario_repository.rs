@@ -79,6 +79,18 @@ impl UsuarioRepository for InMemoryUsuarioRepository {
         Ok(usuario.clone())
     }
 
+    async fn update_usuario(&mut self, dados_usuario_atualizado: Usuario) -> Result<Usuario, DomainError> {
+        sleep(Duration::from_secs(1)).await;
+        let mut usuario_list = self._usuarios.clone();
+        for usuario in &mut usuario_list.iter_mut() {
+        if usuario.id() == dados_usuario_atualizado.id() {
+            *usuario = dados_usuario_atualizado.clone();
+            return Ok(usuario.clone());
+        }
+        }
+        Err(DomainError::NotFound)
+    }
+
     async fn delete_usuario(&mut self, cpf: Cpf) -> Result<(), DomainError> {
         let usuario_list = &mut self._usuarios;
         for (index, usuario) in usuario_list.iter_mut().enumerate() {
