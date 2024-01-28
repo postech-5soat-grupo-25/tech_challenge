@@ -3,6 +3,7 @@ pub mod table;
 pub mod usuarios;
 pub mod clientes;
 pub mod pedidos;
+pub mod produtos;
 
 use tokio_postgres::{NoTls, Error, Client};
 use rocket::tokio;
@@ -40,6 +41,10 @@ pub fn get_tables() -> Vec<Table> {
     },
     Table {
       name: TablesNames::Pedidos,
+      columns: get_pedidos_table_columns(),
+    },
+    Table {
+      name: TablesNames::Produtos,
       columns: get_pedidos_table_columns(),
     },
   ]

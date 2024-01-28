@@ -1,7 +1,7 @@
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
+use core::str::FromStr;
 use crate::core::domain::base::aggregate_root::AggregateRoot;
 use crate::core::domain::base::assertion_concern;
 use crate::core::domain::base::domain_error::DomainError;
@@ -13,6 +13,20 @@ pub enum Categoria {
     Bebida,
     Acompanhamento,
     Sobremesa,
+}
+
+impl FromStr for Categoria {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Lanche" => Ok(Categoria::Lanche),
+            "Bebida" => Ok(Categoria::Bebida),
+            "Acompanhamento" => Ok(Categoria::Acompanhamento),
+            "Sobremesa" => Ok(Categoria::Sobremesa),
+            _ => Err(()),
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
@@ -98,6 +112,10 @@ impl Produto {
 
     pub fn preco(&self) -> f32 {
         self.preco
+    }
+
+    pub fn ingredientes(&self) -> &Ingredientes {
+        &self.ingredientes
     }
 
     pub fn data_criacao(&self) -> &String {
