@@ -6,7 +6,6 @@ use crate::core::{
   domain::{
     base::domain_error::DomainError, 
     entities::{
-      cliente::Cliente, 
       pedido::{Pedido, Status},
       produto::{Produto, Categoria},
     },
@@ -19,13 +18,9 @@ use crate::core::{
   }
 };
 
-pub struct UpdatePedidoInput {
-  lanche: Option<Produto>,
-  acompanhamento: Option<Produto>,
-  bebida: Option<Produto>,
-  pagamento: String,
-  status: Status,
-  data_atualizacao: String,
+
+pub struct CreatePedidoInput {
+  cliente_id: Option<usize>,
 }
 
 #[derive(Clone)]
@@ -66,10 +61,10 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn novo_pedido(
       &self, 
-      cliente_id: Option<usize>,
+      pedido_input: CreatePedidoInput,
     ) -> Result<Pedido, DomainError> {
 
-      let cliente = match cliente_id {
+      let cliente = match pedido_input.cliente_id {
           Some(id) => {
               let mut cliente_repository = self.cliente_repository.lock().await;
               Some(cliente_repository.get_cliente_by_id(id).await?)
