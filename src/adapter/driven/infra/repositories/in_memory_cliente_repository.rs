@@ -50,6 +50,16 @@ impl ClienteRepository for InMemoryClienteRepository {
         Err(DomainError::NotFound)
     }
 
+    async fn get_cliente_by_id(&self, id: i32) -> Result<Cliente, DomainError> {
+        sleep(Duration::from_secs(1)).await;
+        for cliente in &self._clientes {
+            if cliente.id().to_owned() == id as usize {
+                return Ok(cliente.clone());
+            }
+        }
+        Err(DomainError::NotFound)
+    }
+
     async fn create_cliente(&mut self, cliente: Cliente) -> Result<Cliente, DomainError> {
         sleep(Duration::from_secs(1)).await;
         let existing_cliente = self.get_cliente_by_cpf(cliente.cpf().to_owned()).await;

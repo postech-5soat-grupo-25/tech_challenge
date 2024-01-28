@@ -10,6 +10,7 @@ use super::super::postgres::table::Table;
 
 const CREATE_CLIENTE: &str = "INSERT INTO cliente (nome, email, cpf) VALUES ($1, $2, $3) RETURNING *";
 const QUERY_CLIENTE_BY_CPF: &str = "SELECT * FROM cliente WHERE cpf = $1";
+const QUERY_CLIENTE_BY_ID: &str = "SELECT * FROM cliente WHERE id = $1";
 const QUERY_CLIENTES: &str = "SELECT * FROM cliente";
 const DELETE_CLIENTE: &str = "DELETE FROM cliente WHERE cpf = $1";
 
@@ -46,6 +47,14 @@ impl ClienteRepository for PostgresClienteRepository {
 
     async fn get_cliente_by_cpf(&self, cpf: Cpf) -> Result<Cliente, DomainError> {
         let cliente = self.client.query_one(QUERY_CLIENTE_BY_CPF, &[&cpf.0]).await;
+        match cliente {
+            Ok(cliente) => Ok(Cliente::from_row(&cliente)),
+            Err(_) => Err(DomainError::NotFound),
+        }
+    }
+
+    async fn get_cliente_by_id(&self, id: i32) -> Result<Cliente, DomainError> {
+        let cliente = self.client.query_one(QUERY_CLIENTE_BY_ID, &[&id]).await;
         match cliente {
             Ok(cliente) => Ok(Cliente::from_row(&cliente)),
             Err(_) => Err(DomainError::NotFound),

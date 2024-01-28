@@ -8,6 +8,8 @@ pub trait ClienteRepository {
 
     async fn get_cliente_by_cpf(&self, cpf: Cpf) -> Result<Cliente, DomainError>;
 
+    async fn get_cliente_by_id(&self, id: i32) -> Result<Cliente, DomainError>;
+
     async fn create_cliente(&mut self, cliente: Cliente) -> Result<Cliente, DomainError>;
 
     async fn delete_cliente(&mut self, cpf: Cpf) -> Result<(), DomainError>;
