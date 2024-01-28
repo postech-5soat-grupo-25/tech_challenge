@@ -22,18 +22,5 @@ async fn post_novo_pedido(
 }
 
 pub fn routes() -> Vec<rocket::Route> {
-    openapi_get_routes![get_pedidos_novos]
-}
-
-#[catch(404)]
-fn pedido_not_found() -> Json<ErrorResponse> {
-    let error = ErrorResponse {
-        msg: "Pedido não encontrado!".to_string(),
-        status: 404,
-    };
-    Json(error)
-}
-
-pub fn catchers() -> Vec<rocket::Catcher> {
-    catchers![pedido_not_found]
+    openapi_get_routes![post_novo_pedido]
 }
