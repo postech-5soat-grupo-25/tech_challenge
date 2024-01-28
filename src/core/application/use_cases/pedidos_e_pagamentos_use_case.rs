@@ -20,9 +20,12 @@ use crate::core::{
 };
 
 pub struct UpdatePedidoInput {
-  nome: Option<String>,
-  email: Option<String>,
-  endereco: Option<String>,
+  lanche: Option<Produto>,
+  acompanhamento: Option<Produto>,
+  bebida: Option<Produto>,
+  pagamento: String,
+  status: Status,
+  data_atualizacao: String,
 }
 
 #[derive(Clone)]
