@@ -6,7 +6,7 @@ pub enum StatusPagamento {
 }
 
 pub trait PagamentoNotificationHandler {
-    fn handle_payment_notification(&self, id: usize, status: StatusPagamento);
+    fn handle_pagamento_notification(&self, id: usize, status: StatusPagamento);
 }
 
 pub trait PagamentoProcessor {
