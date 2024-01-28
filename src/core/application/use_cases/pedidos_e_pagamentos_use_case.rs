@@ -49,15 +49,10 @@ impl PedidosEPagamentosUseCase {
       }
     }
 
-    async fn verify_order_components(&self, produto_id: Option<usize>) -> Result<Option<Produto>, DomainError> {
-        match produto_id {
-            Some(id) => {
-                let produto_repository = self.produto_repository.lock().await;
-                Ok(Some(produto_repository.get_produto_by_id(id).await?))
-            },
-            None => Ok(None),
-        }
-    }
+    pub async fn get_order_by_id(&self, id: usize) -> Result<Pedido, DomainError> {
+      let pedido_repository = self.pedido_repository.lock().await;
+      pedido_repository.get_pedido_by_id(id).await
+  }
 
     pub async fn novo_pedido(
       &self, 
