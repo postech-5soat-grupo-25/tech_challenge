@@ -19,13 +19,6 @@ pub struct CreateUsuarioInput {
     status: String,
 }
 
-#[derive(Clone, Debug, Deserialize, JsonSchema)]
-pub struct UpdateUsuarioInput {
-    nome: Option<String>,
-    email: Option<String>,
-    tipo: Option<String>,
-    status: Option<String>,
-}
 
 #[derive(Clone)]
 pub struct UsuarioUseCase {
@@ -66,6 +59,35 @@ impl UsuarioUseCase {
         let usuario = usuario_repository
             .create_usuario(Usuario::new(
                 _id,
+                usuario.nome,
+                usuario.email,
+                valid_cpf,
+                usuario.senha,
+                valid_tipo,
+                valid_status,
+                _now.clone(),
+                _now,
+            ))
+            .await?;
+
+        Ok(usuario.clone())
+    }
+
+    pub async fn update_usuario(
+        &self,
+        id : usize,
+        usuario: CreateUsuarioInput,
+    ) -> Result<Usuario, DomainError> {
+        let mut usuario_repository = self.usuario_repository.lock().await;
+
+        let valid_cpf = Cpf::new(usuario.cpf.clone())?;
+        let valid_tipo: Tipo = usuario.tipo.parse().unwrap();
+        let valid_status: Status = usuario.status.parse().unwrap();
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
+
+        let usuario = usuario_repository
+            .update_usuario(Usuario::new(
+                id,
                 usuario.nome,
                 usuario.email,
                 valid_cpf,
