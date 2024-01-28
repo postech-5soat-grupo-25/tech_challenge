@@ -4,7 +4,7 @@ use rocket::State;
 use rocket_okapi::{openapi, openapi_get_routes};
 
 use crate::adapter::api::error_handling::ErrorResponse;
-use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
+use crate::adapter::api::request_guards::admin_guard::AdminUser;
 use crate::core::domain::entities::usuario::Usuario;
 use crate::core::domain::value_objects::cpf::Cpf;
 use crate::core::application::use_cases::usuario_use_case::UsuarioUseCase;
@@ -15,7 +15,7 @@ use crate::core::application::use_cases::usuario_use_case::CreateUsuarioInput;
 #[get("/")]
 async fn get_usuarios(
     usuario_use_case: &State<UsuarioUseCase>,
-    _logged_user_info: AuthenticatedUser,
+    _logged_user_info: AdminUser,
 ) -> Result<Json<Vec<Usuario>>, Status> {
     let usuarios = usuario_use_case.get_usuarios().await?;
     Ok(Json(usuarios))
@@ -26,7 +26,7 @@ async fn get_usuarios(
 async fn get_usuario(
     usuario_use_case: &State<UsuarioUseCase>,
     id: usize,
-    _logged_user_info: AuthenticatedUser,
+    _logged_user_info: AdminUser,
 ) -> Result<Json<Usuario>, Status> {
     let usuario = usuario_use_case.get_usuario_by_id(id).await?;
     Ok(Json(usuario))
@@ -37,7 +37,7 @@ async fn get_usuario(
 async fn create_usuario(
     usuario_use_case: &State<UsuarioUseCase>,
     usuario_input: Json<CreateUsuarioInput>,
-    _logged_user_info: AuthenticatedUser,
+    _logged_user_info: AdminUser,
 ) -> Result<Json<Usuario>, Status> {
     let usuario_input: CreateUsuarioInput = usuario_input.into_inner();
     let usuario = usuario_use_case.create_usuario(usuario_input).await?;
@@ -50,7 +50,7 @@ async fn update_usuario(
     usuario_use_case: &State<UsuarioUseCase>,
     usuario_input: Json<CreateUsuarioInput>,
     id: usize,
-    _logged_user_info: AuthenticatedUser,
+    _logged_user_info: AdminUser,
 ) -> Result<Json<Usuario>, Status> {
     let usuario_input: CreateUsuarioInput = usuario_input.into_inner();
     let usuario = usuario_use_case.update_usuario(id, usuario_input).await?;
@@ -62,7 +62,7 @@ async fn update_usuario(
 async fn delete_usuario(
     usuario_use_case: &State<UsuarioUseCase>,
     cpf: Cpf,
-    _logged_user_info: AuthenticatedUser,
+    _logged_user_info: AdminUser,
 ) -> Result<Json<String>, Status> {
     usuario_use_case.delete_usuario(cpf).await?;
     Ok(Json("success".to_string()))

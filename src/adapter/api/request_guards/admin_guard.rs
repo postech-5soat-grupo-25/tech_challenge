@@ -9,22 +9,22 @@ use rocket_okapi::{
   okapi::openapi3::{SecurityScheme, SecuritySchemeData, Object, SecurityRequirement}
 };
 
-use crate::adapter::api::helpers::auth_helper::{validate_token, AuthError};
+use crate::{adapter::api::helpers::auth_helper::{validate_token, AuthError}, core::domain::entities::usuario::Tipo};
 
-pub struct AuthenticatedUser {
+pub struct AdminUser {
   user_id: String,
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for AuthenticatedUser {
+impl<'r> FromRequest<'r> for AdminUser {
   type Error = AuthError;
 
   async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
       match req.headers().get_one("Authorization") {
           Some(token) => {
               let token = token.replace("Bearer ", "");
-              match validate_token(token.to_string(), None) {
-                  Ok(user_id) => Outcome::Success(AuthenticatedUser {
+              match validate_token(token.to_string(), Some(Tipo::Admin)) {
+                  Ok(user_id) => Outcome::Success(AdminUser {
                       user_id,
                   }),
                   Err(_) => return Outcome::Failure((Status::Unauthorized, AuthError::InvalidToken))
@@ -35,7 +35,7 @@ impl<'r> FromRequest<'r> for AuthenticatedUser {
   }
 }
 
-impl<'a> OpenApiFromRequest<'a> for AuthenticatedUser {
+impl<'a> OpenApiFromRequest<'a> for AdminUser {
   fn from_request_input(
       _gen: &mut OpenApiGenerator,
       _name: String,
