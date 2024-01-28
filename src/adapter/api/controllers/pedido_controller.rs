@@ -58,3 +58,37 @@ fn pedido_not_found() -> Json<ErrorResponse> {
 pub fn catchers() -> Vec<rocket::Catcher> {
     catchers![pedido_not_found]
 }
+
+
+// #[openapi(tag = "Pedidos")]
+// #[get("/pedido/<id>")]
+// async fn get_pedido(pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>, id: usize, _logged_user_info: AuthenticatedUser) -> Result<Json<Pedido>, Status> {
+//     let pedido = pedido_e_pagamentos_use_case.get_order_by_id(id).await?;
+//     Ok(Json(pedido))
+// }
+
+// #[openapi(tag = "Pedidos")]
+// #[get("/pedido/acompanhamento/")]
+// async fn get_acompanhamentos(pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>, id: usize, _logged_user_info: AuthenticatedUser) -> Result<Json<Vec<Produtos>>, Status> {
+//     let acompanhamentos = pedido_e_pagamentos_use_case.lista_acompanhamentos().await?;
+//     Ok(Json(acompanhamentos))
+// }
+
+// #[openapi(tag = "Pedidos")]
+// #[get("/pedido/bebida/")]
+// async fn get_bebidas(pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>, id: usize, _logged_user_info: AuthenticatedUser) -> Result<Json<Vec<Produtos>>, Status> {
+//     let bebidas = pedido_e_pagamentos_use_case.lista_bebidas().await?;
+//     Ok(Json(bebidas))
+// }
+
+
+// #[openapi(tag = "Pedidos")]
+// #[post("/pedido", data="<pedido_input>")]
+// async fn post_novo_pedido(
+//     pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
+//     pedido_input: Json<CreatePedidoInput>,
+//     _logged_user_info: AuthenticatedUser,
+// ) -> Result<Json<Pedido>, Status> {
+//     let novo_pedido = pedido_e_pagamentos_use_case.novo_pedido(pedido_input).await?;
+//     Ok(Json(novo_pedido))
+// }
