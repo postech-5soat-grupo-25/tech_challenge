@@ -13,7 +13,7 @@ use crate::core::{
       cliente_repository::ClienteRepository, 
       pedido_repository::PedidoRepository, 
       produto_repository::ProdutoRepository, 
-      usuario_repository::UsuarioRepository,
+      user_repository::UserRepository,
     },
   }
 };
@@ -27,7 +27,7 @@ pub struct CreatePedidoInput {
 pub struct PedidosEPagamentosUseCase {
     pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
     cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
-    usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>>,
+    user_repository: Arc<Mutex<dyn UserRepository + Sync + Send>>,
     produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
     pagammento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
 }
@@ -36,14 +36,14 @@ impl PedidosEPagamentosUseCase {
     pub fn new(
       pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
       cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
-      usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>>,
+      user_repository: Arc<Mutex<dyn UserRepository + Sync + Send>>,
       produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
       pagammento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
     ) -> Self {
       PedidosEPagamentosUseCase {
         pedido_repository,
         cliente_repository,
-        usuario_repository,
+        user_repository,
         produto_repository,
         pagammento_adapter,
       }

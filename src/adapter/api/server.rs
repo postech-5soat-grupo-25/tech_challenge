@@ -2,7 +2,7 @@ use std::net::{IpAddr, Ipv4Addr};
 // use std::sync::Arc;
 
 // use crate::adapter::driven::infra::{repositories, postgres};
-// use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
+// use crate::core::domain::repositories::user_repository::UserRepository;
 // use repositories::{in_memory_user_repository::InMemoryUserRepository, postgres_user_repository::PostgresUserRepository};
 use crate::adapter::api::config::{Config, Env};
 // use crate::core::application::use_cases::user_use_case::UserUseCase;
