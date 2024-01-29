@@ -21,7 +21,7 @@ use crate::core::application::use_cases::usuario_use_case::UsuarioUseCase;
 use crate::core::application::use_cases::cliente_use_case::ClienteUseCase;
 use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
 
-use super::controllers::{auth_controller, usuario_controller, cliente_controller, pedido_controller};
+use super::controllers::{auth_controller, usuario_controller, cliente_controller, pedido_controller, produto_controller};
 use super::error_handling::generic_catchers;
 
 #[get("/")]
@@ -109,6 +109,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     .mount("/usuarios", usuario_controller::routes())
     .mount("/clientes", cliente_controller::routes())
     .mount("/pedido", pedido_controller::routes())
+    .mount("/produto", produto_controller::routes())
     .register("/usuarios", usuario_controller::catchers())
     .register("/clientes", cliente_controller::catchers())
     .manage(usuario_use_case)
