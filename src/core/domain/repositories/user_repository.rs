@@ -10,7 +10,7 @@ pub trait UserRepository {
 
   async fn get_user_by_cpf(&self, cpf: Cpf) -> Result<Usuario, DomainError>;
 
-  async fn create_user(&mut self, usuario: Usuario) -> Result<Usuario, DomainError>;
+  async fn create_user(&mut self, user: Usuario) -> Result<Usuario, DomainError>;
 
   async fn update_user(&mut self, new_user_data: Usuario) -> Result<Usuario, DomainError>;
 
