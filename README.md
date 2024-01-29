@@ -58,7 +58,7 @@ docker-compose up
 ou
 
 ```bash
-make build
+just prod-docker
 ```
 
 - Desenvolvimento
@@ -72,6 +72,10 @@ ou
 ```bash
 just dev-docker
 ```
+
+Ainda nao foi possível configurar Docker do Postgres + App. Por enquanto o docker executa apenas o postgres.
+Em seguida é necessário executar o projeto localmente.
+
 ## Roadmap
 
 ### Fase 1
