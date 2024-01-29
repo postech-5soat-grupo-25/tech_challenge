@@ -1,4 +1,4 @@
-# Modelo de Projeto Rust utilizando Boas práticas e DDD
+# Tech Challenge | PosTech 5SOAT • Grupo 25
 
 ## Requisitos
 
