@@ -15,7 +15,7 @@ use tokio_postgres::Client;
 use super::super::postgres::table::Table;
 
 pub struct PostgresProdutoRepository {
-client: Arc<Client>,
+client: Client,
 tables: Vec<Table>,
 }
 
@@ -26,13 +26,11 @@ const UPDATE_PRODUCT: &str = "UPDATE produtos SET nome = $1, foto = $2, descrica
 const DELETE_PRODUCT: &str = "DELETE FROM produtos WHERE id = $1";
 
 impl PostgresProdutoRepository {
-pub async fn new(client: Arc<Client>, tables: Vec<Table>) -> Self {
-    let mut repo = PostgresProdutoRepository { client, tables };
-
-    repo.check_for_tables().await;
-
-    repo
-}
+    pub async fn new(client: Client, tables: Vec<Table>) -> Self {
+        let repo = PostgresProdutoRepository { client, tables };
+        repo.check_for_tables().await;
+        repo
+    }
 
     async fn check_for_tables(&self) {
     for table in self.tables.iter() {

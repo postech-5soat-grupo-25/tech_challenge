@@ -3,7 +3,7 @@ use crate::core::domain::entities::cliente::Cliente;
 use crate::core::domain::value_objects::cpf::Cpf;
 
 #[async_trait]
-pub trait ClienteRepository {
+pub trait ClienteRepository: Send + Sync{
     async fn get_clientes(&self) -> Result<Vec<Cliente>, DomainError>;
 
     async fn get_cliente_by_cpf(&self, cpf: Cpf) -> Result<Cliente, DomainError>;

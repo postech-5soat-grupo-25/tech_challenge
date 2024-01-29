@@ -1,5 +1,8 @@
 use postgres_from_row::FromRow;
 use tokio_postgres::Client;
+use std::sync::Arc;
+
+use rocket::futures::lock::Mutex;
 
 use crate::core::domain::entities::pedido::{Pedido, PedidoFromRow, Status};
 use crate::core::domain::entities::cliente::Cliente;
@@ -20,12 +23,12 @@ const DELETE_PEDIDO: &str = "DELETE FROM pedidos WHERE id = $1";
 pub struct PostgresPedidoRepository {
     client: Client,
     tables: Vec<Table>,
-    cliente_repository: Box<dyn ClienteRepository>,
-    produto_repository: Box<dyn ProdutoRepository>,
+    cliente_repository: Arc<Mutex<dyn ClienteRepository + Send + Sync>>,
+    produto_repository: Arc<Mutex<dyn ProdutoRepository + Send + Sync>>,
 }
 
 impl PostgresPedidoRepository {
-    pub async fn new(client: Client, tables: Vec<Table>, cliente_repository: Box<dyn ClienteRepository>, produto_repository: Box<dyn ProdutoRepository>) -> Self {
+    pub async fn new(client: Client, tables: Vec<Table>, cliente_repository: Arc<Mutex<dyn ClienteRepository + Send + Sync>>, produto_repository: Arc<Mutex<dyn ProdutoRepository + Send + Sync>>) -> Self {
         let repo = PostgresPedidoRepository { client, tables, cliente_repository, produto_repository};
         repo.check_for_tables().await;
         repo
@@ -42,25 +45,32 @@ impl PostgresPedidoRepository {
 #[async_trait]
 impl PedidoRepository for PostgresPedidoRepository {
     async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
+        let cliente_repository_lock = self.cliente_repository.lock().await;
+        let produto_repository_lock = self.produto_repository.lock().await;
+
         let pedidos = self.client.query(QUERY_PEDIDOS_NOVOS, &[]).await.unwrap();
         let mut pedidos_vec = Vec::new();
         for pedido in pedidos {
             let pedido_aux:PedidoFromRow = PedidoFromRow::from_row(&pedido);
-            let cliente:Cliente = self.cliente_repository.get_cliente_by_id(&pedido_aux.id());
-            let lanche:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.cliente());
-            let bebida:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.bebida());
-            let acompanhamento:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.acompanhamento());
-
+            let cliente_result: Result<Cliente, DomainError> = cliente_repository_lock.get_cliente_by_id(*pedido_aux.id() as i32).await;
+            let cliente: Cliente = cliente_result.unwrap();
+            let lanche_result: Result<Produto, DomainError> = produto_repository_lock.get_produto_by_id(pedido_aux.cliente() as usize).await;
+            let lanche: Produto = lanche_result.unwrap();
+            let bebida_result: Result<Produto, DomainError> = produto_repository_lock.get_produto_by_id(pedido_aux.bebida() as usize).await;
+            let bebida: Produto = bebida_result.unwrap();
+            let acompanhamento_result: Result<Produto, DomainError> = produto_repository_lock.get_produto_by_id(pedido_aux.acompanhamento() as usize).await;
+            let acompanhamento: Produto = acompanhamento_result.unwrap();
+            
             let pedido:Pedido = Pedido::new(
-                pedido_aux.id(), 
+                *pedido_aux.id(), 
                 Some(cliente), 
                 Some(lanche), 
                 Some(acompanhamento), 
                 Some(bebida), 
-                pedido_aux.pagamento(), 
-                pedido_aux.status(), 
-                pedido_aux.data_criacao(), 
-                pedido_aux.data_atualizacao()
+                pedido_aux.pagamento().clone(), 
+                pedido_aux.status().clone(), 
+                pedido_aux.data_criacao().clone(), 
+                pedido_aux.data_atualizacao().clone()
             );
 
             pedidos_vec.push(pedido.clone());
@@ -69,38 +79,48 @@ impl PedidoRepository for PostgresPedidoRepository {
     }
 
     async fn atualizar_status_pedido(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
+        let cliente_repository_lock = self.cliente_repository.lock().await;
+        let produto_repository_lock = self.produto_repository.lock().await;
         let status_enum = Status::from_string(status);
         if (status_enum == Status::Invalido){
             return Err::<Pedido, _>(DomainError::Invalid("status".to_string()));
         }
         let index = status_enum.to_index();
+        let index_as_i32: i32 = index as i32;
+
+        let id_as_i32: i32 = id as i32;
+
         let updated_pedido = self.client.query(SET_STATUS_PEDIDO, &[
-            &index,
-            &id,
+            &index_as_i32,
+            &id_as_i32,
         ]).await.unwrap();
 
         let updated_pedido = updated_pedido.get(0);
         match updated_pedido {
             Some(pedido) => {
-            let pedido_aux:PedidoFromRow = PedidoFromRow::from_row(&pedido);
-            let cliente:Cliente = self.cliente_repository.get_cliente_by_id(&pedido_aux.id());
-            let lanche:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.cliente());
-            let bebida:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.bebida());
-            let acompanhamento:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.acompanhamento());
+                let pedido_aux:PedidoFromRow = PedidoFromRow::from_row(&pedido);
+                let cliente_result: Result<Cliente, DomainError> = cliente_repository_lock.get_cliente_by_id(*pedido_aux.id() as i32).await;
+                let cliente: Cliente = cliente_result.unwrap();
+                let lanche_result: Result<Produto, DomainError> = produto_repository_lock.get_produto_by_id(pedido_aux.cliente() as usize).await;
+                let lanche: Produto = lanche_result.unwrap();
+                let bebida_result: Result<Produto, DomainError> = produto_repository_lock.get_produto_by_id(pedido_aux.bebida() as usize).await;
+                let bebida: Produto = bebida_result.unwrap();
+                let acompanhamento_result: Result<Produto, DomainError> = produto_repository_lock.get_produto_by_id(pedido_aux.acompanhamento() as usize).await;
+                let acompanhamento: Produto = acompanhamento_result.unwrap();
+                
+                let pedido:Pedido = Pedido::new(
+                    *pedido_aux.id(), 
+                    Some(cliente), 
+                    Some(lanche), 
+                    Some(acompanhamento), 
+                    Some(bebida), 
+                    pedido_aux.pagamento().clone(), 
+                    pedido_aux.status().clone(), 
+                    pedido_aux.data_criacao().clone(), 
+                    pedido_aux.data_atualizacao().clone()
+                );
 
-            let pedido:Pedido = Pedido::new(
-                pedido_aux.id(), 
-                Some(cliente), 
-                Some(lanche), 
-                Some(acompanhamento), 
-                Some(bebida), 
-                pedido_aux.pagamento(), 
-                pedido_aux.status(), 
-                pedido_aux.data_criacao(), 
-                pedido_aux.data_atualizacao()
-            );
-
-                Ok(Pedido::from_row(pedido))
+                Ok(pedido)
             },
             None => {
                 Err(DomainError::NotFound)

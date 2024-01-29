@@ -40,7 +40,7 @@ pub fn get_tables() -> Vec<Table> {
       columns: get_cliente_table_columns(),
     },
     Table {
-      name: TablesNames::Pedido,
+      name: TablesNames::Pedidos,
       columns: get_pedidos_table_columns(),
     },
     Table {

@@ -7,7 +7,9 @@ use rocket::response::Redirect;
 use rocket_okapi::swagger_ui::*;
 use rocket_okapi::settings::UrlObject;
 
+use crate::adapter::driven::infra::repositories::postgres_produto_repository::PostgresProdutoRepository;
 use crate::adapter::driven::infra::{repositories, postgres};
+use crate::core::domain::repositories::produto_repository::ProdutoRepository;
 use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
 use crate::core::domain::repositories::cliente_repository::ClienteRepository;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
@@ -57,7 +59,18 @@ pub async fn main() -> Result<(), rocket::Error> {
         Arc::new(Mutex::new(PostgresClienteRepository::new(postgres_connection_manager.client, tables).await))
     };
 
+    // Cloning cliente_repository to share ownership
+    let cloned_cliente_repository = Arc::clone(&cliente_repository);
+
     let cliente_use_case = ClienteUseCase::new(cliente_repository);
+
+    let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone()).await.unwrap();
+    let tables = postgres::get_tables();
+    let produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>> = 
+        Arc::new(Mutex::new(PostgresProdutoRepository::new(postgres_connection_manager.client, tables).await));
+
+    // Cloning produto_repository to share ownership
+    let cloned_produto_repository = Arc::clone(&produto_repository);
 
     let pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>> =
     if config.env == Env::Test {
@@ -68,7 +81,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone()).await.unwrap();
         let tables = postgres::get_tables();
 
-        Arc::new(Mutex::new(PostgresPedidoRepository::new(postgres_connection_manager.client, tables, cliente_repository, produto_repository).await))
+        Arc::new(Mutex::new(PostgresPedidoRepository::new(postgres_connection_manager.client, tables, cloned_cliente_repository, cloned_produto_repository).await))
     };
 
     let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);

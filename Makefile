@@ -2,9 +2,6 @@
 include .env
 export
 
-.PHONY: all
-all: up
-
 .PHONY: build
 build:
 	docker compose up db -d

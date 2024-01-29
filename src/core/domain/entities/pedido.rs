@@ -81,7 +81,7 @@ impl PedidoFromRow {
         data_criacao: String,
         data_atualizacao: String,
     ) -> Self {
-        Pedido {
+        PedidoFromRow {
             id,
             cliente,
             lanche,
