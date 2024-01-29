@@ -1,34 +1,24 @@
-use std::thread;
-use std::time::Duration;
-
-use crate::core::application::ports::pagamento_port;
 use crate::core::domain::base::domain_error::DomainError;
+use crate::core::application::ports::pagamento_port::{ StatusPagamento, PagamentoPort, ResultadoHandler };
 
-pub struct MockPagamentoProcessor<T: pagamento_port::PagamentoNotificationHandler> {
-    notification_handler: T,
-}
+pub struct MockPagamentoSuccesso;
 
-impl<T: pagamento_port::PagamentoNotificationHandler> MockPagamentoProcessor<T> {
-    pub fn new(notification_handler: T) -> Self {
-        MockPagamentoProcessor {
-            notification_handler,
-        }
+#[async_trait]
+impl PagamentoPort for MockPagamentoSuccesso {
+    async fn processa_pagamento(
+        &self,
+        pedido_id: usize, 
+        valor_pagamento: f32,
+        resultado_handler: ResultadoHandler
+    ) -> Result<usize, DomainError> {
+        resultado_handler(StatusPagamento::Successo, pedido_id);
+        Ok(pedido_id)
     }
-}
 
-impl<T: pagamento_port::PagamentoNotificationHandler + Send + 'static + Clone>
-    pagamento_port::PagamentoProcessor for MockPagamentoProcessor<T>
-{
-    fn process_pagamento(&self, id: usize) -> Result<(), DomainError> {
-        let notification_handler = self.notification_handler.clone();
-        // Simulando chamada assíncrona do webhook com uma nova thread
-        thread::spawn(move || {
-            // Simulando delay de rede
-            thread::sleep(Duration::from_secs(2));
-            // Simulando notificação do webhook
-            notification_handler
-                .handle_pagamento_notification(id, pagamento_port::StatusPagamento::Successo);
-        });
-        Ok(())
+    fn pagamento_status(
+        &self,
+        pagamento_id: usize
+    ) -> Result<StatusPagamento, DomainError> {
+        Ok(StatusPagamento::Successo)
     }
 }
