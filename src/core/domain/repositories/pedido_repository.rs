@@ -23,9 +23,7 @@ pub trait PedidoRepository {
 
   async fn cadastrar_pagamento(&mut self, pedido_id: usize, pagamento: String) -> Result<Pedido, DomainError>;
 
-  async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche_id: usize) -> Result<Pedido, DomainError>;
+  async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche: Produto) -> Result<Pedido, DomainError>;
 
   async fn atualiza_status(&mut self, pedido_id: usize, status: Status) -> Result<Pedido, DomainError>;
-
-  async fn update_pedido(&mut self, pedido_id: usize, pedido: Pedido) -> Result<Pedido, DomainError>;
 }
