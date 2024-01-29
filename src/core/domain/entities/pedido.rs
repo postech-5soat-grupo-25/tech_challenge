@@ -56,6 +56,83 @@ impl Status {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
+pub struct PedidoFromRow {
+    id: usize,
+    cliente: i32,
+    lanche: i32,
+    acompanhamento: i32,
+    bebida: i32,
+    pagamento: String,
+    status: Status,
+    data_criacao: String,
+    data_atualizacao: String,
+}
+
+
+impl PedidoFromRow {
+    pub fn new(
+        id: usize,
+        cliente: i32,
+        lanche: i32,
+        acompanhamento: i32,
+        bebida: i32,
+        pagamento: String,
+        status: Status,
+        data_criacao: String,
+        data_atualizacao: String,
+    ) -> Self {
+        PedidoFromRow {
+            id,
+            cliente,
+            lanche,
+            acompanhamento,
+            bebida,
+            pagamento,
+            status,
+            data_criacao,
+            data_atualizacao,
+        }
+    }
+
+    // Getters
+    pub fn id(&self) -> &usize {
+        &self.id
+    }
+
+    pub fn cliente(&self) -> i32 {
+        self.cliente
+    }
+
+    pub fn lanche(&self) -> i32 {
+        self.lanche
+    }
+
+    pub fn acompanhamento(&self) -> i32 {
+        self.acompanhamento
+    }
+
+    pub fn bebida(&self) -> i32 {
+        self.bebida
+    }
+
+    pub fn pagamento(&self) -> &String {
+        &self.pagamento
+    }
+
+    pub fn status(&self) -> &Status {
+        &self.status
+    }
+
+    pub fn data_criacao(&self) -> &String {
+        &self.data_criacao
+    }
+
+    pub fn data_atualizacao(&self) -> &String {
+        &self.data_atualizacao
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Pedido {
     id: usize,
     cliente: Option<Cliente>,

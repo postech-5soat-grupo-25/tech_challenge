@@ -5,6 +5,7 @@ pub enum TablesNames {
   Usuario,
   Cliente,
   Pedidos,
+  Produtos,
 }
 
 impl TablesNames {
@@ -13,6 +14,7 @@ impl TablesNames {
       TablesNames::Usuario => "usuario".to_string(),
       TablesNames::Cliente => "cliente".to_string(),
       TablesNames::Pedidos => "pedidos".to_string(),
+      TablesNames::Produtos => "produtos".to_string(),
     }
   }
 }
@@ -28,6 +30,7 @@ pub enum ColumnTypes {
   JSON,
   Char(usize),
   VARCHAR(usize),
+  ENUM(String, Vec<String>),
 }
 
 impl ColumnTypes {
@@ -42,6 +45,10 @@ impl ColumnTypes {
       ColumnTypes::JSON => "JSON".to_string(),
       ColumnTypes::Char(size) => format!("CHAR({})", size),
       ColumnTypes::VARCHAR(size) => format!("VARCHAR({})", size),
+      ColumnTypes::ENUM(name, values) => {
+        let values_str = values.iter().map(|v| format!("'{}'", v)).collect::<Vec<_>>().join(", ");
+        format!("{} ENUM({})", name, values_str)
+    },
     }
   }
 }
