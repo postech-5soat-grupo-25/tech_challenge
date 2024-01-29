@@ -26,6 +26,17 @@ pub struct CreatePedidoInput {
   cliente_id: Option<usize>,
 }
 
+pub struct AtualizaPedidoInput {
+    lanche: i32,
+    acompanhamento: i32,
+    bebida: i32,
+    pagamento: String,
+    status: Status,
+    data_criacao: String,
+    data_atualizacao: String,
+}
+
+
 #[derive(Clone)]
 pub struct PedidosEPagamentosUseCase {
     pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
@@ -49,10 +60,15 @@ impl PedidosEPagamentosUseCase {
       }
     }
 
+    pub async fn lista_pedidos(&self) -> Result<Vec<Pedidos>, DomainError> {
+      let pedido_repository = self.pedido_repository.lock().await;
+      pedido_repository.lista_pedidos().await
+    }
+
     pub async fn seleciona_pedido_por_id(&self, id: usize) -> Result<Pedido, DomainError> {
       let pedido_repository = self.pedido_repository.lock().await;
       pedido_repository.get_pedido_by_id(id).await
-  }
+    }
 
     pub async fn novo_pedido(
       &self,
@@ -81,6 +97,61 @@ impl PedidosEPagamentosUseCase {
 
 
       let pedido = self.pedido_repository.lock().await.create_pedido(pedido.clone()).await?;
+
+      Ok(pedido)
+    }
+
+    pub async fn atualiza_pedido(
+      &self,
+      id_pedido: usize
+      pedido_input: AtualizaPedidoInput,
+    ) -> Result<Pedido, DomainError> {
+
+      let cliente = match pedido_input.cliente_id {
+          Some(cliente_id) => {
+              let mut cliente_repository = self.cliente_repository.lock().await;
+              Some(cliente_repository.get_cliente_by_id(cliente_id).await?)
+          },
+          None => None,
+      };
+
+      let lanche = match pedido_input.lanche {
+        Some(lanche_id) => {
+            let mut produto_repository = self.produto_repository.lock().await;
+            Some(cliente_repository.get_produto_by_id(lanche_id).await?)
+        },
+        None => None,
+      };
+
+      let bebida = match pedido_input.lanche {
+        Some(bebida_id) => {
+            let mut produto_repository = self.produto_repository.lock().await;
+            Some(cliente_repository.get_produto_by_id(bebida_id).await?)
+        },
+        None => None,
+      };
+
+      let acompanhamento = match pedido_input.lanche {
+        Some(acompanhamento_id) => {
+            let mut produto_repository = self.produto_repository.lock().await;
+            Some(cliente_repository.get_produto_by_id(acompanhamento_id).await?)
+        },
+        None => None,
+      };
+
+      let pedido = Pedido::new(
+        id_pedido,
+        cliente,
+        lanche,
+        bebida,
+        acompanhamento,
+        pedido_input.pagamento,
+        pedido_input.status,
+        pedido_input.data_criacao,
+        Utc::now().naive_utc().date().to_string(),
+      );
+
+      let pedido = self.pedido_repository.lock().await.atualiza_pedido(pedido.clone()).await?;
 
       Ok(pedido)
     }

@@ -10,6 +10,16 @@ use crate::core::domain::entities::pedido::Pedido;
 use crate::core::application::use_cases::pedidos_e_pagamentos_use_case::{PedidosEPagamentosUseCase, CreatePedidoInput};
 
 #[openapi(tag = "Pedidos")]
+#[get("/pedido")]
+async fn get_pedidos(
+    pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
+    _logged_user_info: AuthenticatedUser,
+) -> Result<Json<Vec<Pedido>>, Status> {
+    let pedidos = preparacao_e_entrega_use_case.get_pedidos_novos().await?;
+    Ok(Json(pedidos_novos))
+}
+
+#[openapi(tag = "Pedidos")]
 #[post("/pedido", data="<pedido_input>")]
 async fn post_novo_pedido(
     pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
@@ -18,6 +28,17 @@ async fn post_novo_pedido(
 ) -> Result<Json<Pedido>, Status> {
     let novo_pedido = pedido_e_pagamentos_use_case.novo_pedido(pedido_input).await?;
     Ok(Json(novo_pedido))
+}
+
+#[openapi(tag = "Pedidos")]
+#[get("/pedido/<id>", data="<pedido_input>")]
+async fn get_pedido_by_id(
+    pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
+    pedido_input: Json<CreatePedidoInput>,
+    _logged_user_info: AuthenticatedUser,
+) -> Result<Json<Pedido>, Status> {
+    let pedido_atualizado = pedido_e_pagamentos_use_case.seleciona_pedido_por_id(pedido_input).await?;
+    Ok(Json(pedido_atualizado))
 }
 
 #[openapi(tag = "Pedidos")]
