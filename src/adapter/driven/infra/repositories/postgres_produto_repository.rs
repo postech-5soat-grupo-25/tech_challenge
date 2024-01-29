@@ -19,11 +19,12 @@ client: Client,
 tables: Vec<Table>,
 }
 
-const CREATE_PRODUCT: &str = "INSERT INTO produtos (nome, foto, descricao, categoria, preco, ingredientes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
-const QUERY_PRODUCT_BY_ID: &str = "SELECT * FROM produtos WHERE id = $1";
-const QUERY_PRODUCTS: &str = "SELECT * FROM produtos";
-const UPDATE_PRODUCT: &str = "UPDATE produtos SET nome = $1, foto = $2, descricao = $3, categoria = $4, preco = $5, ingredientes = $6, created_at = $7, updated_at = $8 WHERE id = $10 RETURNING *";
-const DELETE_PRODUCT: &str = "DELETE FROM produtos WHERE id = $1";
+const CREATE_PRODUCT: &str = "INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
+const QUERY_PRODUCT_BY_ID: &str = "SELECT * FROM produto WHERE id = $1";
+const QUERY_PRODUCTS: &str = "SELECT * FROM produto";
+const QUERY_PRODUCT_BY_CATEGORIA: &str = "SELECT * FROM produto WHERE categoria = $1";
+const UPDATE_PRODUCT: &str = "UPDATE produto SET nome = $1, foto = $2, descricao = $3, categoria = $4, preco = $5, ingredientes = $6, created_at = $7, updated_at = $8 WHERE id = $10 RETURNING *";
+const DELETE_PRODUCT: &str = "DELETE FROM produto WHERE id = $1";
 
 impl PostgresProdutoRepository {
     pub async fn new(client: Client, tables: Vec<Table>) -> Self {
@@ -58,6 +59,15 @@ async fn get_produto_by_id(&self, id: usize) -> Result<Produto, DomainError> {
         Ok(produto) => Ok(Produto::from_row(&produto)),
         Err(_) => Err(DomainError::NotFound),
     }
+}
+
+async fn get_produtos_by_categoria(&self, categoria: Categoria) -> Result<Vec<Produto>, DomainError> {
+    let lista_produtos = self.client.query(QUERY_PRODUCT_BY_CATEGORIA, &[&categoria]).await.unwrap();
+    let mut produtos_vec = Vec::new();
+    for produto in lista_produtos {
+        produtos_vec.push(Produto::from_row(&produto));
+    }
+    Ok(produtos_vec)
 }
 
 async fn create_produto(&mut self, produto: Produto) -> Result<Produto, DomainError> {
