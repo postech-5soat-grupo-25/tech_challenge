@@ -49,7 +49,7 @@ impl PedidosEPagamentosUseCase {
       }
     }
 
-    pub async fn get_order_by_id(&self, id: usize) -> Result<Pedido, DomainError> {
+    pub async fn seleciona_pedido_por_id(&self, id: usize) -> Result<Pedido, DomainError> {
       let pedido_repository = self.pedido_repository.lock().await;
       pedido_repository.get_pedido_by_id(id).await
   }
@@ -90,13 +90,9 @@ impl PedidosEPagamentosUseCase {
       produtos_repository.get_produtos_by_categoria(Categoria::Lanche).await
     }
 
-    pub async fn adicionar_lanche_com_personalizacao(&self, pedido_id: usize, lanche: Produto) -> Result<Pedido, DomainError> {
+    pub async fn adicionar_lanche_com_personalizacao(&self, pedido_id: usize, lanche_id: usize) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-
-      let mut produtos_repository = self.produto_repository.lock().await;
-      let produto = produtos_repository.create_produto(lanche).await?;
-
-      pedido_repository.cadastrar_lanche(pedido_id, produto).await
+      pedido_repository.cadastrar_lanche(pedido_id, lanche_id).await
 
     }
 
@@ -106,9 +102,9 @@ impl PedidosEPagamentosUseCase {
 
     }
 
-    pub async fn adicionar_acompanhamento(&self, pedido_id: usize, acompanhamento: Produto) -> Result<Pedido, DomainError> {
+    pub async fn adicionar_acompanhamento(&self, pedido_id: usize, acompanhamento_id: usize) -> Result<Pedido, DomainError> {
         let mut pedido_repository = self.pedido_repository.lock().await;
-        pedido_repository.cadastrar_acompanhamento(pedido_id, acompanhamento).await
+        pedido_repository.cadastrar_acompanhamento(pedido_id, acompanhamento_id).await
 
     }
 
@@ -117,9 +113,9 @@ impl PedidosEPagamentosUseCase {
       produtos_repository.get_produtos_by_categoria(Categoria::Bebida).await
     }
 
-    pub async fn adicionar_bebida(&self, pedido_id: usize, bebida: Produto) -> Result<Pedido, DomainError> {
+    pub async fn adicionar_bebida(&self, pedido_id: usize, bebida_id: usize) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-      pedido_repository.cadastrar_bebida(pedido_id, bebida).await
+      pedido_repository.cadastrar_bebida(pedido_id, bebida_id).await
     }
 
     pub async fn realizar_pagamento_do_pedido(&self, pedido_id: usize, pagamento: String) -> Result<Pedido, DomainError> {
