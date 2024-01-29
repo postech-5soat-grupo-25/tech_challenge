@@ -29,8 +29,22 @@ cd rust_ddd_template
 
 - Execute o projeto
 
+Se for a primeira vez que você executa a aplicação, execute o seguinte comando para rodar os contêiners e executar as migrações (criar as tabelas e inserir os dados básicos):
+
 ```bash
-just dev
+make build
+```
+
+Se você já tiver tudo configurado, poderá executar os contêiners com o seguinte:
+
+```bash
+make run
+```
+
+Se você quiser parar todos os contêineres relacionados, use o seguinte:
+
+```bash
+make down
 ```
 
 ## Usando docker
@@ -44,7 +58,7 @@ docker-compose up
 ou
 
 ```bash
-just prod-docker
+make build
 ```
 
 - Desenvolvimento
@@ -58,10 +72,6 @@ ou
 ```bash
 just dev-docker
 ```
-
-Ainda nao foi possível configurar Docker do Postgres + App. Por enquanto o docker executa apenas o postgres.
-Em seguida é necessário executar o projeto localmente.
-
 ## Roadmap
 
 ### Fase 1

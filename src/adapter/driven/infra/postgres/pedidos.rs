@@ -1,14 +1,8 @@
 use postgres_from_row::FromRow;
 use std::collections::HashMap;
 
-use crate::core::domain::entities::pedido::Pedido;
-use crate::core::domain::entities::cliente::Cliente;
-use crate::core::domain::entities::produto::Produto;
 use crate::core::domain::entities::pedido::Status;
-
-use crate::core::domain::entities::produto::Categoria;
-use crate::core::domain::value_objects::ingredientes::Ingredientes;
-use crate::core::domain::value_objects::cpf::Cpf;
+use crate::core::domain::entities::pedido::PedidoFromRow;
 
 use super::table::{ColumnDefault, ColumnNullable, ColumnTypes};
 
@@ -92,7 +86,7 @@ pub fn get_pedidos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullab
     columns
 }
 
-impl FromRow for Pedido {
+impl FromRow for PedidoFromRow {
     fn from_row(row: &tokio_postgres::Row) -> Self {
         let id: i32 = row.get("id");
         let cliente_id: i32 = row.get("cliente");
@@ -100,40 +94,13 @@ impl FromRow for Pedido {
         let acompanhamento_id: i32 = row.get("acompanhamento");
         let bebida_id: i32 = row.get("bebida");
         let status: i32 = row.get("status");
-
-        let p = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-            vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let lanche = p.clone();
-        let acompanhamento = p.clone();
-        let bebida = p.clone();
-
         
-        Pedido::new(
+        PedidoFromRow::new(
             id as usize,
-            Some(cliente),
-            Some(lanche),
-            Some(acompanhamento),
-            Some(bebida),
+            cliente_id,
+            lanche_id,
+            acompanhamento_id,
+            bebida_id,
             row.get("pagamento"),
             Status::from_index(status as usize),
             row.get("data_criacao"),
@@ -149,43 +116,16 @@ impl FromRow for Pedido {
         let bebida_id: i32 = row.try_get("bebida")?;
         let status: i32 = row.try_get("status")?;
 
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "fulano.silva@exemplo.com".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            "2024-01-17".to_string(),
-            "2024-01-17".to_string(),
-        );
-
-        let p = Produto::new(
-            1,
-            "Cheeseburger".to_string(),
-            "cheeseburger.png".to_string(),
-            "O clássico pão, carne e queijo!".to_string(),
-            Categoria::Lanche,
-            9.99,
-            Ingredientes::new(
-            vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
-            "2024-01-16".to_string(),
-            "2024-01-16".to_string(),
-        );
-
-        let lanche = p.clone();
-        let acompanhamento = p.clone();
-        let bebida = p.clone();
-        // TODO create a way to get pedidos by id (lanche acompanhamento, bebida) and cliente by id
-        
-        Ok(Pedido::new(
+        Ok(PedidoFromRow::new(
             id as usize,
-            Some(cliente),
-            Some(lanche),
-            Some(acompanhamento),
-            Some(bebida),
-            row.try_get("pagamento")?,
+            cliente_id,
+            lanche_id,
+            acompanhamento_id,
+            bebida_id,
+            row.get("pagamento"),
             Status::from_index(status as usize),
-            row.try_get("data_criacao")?,
-            row.try_get("data_atualizacao")?,
+            row.get("data_criacao"),
+            row.get("data_atualizacao"),
         ))
     }
 }

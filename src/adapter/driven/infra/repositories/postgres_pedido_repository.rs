@@ -1,11 +1,14 @@
 use postgres_from_row::FromRow;
 use tokio_postgres::Client;
 
+use crate::core::domain::entities::pedido::{Pedido, PedidoFromRow, Status};
+use crate::core::domain::entities::cliente::Cliente;
 use crate::adapter::driven::infra::postgres::pedidos;
 use crate::core::domain::base::domain_error::DomainError;
-use crate::core::domain::entities::pedido::Pedido;
+use crate::core::domain::entities::produto::Produto;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
-use crate::core::domain::value_objects::cpf::Cpf;
+use crate::core::domain::repositories::cliente_repository::ClienteRepository;
+use crate::core::domain::repositories::produto_repository::ProdutoRepository;
 
 use super::super::postgres::table::Table;
 
@@ -17,11 +20,13 @@ const DELETE_PEDIDO: &str = "DELETE FROM pedidos WHERE id = $1";
 pub struct PostgresPedidoRepository {
     client: Client,
     tables: Vec<Table>,
+    cliente_repository: Box<dyn ClienteRepository>,
+    produto_repository: Box<dyn ProdutoRepository>,
 }
 
 impl PostgresPedidoRepository {
-    pub async fn new(client: Client, tables: Vec<Table>) -> Self {
-        let repo = PostgresPedidoRepository { client, tables };
+    pub async fn new(client: Client, tables: Vec<Table>, cliente_repository: Box<dyn ClienteRepository>, produto_repository: Box<dyn ProdutoRepository>) -> Self {
+        let repo = PostgresPedidoRepository { client, tables, cliente_repository, produto_repository};
         repo.check_for_tables().await;
         repo
     }
@@ -40,7 +45,25 @@ impl PedidoRepository for PostgresPedidoRepository {
         let pedidos = self.client.query(QUERY_PEDIDOS_NOVOS, &[]).await.unwrap();
         let mut pedidos_vec = Vec::new();
         for pedido in pedidos {
-            pedidos_vec.push(Pedido::from_row(&pedido));
+            let pedido_aux:PedidoFromRow = PedidoFromRow::from_row(&pedido);
+            let cliente:Cliente = self.cliente_repository.get_cliente_by_id(&pedido_aux.id());
+            let lanche:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.cliente());
+            let bebida:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.bebida());
+            let acompanhamento:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.acompanhamento());
+
+            let pedido:Pedido = Pedido::new(
+                pedido_aux.id(), 
+                Some(cliente), 
+                Some(lanche), 
+                Some(acompanhamento), 
+                Some(bebida), 
+                pedido_aux.pagamento(), 
+                pedido_aux.status(), 
+                pedido_aux.data_criacao(), 
+                pedido_aux.data_atualizacao()
+            );
+
+            pedidos_vec.push(pedido.clone());
         }
         Ok(pedidos_vec)
     }
@@ -50,15 +73,33 @@ impl PedidoRepository for PostgresPedidoRepository {
         if (status_enum == Status::Invalido){
             return Err::<Pedido, _>(DomainError::Invalid("status".to_string()));
         }
-        let = status_enum.to_index()
+        let index = status_enum.to_index();
         let updated_pedido = self.client.query(SET_STATUS_PEDIDO, &[
             &index,
             &id,
         ]).await.unwrap();
 
         let updated_pedido = updated_pedido.get(0);
-        match updated_user {
+        match updated_pedido {
             Some(pedido) => {
+            let pedido_aux:PedidoFromRow = PedidoFromRow::from_row(&pedido);
+            let cliente:Cliente = self.cliente_repository.get_cliente_by_id(&pedido_aux.id());
+            let lanche:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.cliente());
+            let bebida:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.bebida());
+            let acompanhamento:Produto = self.produto_repository.get_produto_by_id(&pedido_aux.acompanhamento());
+
+            let pedido:Pedido = Pedido::new(
+                pedido_aux.id(), 
+                Some(cliente), 
+                Some(lanche), 
+                Some(acompanhamento), 
+                Some(bebida), 
+                pedido_aux.pagamento(), 
+                pedido_aux.status(), 
+                pedido_aux.data_criacao(), 
+                pedido_aux.data_atualizacao()
+            );
+
                 Ok(Pedido::from_row(pedido))
             },
             None => {
