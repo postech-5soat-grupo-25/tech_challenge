@@ -6,7 +6,6 @@ use rocket::futures::lock::Mutex;
 
 use crate::core::domain::entities::pedido::{Pedido, PedidoFromRow, Status};
 use crate::core::domain::entities::cliente::Cliente;
-use crate::adapter::driven::infra::postgres::pedidos;
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::produto::Produto;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
@@ -78,7 +77,7 @@ impl PedidoRepository for PostgresPedidoRepository {
         Ok(pedidos_vec)
     }
 
-    async fn atualizar_status_pedido(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
+    async fn atualiza_status(&mut self, id: usize, status :String) -> Result<Pedido, DomainError> {
         let cliente_repository_lock = self.cliente_repository.lock().await;
         let produto_repository_lock = self.produto_repository.lock().await;
         let status_enum = Status::from_string(status);

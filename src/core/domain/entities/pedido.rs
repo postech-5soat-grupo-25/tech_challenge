@@ -22,23 +22,25 @@ pub enum Status {
 impl Status {
     pub fn from_index(index: usize) -> Status {
         match index {
-            0 => Status::Recebido,
-            1 => Status::EmPreparacao,
-            2 => Status::Pronto,
-            3 => Status::Finalizado,
-            4 => Status::Cancelado,
+            0 => Status::Pendente,
+            1 => Status::Recebido,
+            2 => Status::EmPreparacao,
+            3 => Status::Pronto,
+            4 => Status::Finalizado,
+            5 => Status::Cancelado,
             _ => Status::Invalido,
         }
     }
 
     pub fn to_index(&self) -> usize {
         match *self {
-            Status::Recebido => 0,
-            Status::EmPreparacao => 1,
-            Status::Pronto => 2,
-            Status::Finalizado => 3,
-            Status::Cancelado => 4,
-            Status::Invalido => 5,
+            Status::Pendente => 0,
+            Status::Recebido => 1,
+            Status::EmPreparacao => 2,
+            Status::Pronto => 3,
+            Status::Finalizado => 4,
+            Status::Cancelado => 5,
+            Status::Invalido => 6,
         }
     }
 
@@ -263,6 +265,25 @@ impl Pedido {
         assertion_concern::assert_argument_timestamp_format(data_atualizacao.clone())?;
         self.data_atualizacao = data_atualizacao;
         Ok(())
+    }
+
+    pub fn get_total_valor_pedido(&self) -> f32 {
+        let valor_lanche = match self.lanche() {
+            Some(produto) => produto.preco(),
+            None => 0
+        };
+
+        let valor_acompanhamento = match self.acompanhamento() {
+        Some(produto) => produto.preco(),
+        None => 0
+        };
+
+        let valor_bebida = match self.bebida() {
+        Some(produto) => produto.preco(),
+        None => 0
+        };
+
+        valor_lanche + valor_bebida + valor_acompanhamento
     }
 }
 

@@ -2,18 +2,21 @@ use std::sync::Arc;
 use rocket::futures::lock::Mutex;
 use chrono::Utc;
 use crate::core::{
-  application::ports::pagamento_port::PagamentoPort, 
+  application::ports::pagamento_port::{
+    PagamentoPort,
+    ResultadoHandler,
+    StatusPagamento
+  },
   domain::{
-    base::domain_error::DomainError, 
+    base::domain_error::DomainError,
     entities::{
       pedido::{Pedido, Status},
       produto::{Produto, Categoria},
     },
     repositories::{
-      cliente_repository::ClienteRepository, 
-      pedido_repository::PedidoRepository, 
-      produto_repository::ProdutoRepository, 
-      user_repository::UserRepository,
+      cliente_repository::ClienteRepository,
+      pedido_repository::PedidoRepository,
+      produto_repository::ProdutoRepository,
     },
   }
 };
@@ -27,25 +30,22 @@ pub struct CreatePedidoInput {
 pub struct PedidosEPagamentosUseCase {
     pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
     cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
-    user_repository: Arc<Mutex<dyn UserRepository + Sync + Send>>,
     produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
-    pagammento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
+    pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
 }
 
 impl PedidosEPagamentosUseCase {
     pub fn new(
       pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
       cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
-      user_repository: Arc<Mutex<dyn UserRepository + Sync + Send>>,
       produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
-      pagammento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
+      pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
     ) -> Self {
       PedidosEPagamentosUseCase {
         pedido_repository,
         cliente_repository,
-        user_repository,
         produto_repository,
-        pagammento_adapter,
+        pagamento_adapter,
       }
     }
 
@@ -55,7 +55,7 @@ impl PedidosEPagamentosUseCase {
   }
 
     pub async fn novo_pedido(
-      &self, 
+      &self,
       pedido_input: CreatePedidoInput,
     ) -> Result<Pedido, DomainError> {
 
@@ -80,7 +80,7 @@ impl PedidosEPagamentosUseCase {
       );
 
 
-      self.pedido_repository.lock().await.create_pedido(pedido.clone()).await?;
+      let pedido = self.pedido_repository.lock().await.create_pedido(pedido.clone()).await?;
 
       Ok(pedido)
     }
@@ -120,7 +120,20 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn realizar_pagamento_do_pedido(&self, pedido_id: usize, pagamento: String) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-      pedido_repository.cadastrar_pagamento(pedido_id, pagamento).await
+      let mut pagamento_adapter = self.pagamento_adapter.lock().await;
+
+      let pedido = pedido_repository.get_pedido_by_id(pedido_id).await?;
+
+      let total_pedido = pedido.get_total_valor_pedido();
+
+      let resultado_handler: ResultadoHandler = |status, pedido_id| {
+        if status == StatusPagamento::Successo {
+          pedido_repository.atualiza_status(pedido_id, Status::Recebido)
+        };
+      };
+
+      let pagamento_id: usize = pagamento_adapter.processa_pagamento(pedido_id, total_pedido, resultado_handler).await?;
+      pedido_repository.cadastrar_pagamento(pedido_id, pagamento_id).await
     }
 }
 

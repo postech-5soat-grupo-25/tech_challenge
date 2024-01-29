@@ -1,7 +1,10 @@
 use crate::core::domain::{
   base::domain_error::DomainError,
   entities::{
-    pedido::Pedido,
+    pedido::{
+      Pedido,
+      Status
+    },
     produto::Produto,
   }
 };
@@ -9,6 +12,8 @@ use crate::core::domain::{
 #[async_trait]
 pub trait PedidoRepository {
   async fn create_pedido(&mut self, pedido: Pedido) -> Result<Pedido, DomainError>;
+
+  async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError>;
 
   async fn get_pedido_by_id(&self, pedido_id: usize) -> Result<Pedido, DomainError>;
 
@@ -19,6 +24,8 @@ pub trait PedidoRepository {
   async fn cadastrar_pagamento(&mut self, pedido_id: usize, pagamento: String) -> Result<Pedido, DomainError>;
 
   async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche_id: usize) -> Result<Pedido, DomainError>;
+
+  async fn atualiza_status(&mut self, pedido_id: usize, status: Status) -> Result<Pedido, DomainError>;
 
   async fn update_pedido(&mut self, pedido_id: usize, pedido: Pedido) -> Result<Pedido, DomainError>;
 }
