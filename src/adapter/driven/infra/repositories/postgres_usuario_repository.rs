@@ -13,7 +13,7 @@ pub struct PostgresUsuarioRepository {
     tables: Vec<Table>,
 }
 
-const CREATE_USUARIO: &str = "INSERT INTO usuario (nome, email, cpf, senha, tipo, status, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *";
+const CREATE_USUARIO: &str = "INSERT INTO usuario (nome, email, cpf, senha, tipo, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
 const UPDATE_USUARIO: &str = "UPDATE usuario SET nome = $1, email = $2, cpf = $3, senha = $4, tipo = $5, status = $6 WHERE id = $7 RETURNING *";
 const QUERY_USUARIO_BY_CPF: &str = "SELECT * FROM usuario WHERE cpf = $1";
 const QUERY_USUARIO_BY_ID: &str = "SELECT * FROM usuario WHERE id = $1";
