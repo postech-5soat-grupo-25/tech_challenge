@@ -13,6 +13,8 @@ use crate::core::domain::{
 pub trait PedidoRepository {
   async fn create_pedido(&mut self, pedido: Pedido) -> Result<Pedido, DomainError>;
 
+  async fn lista_pedidos(&mut self) -> Result<Vec<Pedido>, DomainError>;
+
   async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError>;
 
   async fn get_pedido_by_id(&self, pedido_id: usize) -> Result<Pedido, DomainError>;
