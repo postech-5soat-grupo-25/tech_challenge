@@ -270,17 +270,17 @@ impl Pedido {
     pub fn get_total_valor_pedido(&self) -> f32 {
         let valor_lanche = match self.lanche() {
             Some(produto) => produto.preco(),
-            None => 0
+            None => 0.0
         };
 
         let valor_acompanhamento = match self.acompanhamento() {
         Some(produto) => produto.preco(),
-        None => 0
+        None => 0.0
         };
 
         let valor_bebida = match self.bebida() {
         Some(produto) => produto.preco(),
-        None => 0
+        None => 0.0
         };
 
         valor_lanche + valor_bebida + valor_acompanhamento

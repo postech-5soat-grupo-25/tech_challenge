@@ -61,12 +61,12 @@ pub async fn main() -> Result<(), rocket::Error> {
         Arc::new(Mutex::new(PostgresClienteRepository::new(postgres_connection_manager.client, tables).await))
     };
 
-    let pagamento_adapter = Arc::new(MockPagamentoSuccesso{});
+    let pagamento_adapter = Arc::new(Mutex::new(MockPagamentoSuccesso{}));
 
     // Cloning cliente_repository to share ownership
     let cloned_cliente_repository = Arc::clone(&cliente_repository);
 
-    let cliente_use_case = ClienteUseCase::new(cliente_repository);
+    let cliente_use_case = ClienteUseCase::new(Arc::clone(&cliente_repository));
 
     let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone()).await.unwrap();
     let tables = postgres::get_tables();
@@ -88,7 +88,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         Arc::new(Mutex::new(PostgresPedidoRepository::new(postgres_connection_manager.client, tables, cloned_cliente_repository, cloned_produto_repository).await))
     };
 
-    let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);
+    let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(Arc::clone(&pedido_repository));
 
     let pedidos_e_pagamentos_use_case = pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase::new(
         pedido_repository,

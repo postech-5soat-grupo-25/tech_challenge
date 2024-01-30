@@ -27,7 +27,7 @@ async fn get_produto_by_id(
     id: usize,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Produto>, Status> {
-    let produto = produto_use_case.get_products_by_id(id).await?;
+    let produto = produto_use_case.get_produto_by_id(id).await?;
     Ok(Json(produto))
 }
 

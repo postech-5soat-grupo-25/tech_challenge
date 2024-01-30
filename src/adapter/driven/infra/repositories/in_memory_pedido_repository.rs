@@ -70,12 +70,17 @@ async fn get_status_by_string(status : String) -> Status {
         "set_pedido_cancelado" => status_enum = Status::Cancelado,
         &_ => status_enum = Status::Invalido,
     };
-    return status_enum.clone();
+    return status_enum;
 }
 
 
 #[async_trait]
 impl PedidoRepository for InMemoryPedidoRepository {
+
+    async fn lista_pedidos(&mut self) -> Result<Vec<Pedido>, DomainError> {
+        Ok(self._pedidos.clone())
+    }
+
     async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
         let mut pedidos : Vec<Pedido> = Vec::new();
         for pedido in &self._pedidos {

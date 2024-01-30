@@ -62,6 +62,7 @@ async fn get_produto_by_id(&self, id: usize) -> Result<Produto, DomainError> {
 }
 
 async fn get_produtos_by_categoria(&self, categoria: Categoria) -> Result<Vec<Produto>, DomainError> {
+    let categoria = tokio_postgres::types::Json(categoria);
     let lista_produtos = self.client.query(QUERY_PRODUCT_BY_CATEGORIA, &[&categoria]).await.unwrap();
     let mut produtos_vec = Vec::new();
     for produto in lista_produtos {

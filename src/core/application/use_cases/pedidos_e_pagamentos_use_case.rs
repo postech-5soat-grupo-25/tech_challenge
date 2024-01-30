@@ -1,10 +1,11 @@
 use std::sync::Arc;
 use rocket::futures::{lock::Mutex, TryFutureExt};
 use chrono::Utc;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use crate::core::{
   application::ports::pagamento_port::{
     PagamentoPort,
-    ResultadoHandler,
     StatusPagamento
   },
   domain::{
@@ -21,7 +22,7 @@ use crate::core::{
   }
 };
 
-
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CreatePedidoInput {
   cliente_id: Option<usize>,
 }
@@ -60,8 +61,8 @@ impl PedidosEPagamentosUseCase {
       }
     }
 
-    pub async fn lista_pedidos(&self) -> Result<Vec<Pedidos>, DomainError> {
-      let pedido_repository = self.pedido_repository.lock().await;
+    pub async fn lista_pedidos(&self) -> Result<Vec<Pedido>, DomainError> {
+      let mut pedido_repository = self.pedido_repository.lock().await;
       pedido_repository.lista_pedidos().await
     }
 
@@ -97,61 +98,6 @@ impl PedidosEPagamentosUseCase {
 
 
       let pedido = self.pedido_repository.lock().await.create_pedido(pedido.clone()).await?;
-
-      Ok(pedido)
-    }
-
-    pub async fn atualiza_pedido(
-      &self,
-      id_pedido: usize
-      pedido_input: AtualizaPedidoInput,
-    ) -> Result<Pedido, DomainError> {
-
-      let cliente = match pedido_input.cliente_id {
-          Some(cliente_id) => {
-              let mut cliente_repository = self.cliente_repository.lock().await;
-              Some(cliente_repository.get_cliente_by_id(cliente_id).await?)
-          },
-          None => None,
-      };
-
-      let lanche = match pedido_input.lanche {
-        Some(lanche_id) => {
-            let mut produto_repository = self.produto_repository.lock().await;
-            Some(cliente_repository.get_produto_by_id(lanche_id).await?)
-        },
-        None => None,
-      };
-
-      let bebida = match pedido_input.lanche {
-        Some(bebida_id) => {
-            let mut produto_repository = self.produto_repository.lock().await;
-            Some(cliente_repository.get_produto_by_id(bebida_id).await?)
-        },
-        None => None,
-      };
-
-      let acompanhamento = match pedido_input.lanche {
-        Some(acompanhamento_id) => {
-            let mut produto_repository = self.produto_repository.lock().await;
-            Some(cliente_repository.get_produto_by_id(acompanhamento_id).await?)
-        },
-        None => None,
-      };
-
-      let pedido = Pedido::new(
-        id_pedido,
-        cliente,
-        lanche,
-        bebida,
-        acompanhamento,
-        pedido_input.pagamento,
-        pedido_input.status,
-        pedido_input.data_criacao,
-        Utc::now().naive_utc().date().to_string(),
-      );
-
-      let pedido = self.pedido_repository.lock().await.atualiza_pedido(pedido.clone()).await?;
 
       Ok(pedido)
     }
@@ -201,11 +147,15 @@ impl PedidosEPagamentosUseCase {
 
       let total_pedido = pedido.get_total_valor_pedido();
 
-      let resultado_handler: ResultadoHandler = |status, pedido_id| {
-        if status == StatusPagamento::Successo {
-          pedido_repository.atualiza_status(pedido_id, Status::Recebido)
-        };
-      };
+      let status_pagamento = pagamento_adapter.processa_pagamento(pedido_id, total_pedido)?;
+
+      if status_pagamento == StatusPagamento::Successo {
+        pedido_repository.atualiza_status(pedido_id, Status::Recebido).await?;
+      } else {
+        Err(DomainError::Invalid("Pagamento não realizado".to_string()))?;
+      }
+
+      Ok(pedido)
     }
 }
 

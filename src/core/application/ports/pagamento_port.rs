@@ -1,24 +1,23 @@
+use schemars::JsonSchema;
+
 use crate::core::domain::base::domain_error::DomainError;
 
-pub type ResultadoHandler = fn(status: StatusPagamento, pedido_id: usize) -> ();
-
+#[derive(PartialEq, JsonSchema)]
 pub enum StatusPagamento {
     Successo,
     Falha,
 }
 
-pub trait PagamentoNotificationHandler {
-    fn handle_pagamento_notification(&self, id: usize, status: StatusPagamento);
-}
-
-pub trait PagamentoPort {
+pub trait PagamentoPort: Send + Sync {
     fn processa_pagamento(
+        &self,
         pedido_id: usize,
         valor_pagamento: f32,
-        resultado_handler: ResultadoHandler
-    ) -> Result<usize, DomainError>;
+    ) -> Result<StatusPagamento, DomainError>;
 
     fn pagamento_status(
+        &self,
         pagamento_id: usize
     ) -> Result<StatusPagamento, DomainError>;
 }
+

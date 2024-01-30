@@ -12,7 +12,7 @@ pub enum Categoria {
     Lanche,
     Bebida,
     Acompanhamento,
-    Sobremesa,
+    // Sobremesa,
 }
 
 impl FromStr for Categoria {
@@ -23,7 +23,7 @@ impl FromStr for Categoria {
             "Lanche" => Ok(Categoria::Lanche),
             "Bebida" => Ok(Categoria::Bebida),
             "Acompanhamento" => Ok(Categoria::Acompanhamento),
-            "Sobremesa" => Ok(Categoria::Sobremesa),
+            // "Sobremesa" => Ok(Categoria::Sobremesa),
             _ => Err(()),
         }
     }
@@ -73,8 +73,8 @@ impl Produto {
         match self.categoria {
             Categoria::Lanche
             | Categoria::Acompanhamento
-            | Categoria::Bebida
-            | Categoria::Sobremesa => (),
+            | Categoria::Bebida => (),
+            // | Categoria::Sobremesa => (),
             _ => {
                 return Err(DomainError::Invalid(
                     "Categoria do Produto é inválida".to_string(),

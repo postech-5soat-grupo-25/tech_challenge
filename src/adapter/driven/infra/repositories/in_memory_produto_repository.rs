@@ -1,5 +1,5 @@
 use crate::core::domain::{
-    entities::produto::Produto,
+    entities::produto::{self, Produto},
     repositories::produto_repository::ProdutoRepository,
     base::domain_error::DomainError,
 };
@@ -25,7 +25,7 @@ impl InMemoryProdutoRepository {
             String::from("Carne"),
             String::from("Pao"),
             String::from("Alface"),
-        ]);
+        ]).unwrap();
 
         let produto = Produto::new(
             _id,
@@ -67,12 +67,13 @@ impl ProdutoRepository for InMemoryProdutoRepository {
 
     async fn get_produtos_by_categoria(&self, categoria: Categoria) -> Result<Vec<Produto>, DomainError> {
         sleep(Duration::from_secs(1)).await;
+        let mut produtos = Vec::new();
         for produto in &self._produto {
             if produto.categoria().to_owned() == categoria {
-                return Ok(produto.clone());
+                produtos.push(produto.clone());
             }
         }
-        Err(DomainError::NotFound)
+        Ok(produtos)
     }
 
     async fn create_produto(&mut self, produto: Produto) -> Result<Produto, DomainError> {
