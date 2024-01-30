@@ -10,7 +10,7 @@ use rocket_okapi::settings::UrlObject;
 use crate::adapter::driven::infra::repositories::postgres_produto_repository::PostgresProdutoRepository;
 use crate::adapter::driven::infra::{repositories, postgres};
 use crate::adapter::driven::pagamento::mock::MockPagamentoSuccesso;
-use crate::core::application::use_cases::pedidos_e_pagamentos_use_case;
+use crate::core::application::use_cases::{pedidos_e_pagamentos_use_case, produto_use_case};
 use crate::core::domain::repositories::produto_repository::ProdutoRepository;
 use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
 use crate::core::domain::repositories::cliente_repository::ClienteRepository;
@@ -90,6 +90,8 @@ pub async fn main() -> Result<(), rocket::Error> {
 
     let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(Arc::clone(&pedido_repository));
 
+    let produto_use_case = produto_use_case::ProdutoUseCase::new(Arc::clone(&produto_repository));
+
     let pedidos_e_pagamentos_use_case = pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase::new(
         pedido_repository,
         cliente_repository,
@@ -112,6 +114,7 @@ pub async fn main() -> Result<(), rocket::Error> {
                 UrlObject::new("Usuarios", "/usuarios/openapi.json"),
                 UrlObject::new("Clientes", "/clientes/openapi.json"),
                 UrlObject::new("Pedido", "/pedido/openapi.json"),
+                UrlObject::new("Produto", "/produto/openapi.json"),
             ],
             ..Default::default()
         }),
@@ -127,6 +130,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     .manage(cliente_use_case)
     .manage(preparacao_e_entrega_use_case)
     .manage(pedidos_e_pagamentos_use_case)
+    .manage(produto_use_case)
     .configure(server_config)
     .launch()
     .await?;
