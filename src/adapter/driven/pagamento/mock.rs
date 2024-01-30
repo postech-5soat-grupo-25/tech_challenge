@@ -3,11 +3,9 @@ use crate::core::application::ports::pagamento_port::{ StatusPagamento, Pagament
 
 pub struct MockPagamentoSuccesso;
 
-#[async_trait]
 impl PagamentoPort for MockPagamentoSuccesso {
-    async fn processa_pagamento(
-        &self,
-        pedido_id: usize, 
+    fn  processa_pagamento(
+        pedido_id: usize,
         valor_pagamento: f32,
         resultado_handler: ResultadoHandler
     ) -> Result<usize, DomainError> {
@@ -16,7 +14,6 @@ impl PagamentoPort for MockPagamentoSuccesso {
     }
 
     fn pagamento_status(
-        &self,
         pagamento_id: usize
     ) -> Result<StatusPagamento, DomainError> {
         Ok(StatusPagamento::Successo)

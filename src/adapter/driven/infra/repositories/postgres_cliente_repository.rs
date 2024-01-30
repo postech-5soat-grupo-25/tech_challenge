@@ -53,7 +53,8 @@ impl ClienteRepository for PostgresClienteRepository {
         }
     }
 
-    async fn get_cliente_by_id(&self, id: i32) -> Result<Cliente, DomainError> {
+    async fn get_cliente_by_id(&self, id: usize) -> Result<Cliente, DomainError> {
+        let id = id as i32;
         let cliente = self.client.query_one(QUERY_CLIENTE_BY_ID, &[&id]).await;
         match cliente {
             Ok(cliente) => Ok(Cliente::from_row(&cliente)),

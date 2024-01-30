@@ -195,19 +195,17 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn realizar_pagamento_do_pedido(&self, pedido_id: usize) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-      let pagamento_adapter = self.pagamento_adapter.lock().await;
+      let mut pagamento_adapter = self.pagamento_adapter.lock().await;
 
       let pedido = pedido_repository.get_pedido_by_id(pedido_id).await?;
+
       let total_pedido = pedido.get_total_valor_pedido();
 
-      let resultado_handler: ResultadoHandler = Box::new(move |status, pedido_id| {
+      let resultado_handler: ResultadoHandler = |status, pedido_id| {
         if status == StatusPagamento::Successo {
-          pedido_repository.atualiza_status(pedido_id, Status::Recebido).unwrap();
-        }
-      });
-
-      let pagamento_id: usize = pagamento_adapter.processa_pagamento(pedido_id, total_pedido, resultado_handler).await?;
-      pedido_repository.cadastrar_pagamento(pedido_id, pagamento_id).await
+          pedido_repository.atualiza_status(pedido_id, Status::Recebido)
+        };
+      };
     }
 }
 

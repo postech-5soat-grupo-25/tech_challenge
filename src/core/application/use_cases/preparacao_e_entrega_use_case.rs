@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rocket::futures::lock::Mutex;
 
 use crate::core::domain::base::domain_error::DomainError;
-use crate::core::domain::entities::pedido::Pedido;
+use crate::core::domain::entities::pedido::{Pedido, Status};
 
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
 
@@ -22,7 +22,7 @@ impl PreparacaoeEntregaUseCase {
         pedido_repository.get_pedidos_novos().await
     }
 
-    pub async fn atualiza_status(&self,  id: usize, status : String) -> Result<Pedido, DomainError> {
+    pub async fn atualiza_status(&self,  id: usize, status : Status) -> Result<Pedido, DomainError> {
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository.atualiza_status(id, status).await
     }

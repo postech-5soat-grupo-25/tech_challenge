@@ -9,6 +9,8 @@ use rocket_okapi::settings::UrlObject;
 
 use crate::adapter::driven::infra::repositories::postgres_produto_repository::PostgresProdutoRepository;
 use crate::adapter::driven::infra::{repositories, postgres};
+use crate::adapter::driven::pagamento::mock::MockPagamentoSuccesso;
+use crate::core::application::use_cases::pedidos_e_pagamentos_use_case;
 use crate::core::domain::repositories::produto_repository::ProdutoRepository;
 use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
 use crate::core::domain::repositories::cliente_repository::ClienteRepository;
@@ -59,6 +61,8 @@ pub async fn main() -> Result<(), rocket::Error> {
         Arc::new(Mutex::new(PostgresClienteRepository::new(postgres_connection_manager.client, tables).await))
     };
 
+    let pagamento_adapter = Arc::new(MockPagamentoSuccesso{});
+
     // Cloning cliente_repository to share ownership
     let cloned_cliente_repository = Arc::clone(&cliente_repository);
 
@@ -66,7 +70,7 @@ pub async fn main() -> Result<(), rocket::Error> {
 
     let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone()).await.unwrap();
     let tables = postgres::get_tables();
-    let produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>> = 
+    let produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>> =
         Arc::new(Mutex::new(PostgresProdutoRepository::new(postgres_connection_manager.client, tables).await));
 
     // Cloning produto_repository to share ownership
@@ -85,6 +89,13 @@ pub async fn main() -> Result<(), rocket::Error> {
     };
 
     let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);
+
+    let pedidos_e_pagamentos_use_case = pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase::new(
+        pedido_repository,
+        cliente_repository,
+        produto_repository,
+        pagamento_adapter,
+    );
 
     let server_config = rocket::Config::figment()
         .merge(("address", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))))
@@ -115,6 +126,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     .manage(usuario_use_case)
     .manage(cliente_use_case)
     .manage(preparacao_e_entrega_use_case)
+    .manage(pedidos_e_pagamentos_use_case)
     .configure(server_config)
     .launch()
     .await?;
