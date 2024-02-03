@@ -18,7 +18,7 @@ pub fn assert_argument_timestamp_format(value: String) -> Result<(), DomainError
     }
 }
 
-pub fn assert_argument_not_negative(value: f32) -> Result<(), DomainError> {
+pub fn assert_argument_not_negative(value: f64) -> Result<(), DomainError> {
     if value < 0.0 {
         Err(DomainError::NonPositive)
     } else {

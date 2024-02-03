@@ -8,11 +8,7 @@ pub struct Ingredientes(Vec<String>);
 
 impl Ingredientes {
     pub fn new(ingredientes: Vec<String>) -> Result<Self, DomainError> {
-        if ingredientes.is_empty() {
-            return Err(DomainError::Empty);
-        } else {
-            return Ok(Ingredientes(ingredientes));
-        }
+        return Ok(Ingredientes(ingredientes));
     }
 }
 

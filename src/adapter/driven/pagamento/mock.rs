@@ -7,7 +7,7 @@ impl PagamentoPort for MockPagamentoSuccesso {
     fn processa_pagamento(
         &self,
         pedido_id: usize,
-        valor_pagamento: f32
+        valor_pagamento: f64
     ) -> Result<StatusPagamento, DomainError> {
         Ok(StatusPagamento::Successo)
     }

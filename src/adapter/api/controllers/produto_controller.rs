@@ -11,7 +11,7 @@ use crate::core::application::use_cases::produto_use_case::{ProdutoUseCase, Crea
 use crate::core::domain::entities::produto::Produto;
 
 #[openapi(tag = "Produto")]
-#[get("/produto")]
+#[get("/")]
 async fn get_produto(
     produto_use_case: &State<ProdutoUseCase>,
     _logged_user_info: AuthenticatedUser,

@@ -18,12 +18,12 @@ pub struct CreateProdutoInput {
     foto: String,
     descricao: String,
     categoria: Categoria,
-    preco: f32,
+    preco: f64,
     ingredientes: Ingredientes,
 }
 
 impl CreateProdutoInput {
-    pub fn new(nome: String, foto: String, descricao: String, categoria: Categoria, preco: f32, ingredientes: Ingredientes) -> Self {
+    pub fn new(nome: String, foto: String, descricao: String, categoria: Categoria, preco: f64, ingredientes: Ingredientes) -> Self {
         Self {
             nome,
             foto,
