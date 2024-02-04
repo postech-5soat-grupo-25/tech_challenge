@@ -6,9 +6,12 @@ use crate::core::domain::{
 use crate::core::domain::entities::produto::Categoria;
 use crate::core::domain::value_objects::ingredientes::Ingredientes;
 
-use std::sync::Arc;
-
+use chrono::{DateTime, Utc};
 use postgres_from_row::FromRow;
+use serde_json::{json, Value};
+use std::sync::Arc;
+use std::time::SystemTime;
+use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Client;
 
 use super::super::postgres::table::Table;
@@ -20,11 +23,11 @@ pub struct PostgresProdutoRepository {
 
 const ALL_PRODUCT_SELECT: &str =
     "id, nome, foto, descricao, categoria, preco, ingredientes, data_criacao::TEXT, data_atualizacao::TEXT";
-const CREATE_PRODUCT: &str = "INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
-const QUERY_PRODUCT_BY_ID: &str = "SELECT id, nome, foto, descricao, categoria, preco, ingredientes, data_criacao::TEXT, data_atualizacao::TEXT FROM produto WHERE id = $1";
-const QUERY_PRODUCTS: &str = "SELECT id, nome, foto, descricao, categoria, preco, ingredientes, data_criacao::TEXT, data_atualizacao::TEXT FROM produto";
-const QUERY_PRODUCT_BY_CATEGORIA: &str = "SELECT id, nome, foto, descricao, categoria, preco, ingredientes, data_criacao::TEXT, data_atualizacao::TEXT FROM produto WHERE categoria = $1";
-const UPDATE_PRODUCT: &str = "UPDATE produto SET nome = $1, foto = $2, descricao = $3, categoria = $4, preco = $5, ingredientes = $6, created_at = $7, updated_at = $8 WHERE id = $10 RETURNING *";
+const CREATE_PRODUCT: &str = "INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
+const QUERY_PRODUCT_BY_ID: &str = "SELECT * FROM produto WHERE id = $1";
+const QUERY_PRODUCTS: &str = "SELECT * FROM produto";
+const QUERY_PRODUCT_BY_CATEGORIA: &str = "SELECT * FROM produto WHERE categoria = $1";
+const UPDATE_PRODUCT: &str = "UPDATE produto SET nome = $1, foto = $2, descricao = $3, categoria = $4, preco = $5, ingredientes = $6, data_atualizacao = $7 WHERE id = $8 RETURNING *";
 const DELETE_PRODUCT: &str = "DELETE FROM produto WHERE id = $1";
 
 impl PostgresProdutoRepository {
@@ -81,11 +84,8 @@ impl ProdutoRepository for PostgresProdutoRepository {
 
     async fn create_produto(&mut self, produto: Produto) -> Result<Produto, DomainError> {
         let ingredientes = produto.ingredientes();
-        let ingredientes_json = tokio_postgres::types::Json(ingredientes);
-
-        let categoria = produto.categoria();
-        let categoria_json = tokio_postgres::types::Json(categoria);
-
+        let ingredientes_vec: Vec<String> = ingredientes.to_vec_string();
+        let _now: SystemTime = SystemTime::now();
         let new_produto = self
             .client
             .query(
@@ -94,11 +94,11 @@ impl ProdutoRepository for PostgresProdutoRepository {
                     &produto.nome(),
                     &produto.foto(),
                     &produto.descricao(),
-                    &categoria_json,
+                    &produto.categoria(),
                     &produto.preco(),
-                    &ingredientes_json,
-                    &produto.data_criacao(),
-                    &produto.data_atualizacao(),
+                    &ingredientes_vec,
+                    &_now.clone(),
+                    &_now,
                 ],
             )
             .await
@@ -114,10 +114,8 @@ impl ProdutoRepository for PostgresProdutoRepository {
         let id = new_produto_data.id().clone() as i32;
 
         let ingredientes = new_produto_data.ingredientes();
-        let ingredientes_json = tokio_postgres::types::Json(ingredientes);
-
-        let categoria = new_produto_data.categoria();
-        let categoria_json = tokio_postgres::types::Json(categoria);
+        let ingredientes_vec: Vec<String> = ingredientes.to_vec_string();
+        let _now: SystemTime = SystemTime::now();
 
         let updated_produto = self
             .client
@@ -127,11 +125,10 @@ impl ProdutoRepository for PostgresProdutoRepository {
                     &new_produto_data.nome(),
                     &new_produto_data.foto(),
                     &new_produto_data.descricao(),
-                    &categoria_json,
+                    &new_produto_data.categoria(),
                     &new_produto_data.preco(),
-                    &ingredientes_json,
-                    &new_produto_data.data_criacao(),
-                    &new_produto_data.data_atualizacao(),
+                    &ingredientes_vec,
+                    &_now,
                     &id,
                 ],
             )

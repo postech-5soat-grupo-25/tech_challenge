@@ -67,7 +67,7 @@ impl ProdutoUseCase {
 
     pub async fn create_produto(&self, produto: CreateProdutoInput) -> Result<Produto, DomainError> {
         let mut produto_repository = self.produto_repository.lock().await;
-        let valid_categoria = Categoria::Bebida;
+
 
         let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
 
@@ -76,7 +76,7 @@ impl ProdutoUseCase {
             produto.nome,
             produto.foto,
             produto.descricao,
-            valid_categoria,
+            produto.categoria,
             produto.preco,
             produto.ingredientes.clone(),
             _now.clone(),
@@ -87,31 +87,23 @@ impl ProdutoUseCase {
         Ok(produto.clone())
     }
 
-    pub async fn update_produto(&self, id: usize, fields_to_update: UpdateProdutoInput) -> Result<Produto, DomainError> {
+    pub async fn update_produto(&self, id: usize, fields_to_update: CreateProdutoInput) -> Result<Produto, DomainError> {
         let mut produto_repository = self.produto_repository.lock().await;
-        let mut produto = produto_repository.get_produto_by_id(id).await?;
 
-        if let Some(nome) = fields_to_update.nome {
-            produto.set_nome(nome);
-        }
+        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
+        let produto_atualizado = produto_repository.update_produto(Produto::new(
+            id,
+            fields_to_update.nome,
+            fields_to_update.foto,
+            fields_to_update.descricao,
+            fields_to_update.categoria,
+            fields_to_update.preco,
+            fields_to_update.ingredientes,
+            _now.clone(),
+            _now,
+        )).await?;
 
-        if let Some(foto) = fields_to_update.foto {
-            produto.set_foto(foto);
-        }
-
-        if let Some(descricao) = fields_to_update.descricao {
-            produto.set_descricao(descricao);
-        }
-
-        if let Some(categoria) = fields_to_update.categoria {
-            produto.set_categoria(categoria);
-        }
-
-        if let Some(ingredientes) = fields_to_update.ingredientes {
-            produto.set_ingredientes(ingredientes);
-        }
-
-        produto_repository.update_produto(produto).await
+        Ok(produto_atualizado.clone())
     }
 
     pub async fn delete_produto(&self, id: usize) -> Result<(), DomainError> {

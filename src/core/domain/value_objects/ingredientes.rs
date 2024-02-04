@@ -10,6 +10,10 @@ impl Ingredientes {
     pub fn new(ingredientes: Vec<String>) -> Result<Self, DomainError> {
         return Ok(Ingredientes(ingredientes));
     }
+
+    pub fn to_vec_string(&self) -> Vec<String> {
+        self.0.clone() // Clone the internal Vec<String>
+    }
 }
 
 #[cfg(test)]

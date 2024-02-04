@@ -71,16 +71,23 @@ impl ToSql for Categoria {
     }
 }
 
-impl FromStr for Categoria {
-    type Err = ();
+impl Categoria {
+    pub fn from_string(s: &str) -> Option<Categoria> {
+        match s.to_lowercase().as_str() {
+            "lanche" => Some(Categoria::Lanche),
+            "bebida" => Some(Categoria::Bebida),
+            "acompanhamento" => Some(Categoria::Acompanhamento),
+            "sobremesa" => Some(Categoria::Sobremesa),
+            _ => None,
+        }
+    }
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "lanche" => Ok(Categoria::Lanche),
-            "bebida" => Ok(Categoria::Bebida),
-            "acompanhamento" => Ok(Categoria::Acompanhamento),
-            // "Sobremesa" => Ok(Categoria::Sobremesa),
-            _ => Err(()),
+    pub fn to_string(&self) -> String {
+        match self {
+            Categoria::Lanche => String::from("lanche"),
+            Categoria::Bebida => String::from("bebida"),
+            Categoria::Acompanhamento => String::from("acompanhamento"),
+            Categoria::Sobremesa => String::from("sobremesa"),
         }
     }
 }

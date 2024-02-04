@@ -3,6 +3,7 @@ use postgres_from_row::FromRow;
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 use crate::core::domain::entities::produto::Categoria;
 use crate::core::domain::entities::produto::Produto;
@@ -112,8 +113,12 @@ impl FromRow for Produto {
 
         let categoria: Categoria = row.get("categoria");
         //let categoria = Categoria::from_str(&categoria_str.to_lowercase()).unwrap_or_else(|_| panic!("Invalid Categoria: {}", categoria_str));
-        let data_criacao =  row.get("data_criacao");
-        let data_atualizacao =  row.get("data_atualizacao");
+        let data_criacao:SystemTime = row.get("data_criacao");
+        let data_criacao_utc: DateTime<Utc> = data_criacao.into();
+        let data_criacao_string = data_criacao_utc.to_rfc3339();
+        let data_atualizacao:SystemTime =  row.get("data_atualizacao");
+        let data_atualizacao_utc: DateTime<Utc> = data_atualizacao.into();
+        let data_atualizacao_string = data_atualizacao_utc.to_rfc3339();
 
         Produto::new(
             id as usize,
@@ -123,8 +128,8 @@ impl FromRow for Produto {
             categoria,
             preco,
             ingredientes,
-            data_criacao,
-            data_atualizacao,
+            data_criacao_string,
+            data_atualizacao_string,
         )
     }
 
@@ -140,9 +145,7 @@ impl FromRow for Produto {
             Err(e) => panic!("Failed to create Ingredientes: {:?}", e),
         };
 
-        let categoria_str: String = row.get("categoria");
-        let categoria = Categoria::from_str(&categoria_str)
-            .unwrap_or_else(|_| panic!("Invalid Categoria: {}", categoria_str));
+        let categoria: Categoria = row.get("categoria");
 
         Ok(Produto::new(
             id as usize,
