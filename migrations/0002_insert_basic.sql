@@ -1,14 +1,14 @@
 -- Insert para categoria 'lanche'
 INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, data_criacao, data_atualizacao)
-VALUES ('Hamburguer', 'hamburguer.jpg', 'Delicioso hamburguer artesanal', 'lanche', 10.99, '{"carne": "bovina", "queijo": "cheddar", "salada": "alface"}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('Hamburguer', 'hamburguer.jpg', 'Delicioso hamburguer artesanal', 'lanche', 10.99, '{"carne bovina", "queijo cheddar", "alface" }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert para um Cheeseburguer
 INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, data_criacao, data_atualizacao)
-VALUES ('Cheeseburguer', 'cheeseburguer.jpg', 'Irresistível cheeseburguer com queijo derretido', 'lanche', 12.99, '{"carne": "bovina", "queijo": "cheddar", "salada": "cebola"}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('Cheeseburguer', 'cheeseburguer.jpg', 'Irresistível cheeseburguer com queijo derretido', 'lanche', 12.99, '{"carne bovina", "queijo cheddar", "cebola" }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert para um Lanche de Frango
 INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, data_criacao, data_atualizacao)
-VALUES ('Hamburguer de Frango', 'lanche_frango.jpg', 'Delicioso lanche com carne de frango grelhada', 'lanche', 11.99, '{"carne": "frango", "queijo": "prato", "salada": "alface"}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('Hamburguer de Frango', 'lanche_frango.jpg', 'Delicioso lanche com carne de frango grelhada', 'lanche', 11.99, '{"carne frango", "queijo prato", "alface" }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert para categoria 'bebida'
 INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, data_criacao, data_atualizacao)

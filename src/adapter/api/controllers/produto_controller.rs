@@ -9,9 +9,10 @@ use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
 use crate::core::application::use_cases::produto_use_case::{ProdutoUseCase, CreateProdutoInput, UpdateProdutoInput};
 use crate::core::domain::entities::produto::Produto;
+use crate::adapter::api::request_guards::admin_guard::AdminUser;
 
 #[openapi(tag = "Produto")]
-#[get("/produto")]
+#[get("/")]
 async fn get_produto(
     produto_use_case: &State<ProdutoUseCase>,
     _logged_user_info: AuthenticatedUser,
@@ -21,7 +22,7 @@ async fn get_produto(
 }
 
 #[openapi(tag = "Produto")]
-#[put("/<id>")]
+#[get("/<id>")]
 async fn get_produto_by_id(
     produto_use_case: &State<ProdutoUseCase>,
     id: usize,
@@ -47,7 +48,7 @@ async fn create_produto(
 #[post("/<id>", data = "<produto_input>")]
 async fn update_produto(
     produto_use_case: &State<ProdutoUseCase>,
-    produto_input: Json<UpdateProdutoInput>,
+    produto_input: Json<CreateProdutoInput>,
     id: usize,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Produto>, Status> {
@@ -56,8 +57,19 @@ async fn update_produto(
     Ok(Json(produto))
 }
 
+#[openapi(tag = "Produto")]
+#[delete("/<id>")]
+async fn delete_produto(
+    produto_use_case: &State<ProdutoUseCase>,
+    id: usize,
+    _logged_user_info: AdminUser,
+) -> Result<Json<String>, Status> {
+    produto_use_case.delete_produto(id).await?;
+    Ok(Json("success".to_string()))
+}
+
 pub fn routes() -> Vec<rocket::Route> {
-    openapi_get_routes![get_produto, get_produto_by_id, create_produto, update_produto]
+    openapi_get_routes![get_produto, get_produto_by_id, create_produto, update_produto, delete_produto]
 }
 
 #[catch(404)]

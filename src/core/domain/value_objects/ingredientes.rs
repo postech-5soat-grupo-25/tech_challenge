@@ -8,11 +8,11 @@ pub struct Ingredientes(Vec<String>);
 
 impl Ingredientes {
     pub fn new(ingredientes: Vec<String>) -> Result<Self, DomainError> {
-        if ingredientes.is_empty() {
-            return Err(DomainError::Empty);
-        } else {
-            return Ok(Ingredientes(ingredientes));
-        }
+        return Ok(Ingredientes(ingredientes));
+    }
+
+    pub fn to_vec_string(&self) -> Vec<String> {
+        self.0.clone() // Clone the internal Vec<String>
     }
 }
 

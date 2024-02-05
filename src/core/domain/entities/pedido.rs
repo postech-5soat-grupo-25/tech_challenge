@@ -267,7 +267,7 @@ impl Pedido {
         Ok(())
     }
 
-    pub fn get_total_valor_pedido(&self) -> f32 {
+    pub fn get_total_valor_pedido(&self) -> f64 {
         let valor_lanche = match self.lanche() {
             Some(produto) => produto.preco(),
             None => 0.0

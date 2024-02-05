@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS produto (
     descricao TEXT NOT NULL, 
     categoria CATEGORIA_ENUM NOT NULL,
     preco FLOAT NOT NULL,
-    ingredientes JSON NOT NULL,
+    ingredientes TEXT[] NOT NULL,
     data_criacao TIMESTAMP,
     data_atualizacao TIMESTAMP
 );

@@ -1,30 +1,93 @@
-use chrono::Utc;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use core::str::FromStr;
 use crate::core::domain::base::aggregate_root::AggregateRoot;
 use crate::core::domain::base::assertion_concern;
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::value_objects::ingredientes::Ingredientes;
+use bytes::BytesMut;
+use chrono::Utc;
+use core::str::FromStr;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use std::error::Error;
+use tokio_postgres::types::{FromSql, ToSql, Type};
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Categoria {
     Lanche,
     Bebida,
     Acompanhamento,
-    // Sobremesa,
+    Sobremesa,
 }
 
-impl FromStr for Categoria {
-    type Err = ();
+impl<'a> FromSql<'a> for Categoria {
+    fn from_sql(
+        _ty: &tokio_postgres::types::Type,
+        raw: &'a [u8],
+    ) -> Result<Self, Box<dyn Error + Sync + Send>> {
+        let value = std::str::from_utf8(raw)?;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Lanche" => Ok(Categoria::Lanche),
-            "Bebida" => Ok(Categoria::Bebida),
-            "Acompanhamento" => Ok(Categoria::Acompanhamento),
-            // "Sobremesa" => Ok(Categoria::Sobremesa),
-            _ => Err(()),
+        match value {
+            "lanche" => Ok(Categoria::Lanche),
+            "bebida" => Ok(Categoria::Bebida),
+            "acompanhamento" => Ok(Categoria::Acompanhamento),
+            "sobremesa" => Ok(Categoria::Sobremesa),
+            _ => Err("Invalid categoria value".into()),
+        }
+    }
+
+    fn accepts(_ty: &tokio_postgres::types::Type) -> bool {
+        // You might need to adjust this according to your PostgreSQL setup
+        true
+    }
+}
+
+impl ToSql for Categoria {
+    fn to_sql(
+        &self,
+        _ty: &Type,
+        out: &mut BytesMut,
+    ) -> Result<tokio_postgres::types::IsNull, Box<dyn std::error::Error + 'static + Send + Sync>>
+    {
+        match self {
+            Categoria::Lanche => out.extend_from_slice(b"lanche"),
+            Categoria::Bebida => out.extend_from_slice(b"bebida"),
+            Categoria::Acompanhamento => out.extend_from_slice(b"acompanhamento"),
+            Categoria::Sobremesa => out.extend_from_slice(b"sobremesa"),
+            // Handle additional variants if needed
+        }
+        Ok(tokio_postgres::types::IsNull::No)
+    }
+
+    fn accepts(_ty: &Type) -> bool {
+        true
+    }
+
+    fn to_sql_checked(
+        &self,
+        ty: &Type,
+        out: &mut BytesMut,
+    ) -> Result<tokio_postgres::types::IsNull, Box<dyn std::error::Error + 'static + Send + Sync>>
+    {
+        self.to_sql(ty, out)
+    }
+}
+
+impl Categoria {
+    pub fn from_string(s: &str) -> Option<Categoria> {
+        match s.to_lowercase().as_str() {
+            "lanche" => Some(Categoria::Lanche),
+            "bebida" => Some(Categoria::Bebida),
+            "acompanhamento" => Some(Categoria::Acompanhamento),
+            "sobremesa" => Some(Categoria::Sobremesa),
+            _ => None,
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            Categoria::Lanche => String::from("lanche"),
+            Categoria::Bebida => String::from("bebida"),
+            Categoria::Acompanhamento => String::from("acompanhamento"),
+            Categoria::Sobremesa => String::from("sobremesa"),
         }
     }
 }
@@ -36,7 +99,7 @@ pub struct Produto {
     foto: String,
     descricao: String,
     categoria: Categoria,
-    preco: f32,
+    preco: f64,
     ingredientes: Ingredientes,
     data_criacao: String,
     data_atualizacao: String,
@@ -51,7 +114,7 @@ impl Produto {
         foto: String,
         descricao: String,
         categoria: Categoria,
-        preco: f32,
+        preco: f64,
         ingredientes: Ingredientes,
         data_criacao: String,
         data_atualizacao: String,
@@ -71,9 +134,7 @@ impl Produto {
 
     pub fn validate_entity(&self) -> Result<(), DomainError> {
         match self.categoria {
-            Categoria::Lanche
-            | Categoria::Acompanhamento
-            | Categoria::Bebida => (),
+            Categoria::Lanche | Categoria::Acompanhamento | Categoria::Bebida => (),
             // | Categoria::Sobremesa => (),
             _ => {
                 return Err(DomainError::Invalid(
@@ -110,7 +171,7 @@ impl Produto {
         &self.categoria
     }
 
-    pub fn preco(&self) -> f32 {
+    pub fn preco(&self) -> f64 {
         self.preco
     }
 
@@ -147,7 +208,7 @@ impl Produto {
         self.categoria = categoria;
     }
 
-    pub fn set_preco(&mut self, preco: f32) -> Result<(), DomainError> {
+    pub fn set_preco(&mut self, preco: f64) -> Result<(), DomainError> {
         assertion_concern::assert_argument_not_negative(preco.clone())?;
         self.preco = preco;
         Ok(())

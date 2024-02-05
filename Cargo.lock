@@ -1934,6 +1934,7 @@ checksum = "ba852e71502340e2eaf2fa51f9b3ec6aa25750da1aa65771491c69d67789b05c"
 name = "tech_challenge"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "chrono",
  "jsonwebtoken",
  "just",
