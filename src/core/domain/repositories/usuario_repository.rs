@@ -1,7 +1,10 @@
+use mockall::*;
+
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::usuario::Usuario;
 use crate::core::domain::value_objects::cpf::Cpf;
 
+#[automock]
 #[async_trait]
 pub trait UsuarioRepository {
     async fn get_usuarios(&self) -> Result<Vec<Usuario>, DomainError>;

@@ -115,3 +115,149 @@ impl ProdutoUseCase {
 
 unsafe impl Send for ProdutoUseCase {}
 unsafe impl Sync for ProdutoUseCase {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio;
+    use mockall::predicate::*;
+    use crate::core::domain::entities::produto::Produto;
+    use crate::core::domain::value_objects::ingredientes::Ingredientes;
+    use crate::core::domain::repositories::produto_repository::MockProdutoRepository;
+
+    #[tokio::test]
+    async fn test_get_produtos() {
+        let mut mock = MockProdutoRepository::new();
+
+        let returned_produto = Produto::new(
+            1,
+            "nome".to_string(),
+            "foto".to_string(),
+            "descricao".to_string(),
+            Categoria::Lanche,
+            10.0,
+            Ingredientes::new(vec!["ingrediente1".to_string(), "ingrediente2".to_string()]).unwrap(),
+            "2021-10-10".to_string(),
+            "2021-10-10".to_string()
+        );
+
+        let expected_produto = returned_produto.clone();
+
+        mock.expect_get_produtos()
+            .times(1)
+            .returning(move || Ok(vec![returned_produto.clone()]));
+
+        let use_case = ProdutoUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.get_produtos().await;
+        assert_eq!(result.unwrap()[0].id(), expected_produto.id());
+    }
+
+    #[tokio::test]
+    async fn test_get_produto_by_id() {
+        let mut mock = MockProdutoRepository::new();
+
+        let returned_produto = Produto::new(
+            1,
+            "nome".to_string(),
+            "foto".to_string(),
+            "descricao".to_string(),
+            Categoria::Lanche,
+            10.0,
+            Ingredientes::new(vec!["ingrediente1".to_string(), "ingrediente2".to_string()]).unwrap(),
+            "2021-10-10".to_string(),
+            "2021-10-10".to_string()
+        );
+
+        let expected_produto = returned_produto.clone();
+
+        mock.expect_get_produto_by_id()
+            .times(1)
+            .with(eq(1))
+            .returning(move |_| Ok(returned_produto.clone()));
+
+        let use_case = ProdutoUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.get_produto_by_id(1).await;
+        assert_eq!(result.unwrap().id(), expected_produto.id());
+    }
+
+    #[tokio::test]
+    async fn test_create_produto() {
+        let mut mock = MockProdutoRepository::new();
+
+        let returned_produto = Produto::new(
+            1,
+            "nome".to_string(),
+            "foto".to_string(),
+            "descricao".to_string(),
+            Categoria::Lanche,
+            10.0,
+            Ingredientes::new(vec!["ingrediente1".to_string(), "ingrediente2".to_string()]).unwrap(),
+            "2021-10-10".to_string(),
+            "2021-10-10".to_string()
+        );
+
+        let expected_produto = returned_produto.clone();
+
+        mock.expect_create_produto()
+            .times(1)
+            .returning(move |_| Ok(returned_produto.clone()));
+
+        let use_case = ProdutoUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.create_produto(CreateProdutoInput::new(
+            "nome".to_string(),
+            "foto".to_string(),
+            "descricao".to_string(),
+            Categoria::Lanche,
+            10.0,
+            Ingredientes::new(vec!["ingrediente1".to_string(), "ingrediente2".to_string()]).unwrap()
+        )).await;
+        assert_eq!(result.unwrap().id(), expected_produto.id());
+    }
+
+    #[tokio::test]
+    async fn test_update_produto() {
+        let mut mock = MockProdutoRepository::new();
+
+        let returned_produto = Produto::new(
+            1,
+            "nome".to_string(),
+            "foto".to_string(),
+            "descricao".to_string(),
+            Categoria::Lanche,
+            10.0,
+            Ingredientes::new(vec!["ingrediente1".to_string(), "ingrediente2".to_string()]).unwrap(),
+            "2021-10-10".to_string(),
+            "2021-10-10".to_string()
+        );
+
+        let expected_produto = returned_produto.clone();
+
+        mock.expect_update_produto()
+            .times(1)
+            .returning(move |_| Ok(returned_produto.clone()));
+
+        let use_case = ProdutoUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.update_produto(1, CreateProdutoInput::new(
+            "nome".to_string(),
+            "foto".to_string(),
+            "descricao".to_string(),
+            Categoria::Lanche,
+            10.0,
+            Ingredientes::new(vec!["ingrediente1".to_string(), "ingrediente2".to_string()]).unwrap()
+        )).await;
+        assert_eq!(result.unwrap().id(), expected_produto.id());
+    }
+
+    #[tokio::test]
+    async fn test_delete_produto() {
+        let mut mock = MockProdutoRepository::new();
+
+        mock.expect_delete_produto()
+            .times(1)
+            .returning(move |_| Ok(()));
+
+        let use_case = ProdutoUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.delete_produto(1).await;
+        assert_eq!(result.unwrap(), ());
+    }
+}

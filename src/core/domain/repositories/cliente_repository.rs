@@ -1,7 +1,10 @@
+use mockall::*;
+
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::cliente::Cliente;
 use crate::core::domain::value_objects::cpf::Cpf;
 
+#[automock]
 #[async_trait]
 pub trait ClienteRepository: Send + Sync{
     async fn get_clientes(&self) -> Result<Vec<Cliente>, DomainError>;

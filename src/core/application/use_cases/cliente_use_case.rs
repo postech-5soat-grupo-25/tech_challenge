@@ -67,3 +67,106 @@ impl ClienteUseCase {
 
 unsafe impl Send for ClienteUseCase {}
 unsafe impl Sync for ClienteUseCase {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mockall::predicate::*;
+    use crate::core::domain::entities::cliente::Cliente;
+    use crate::core::domain::repositories::cliente_repository::MockClienteRepository;
+    use rocket::futures::lock::Mutex;
+    use std::sync::Arc;
+    use tokio;
+
+    #[tokio::test]
+    async fn test_get_clientes() {
+        let mut mock = MockClienteRepository::new();
+
+        let returned_cliente = Cliente::new(
+            1,
+            "nome".to_string(),
+            "email".to_string(),
+            Cpf::new("000.000.000-00".to_string()).unwrap(),
+            "2021-10-10".to_string(),
+            "2021-10-10".to_string(),
+        );
+
+        let expected_cliente = returned_cliente.clone();
+
+        mock.expect_get_clientes()
+            .times(1)
+            .returning(move || Ok(vec![returned_cliente.clone()]));
+
+        let use_case = ClienteUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.get_clientes().await;
+        assert_eq!(result.unwrap()[0].id(), expected_cliente.id());
+    }
+
+    #[tokio::test]
+    async fn test_get_cliente_by_cpf() {
+        let mut mock = MockClienteRepository::new();
+
+        let returned_cliente = Cliente::new(
+            1,
+            "nome".to_string(),
+            "email".to_string(),
+            Cpf::new("000.000.000-00".to_string()).unwrap(),
+            "2021-10-10".to_string(),
+            "2021-10-10".to_string(),
+        );
+
+        let expected_cliente = returned_cliente.clone();
+
+        mock.expect_get_cliente_by_cpf()
+            .times(1)
+            .with(eq(Cpf::new("000.000.000-00".to_string()).unwrap()))
+            .returning(move |_| Ok(returned_cliente.clone()));
+
+        let use_case = ClienteUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.get_cliente_by_cpf(Cpf::new("000.000.000-00".to_string()).unwrap()).await;
+        assert_eq!(result.unwrap().id(), expected_cliente.id());
+    }
+
+    #[tokio::test]
+    async fn test_create_cliente() {
+        let mut mock = MockClienteRepository::new();
+
+        let returned_cliente = Cliente::new(
+            1,
+            "nome".to_string(),
+            "email".to_string(),
+            Cpf::new("000.000.000-00".to_string()).unwrap(),
+            "2021-10-10".to_string(),
+            "2021-10-10".to_string(),
+        );
+
+        let expected_cliente = returned_cliente.clone();
+
+        mock.expect_create_cliente()
+            .times(1)
+            .returning(move |_| Ok(returned_cliente.clone()));
+
+        let use_case = ClienteUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.create_cliente(CreateClienteInput {
+            nome: "nome".to_string(),
+            email: "email".to_string(),
+            cpf: "000.000.000-00".to_string(),
+        }).await;
+
+        assert_eq!(result.unwrap().id(), expected_cliente.id());
+    }
+
+    #[tokio::test]
+    async fn test_delete_cliente() {
+        let mut mock = MockClienteRepository::new();
+
+        mock.expect_delete_cliente()
+            .times(1)
+            .with(eq(Cpf::new("000.000.000-00".to_string()).unwrap()))
+            .returning(move |_| Ok(()));
+
+        let use_case = ClienteUseCase::new(Arc::new(Mutex::new(mock)));
+        let result = use_case.delete_cliente(Cpf::new("000.000.000-00".to_string()).unwrap()).await;
+        assert_eq!(result.unwrap(), ());
+    }
+}
