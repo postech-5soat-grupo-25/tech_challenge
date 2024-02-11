@@ -11,7 +11,8 @@ use rocket::tokio;
 use self::table::{Table, TablesNames};
 use self::usuarios::get_usuario_table_columns;
 use self::clientes::get_cliente_table_columns;
-use self::pedidos::get_pedidos_table_columns;
+use self::produtos::get_produto_table_columns;
+use self::pedidos::get_pedido_table_columns;
 pub struct PgConnectionManager {
   pub client: Client,
 }
@@ -40,12 +41,12 @@ pub fn get_tables() -> Vec<Table> {
       columns: get_cliente_table_columns(),
     },
     Table {
-      name: TablesNames::Pedidos,
-      columns: get_pedidos_table_columns(),
+      name: TablesNames::Produto,
+      columns: get_produto_table_columns(),
     },
     Table {
-      name: TablesNames::Produtos,
-      columns: get_pedidos_table_columns(),
+      name: TablesNames::Pedido,
+      columns: get_pedido_table_columns(),
     },
   ]
 }

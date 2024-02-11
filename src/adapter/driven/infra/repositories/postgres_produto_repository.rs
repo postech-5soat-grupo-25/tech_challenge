@@ -1,18 +1,16 @@
+use std::error::Error;
+use bytes::BytesMut;
+use postgres_from_row::FromRow;
+use tokio_postgres::Client;
+use tokio_postgres::types::{FromSql, ToSql, Type};
+
+
 use crate::core::domain::{
-    base::domain_error::DomainError, entities::produto::Produto,
+    base::domain_error::DomainError, 
+    entities::produto::Categoria, 
+    entities::produto::Produto,
     repositories::produto_repository::ProdutoRepository,
 };
-
-use crate::core::domain::entities::produto::Categoria;
-use crate::core::domain::value_objects::ingredientes::Ingredientes;
-
-use chrono::{DateTime, Utc};
-use postgres_from_row::FromRow;
-use serde_json::{json, Value};
-use std::sync::Arc;
-use std::time::SystemTime;
-use tokio_postgres::types::{FromSql, ToSql, Type};
-use tokio_postgres::Client;
 
 use super::super::postgres::table::Table;
 
@@ -21,14 +19,64 @@ pub struct PostgresProdutoRepository {
     tables: Vec<Table>,
 }
 
-const ALL_PRODUCT_SELECT: &str =
-    "id, nome, foto, descricao, categoria, preco, ingredientes, data_criacao::TEXT, data_atualizacao::TEXT";
-const CREATE_PRODUCT: &str = "INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
-const QUERY_PRODUCT_BY_ID: &str = "SELECT * FROM produto WHERE id = $1";
-const QUERY_PRODUCTS: &str = "SELECT * FROM produto";
-const QUERY_PRODUCT_BY_CATEGORIA: &str = "SELECT * FROM produto WHERE categoria = $1";
-const UPDATE_PRODUCT: &str = "UPDATE produto SET nome = $1, foto = $2, descricao = $3, categoria = $4, preco = $5, ingredientes = $6, data_atualizacao = $7 WHERE id = $8 RETURNING *";
-const DELETE_PRODUCT: &str = "DELETE FROM produto WHERE id = $1";
+const CREATE_PRODUCT: &str = "INSERT INTO produto (nome, foto, descricao, categoria, preco, ingredientes, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao";
+const QUERY_PRODUCT_BY_ID: &str = "SELECT id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao FROM produto WHERE id = $1";
+const QUERY_PRODUCTS: &str = "SELECT id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao FROM produto";
+const QUERY_PRODUCT_BY_CATEGORIA: &str = "SELECT id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao FROM produto WHERE categoria = $1";
+const UPDATE_PRODUCT: &str = "UPDATE produto SET nome = $1, foto = $2, descricao = $3, categoria = $4, preco = $5, ingredientes = $6, data_atualizacao = CURRENT_TIMESTAMP WHERE id = $7 RETURNING id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao";
+const DELETE_PRODUCT: &str = "DELETE FROM produto WHERE id = $1 RETURNING *";
+
+
+impl<'a> FromSql<'a> for Categoria {
+    fn from_sql(
+        _ty: &tokio_postgres::types::Type,
+        raw: &'a [u8],
+    ) -> Result<Self, Box<dyn Error + Sync + Send>> {
+        let value = std::str::from_utf8(raw)?;
+
+        match value {
+            "Lanche" => Ok(Categoria::Lanche),
+            "Bebida" => Ok(Categoria::Bebida),
+            "Acompanhamento" => Ok(Categoria::Acompanhamento),
+            "Sobremesa" => Ok(Categoria::Sobremesa),
+            _ => Err("Invalid categoria value".into()),
+        }
+    }
+    fn accepts(_ty: &tokio_postgres::types::Type) -> bool {
+        true
+    }
+}
+
+impl ToSql for Categoria {
+    fn to_sql(
+        &self,
+        _ty: &Type,
+        out: &mut BytesMut,
+    ) -> Result<tokio_postgres::types::IsNull, Box<dyn std::error::Error + 'static + Send + Sync>>
+    {
+        match self {
+            Categoria::Lanche => out.extend_from_slice(b"Lanche"),
+            Categoria::Bebida => out.extend_from_slice(b"Bebida"),
+            Categoria::Acompanhamento => out.extend_from_slice(b"Acompanhamento"),
+            Categoria::Sobremesa => out.extend_from_slice(b"Sobremesa"),
+        }
+        Ok(tokio_postgres::types::IsNull::No)
+    }
+
+    fn accepts(_ty: &Type) -> bool {
+        true
+    }
+
+    fn to_sql_checked(
+        &self,
+        ty: &Type,
+        out: &mut BytesMut,
+    ) -> Result<tokio_postgres::types::IsNull, Box<dyn std::error::Error + 'static + Send + Sync>>
+    {
+        self.to_sql(ty, out)
+    }
+}
+
 
 impl PostgresProdutoRepository {
     pub async fn new(client: Client, tables: Vec<Table>) -> Self {
@@ -85,7 +133,6 @@ impl ProdutoRepository for PostgresProdutoRepository {
     async fn create_produto(&mut self, produto: Produto) -> Result<Produto, DomainError> {
         let ingredientes = produto.ingredientes();
         let ingredientes_vec: Vec<String> = ingredientes.to_vec_string();
-        let _now: SystemTime = SystemTime::now();
         let new_produto = self
             .client
             .query(
@@ -96,9 +143,7 @@ impl ProdutoRepository for PostgresProdutoRepository {
                     &produto.descricao(),
                     &produto.categoria(),
                     &produto.preco(),
-                    &ingredientes_vec,
-                    &_now.clone(),
-                    &_now,
+                    &ingredientes_vec
                 ],
             )
             .await
@@ -112,10 +157,8 @@ impl ProdutoRepository for PostgresProdutoRepository {
 
     async fn update_produto(&mut self, new_produto_data: Produto) -> Result<Produto, DomainError> {
         let id = new_produto_data.id().clone() as i32;
-
         let ingredientes = new_produto_data.ingredientes();
         let ingredientes_vec: Vec<String> = ingredientes.to_vec_string();
-        let _now: SystemTime = SystemTime::now();
 
         let updated_produto = self
             .client
@@ -128,7 +171,6 @@ impl ProdutoRepository for PostgresProdutoRepository {
                     &new_produto_data.categoria(),
                     &new_produto_data.preco(),
                     &ingredientes_vec,
-                    &_now,
                     &id,
                 ],
             )

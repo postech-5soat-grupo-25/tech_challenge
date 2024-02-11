@@ -78,7 +78,7 @@ impl PedidosEPagamentosUseCase {
 
       let cliente = match pedido_input.cliente_id {
           Some(id) => {
-              let mut cliente_repository = self.cliente_repository.lock().await;
+              let cliente_repository = self.cliente_repository.lock().await;
               Some(cliente_repository.get_cliente_by_id(id).await?)
           },
           None => None,

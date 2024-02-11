@@ -1,0 +1,756 @@
+{
+	"info": {
+		"_postman_id": "9b9ba446-116b-455f-b360-3ed59cd6f419",
+		"name": "Tech Challenge | PosTech 5SOAT • Grupo 25",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32609641"
+	},
+	"item": [
+		{
+			"name": "Fase 1",
+			"item": [
+				{
+					"name": "Auth",
+					"item": [
+						{
+							"name": "login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Usuario object should not be empty\", function () {",
+											"  const responseData = pm.response.json();",
+											"  ",
+											"  pm.expect(responseData).to.be.an('object');",
+											"  pm.expect(responseData.usuario).to.exist.and.to.not.be.empty;",
+											"});",
+											"",
+											"pm.test(\"Status should be either 'Ativo' or 'Inativo'\", function () {",
+											"  const responseData = pm.response.json();",
+											"  const validStatus = ['Ativo', 'Inativo'];",
+											"  pm.expect(responseData.usuario.status).to.be.oneOf(validStatus);",
+											"});",
+											"",
+											"pm.test(\"Tipo should be either 'Admin' or 'Cozinha'\", function () {",
+											"  const responseData = pm.response.json();",
+											"  const validTipo = ['Admin', 'Cozinha'];",
+											"  pm.expect(responseData.usuario.tipo).to.be.oneOf(validTipo);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "inherit"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"cpf\": \"000.000.000-00\",\r\n    \"senha\": \"melhor_projeto\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/auth/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Usuarios",
+					"item": [
+						{
+							"name": "usuario",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"  pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response has the required fields\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    \r",
+											"    pm.expect(responseData).to.be.an('array').that.is.not.empty;\r",
+											"    responseData.forEach(function(user) {\r",
+											"        pm.expect(user).to.include.all.keys('id', 'nome', 'email', 'cpf', 'tipo', 'status', 'data_criacao', 'data_atualizacao');\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Tipo is either Admin or Cozinha\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    \r",
+											"    responseData.forEach(function(user) {\r",
+											"        pm.expect(user.tipo).to.be.a('string').and.to.be.oneOf(['Admin', 'Cozinha']);\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Status is either Ativo or Inativo\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    \r",
+											"    responseData.forEach(function(user) {\r",
+											"        pm.expect(user.status).to.be.a('string').and.to.be.oneOf(['Ativo', 'Inativo']);\r",
+											"    });\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwicm9sZSI6IkFkbWluIiwiY29tcGFueSI6Indkcm9wcyIsImV4cCI6MTAwMDAwMDAwMDB9.giIiXFchxDDN2hRZcSArC-oKYn-U4sDTWF8WTfHFk1rBNpirk0JDk0pjaJmLcdsPxF7MKXFilCY7EEbDU21dOg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/usuarios",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"usuarios"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "usuario",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"\r",
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"\r",
+											"pm.test(\"Email is in a valid format\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    \r",
+											"    pm.expect(responseData).to.be.an('object');\r",
+											"    pm.expect(responseData.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/, \"Email should be in a valid format\");\r",
+											"});\r",
+											"\r",
+											"\r",
+											"pm.test(\"CPF is in a valid format\", function () {\r",
+											"  const responseData = pm.response.json();\r",
+											"  \r",
+											"  pm.expect(responseData.cpf).to.match(/^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$/, \"CPF should be in the format XXX.XXX.XXX-XX\");\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Tipo is either Admin or Cozinha\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    pm.expect(responseData.tipo).to.be.oneOf(['Admin', 'Cozinha']);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Status is either Ativo or Inativo\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    pm.expect(responseData.status).to.be.oneOf(['Ativo', 'Inativo']);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"nome\": \"Fulano da Silva\",\r\n  \"email\": \"fulano.silva@exemplo.com\",\r\n  \"senha\": \"senha_segura\",\r\n  \"cpf\": \"123.456.789-09\",\r\n  \"tipo\": \"Admin\",\r\n  \"status\": \"Ativo\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/usuarios",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"usuarios"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "usuario/id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response Content-Type is application/json\", function () {\r",
+											"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response exactly matches the expected data for id=2\", function () {\r",
+											"    const expectedData = {\r",
+											"        \"id\": 2,\r",
+											"        \"nome\": \"Fulano da Silva\",\r",
+											"        \"email\": \"fulano.silva@exemplo.com\",\r",
+											"        \"cpf\": \"123.456.789-09\",\r",
+											"        \"tipo\": \"Admin\",\r",
+											"        \"status\": \"Ativo\"\r",
+											"    };\r",
+											"\r",
+											"    let filteredResponse = _.omit(pm.response.json(), ['data_criacao', 'data_atualizacao']);\r",
+											"\r",
+											"    pm.expect(filteredResponse).to.eql(expectedData);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/usuario/2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"usuario",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "usuario/id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"    pm.expect(pm.response.code).to.equal(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response has the expected fields\", function () {\r",
+											"    const expectedFields = [\"id\", \"nome\", \"email\", \"cpf\", \"tipo\", \"status\", \"data_criacao\", \"data_atualizacao\"];\r",
+											"    const responseKeys = Object.keys(pm.response.json());\r",
+											"    pm.expect(responseKeys).to.include.members(expectedFields);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"nome\": \"Fulano da Silva\",\r\n    \"email\": \"fulano.silva@exemplo.com\",\r\n    \"senha\": \"senha_forte_atualizada\",\r\n    \"cpf\": \"123.456.789-09\",\r\n    \"tipo\": \"Admin\",\r\n    \"status\": \"Ativo\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/usuarios/2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"usuarios",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "usuario/cpf",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"    pm.expect(pm.response.code).to.equal(200);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/usuarios/123.456.789-09",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"usuarios",
+										"123.456.789-09"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Clientes",
+					"item": [
+						{
+							"name": "cliente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"    pm.expect(pm.response.code).to.equal(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Expected fields are returned in the response\", function () {\r",
+											"    const expectedFields = ['id', 'nome', 'email', 'cpf', 'data_criacao', 'data_atualizacao'];\r",
+											"    const responseData = pm.response.json();\r",
+											"\r",
+											"    responseData.forEach(function(cliente) {\r",
+											"        expectedFields.forEach(function(field) {\r",
+											"            pm.expect(cliente).to.have.property(field);\r",
+											"        });\r",
+											"    });\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/clientes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"clientes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "cliente",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Response status code is 200', function () {\r",
+											"    pm.expect(pm.response.code).to.equal(200);\r",
+											"})\r",
+											"\r",
+											"pm.test(\"Expected fields are returned in the response\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    pm.expect(responseData).to.have.property('id');\r",
+											"    pm.expect(responseData).to.have.property('nome');\r",
+											"    pm.expect(responseData).to.have.property('email');\r",
+											"    pm.expect(responseData).to.have.property('cpf');\r",
+											"    pm.expect(responseData).to.have.property('data_criacao');\r",
+											"    pm.expect(responseData).to.have.property('data_atualizacao');\r",
+											"});\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"nome\": \"Ciclano de Almeida\",\r\n  \"email\": \"ciclano.almeida@exemplo.com\",\r\n  \"cpf\": \"917.922.520-99\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/clientes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"clientes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "cliente/cpf",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"\r",
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"  pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"\r",
+											"pm.test(\"Response has the required fields\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    pm.expect(responseData).to.be.an('object');\r",
+											"    pm.expect(responseData).to.have.property('id');\r",
+											"    pm.expect(responseData).to.have.property('nome');\r",
+											"    pm.expect(responseData).to.have.property('email');\r",
+											"    pm.expect(responseData).to.have.property('cpf');\r",
+											"    pm.expect(responseData).to.have.property('data_criacao');\r",
+											"    pm.expect(responseData).to.have.property('data_atualizacao');\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/clientes/123.456.789-09",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"clientes",
+										"123.456.789-09"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Produtos",
+					"item": [
+						{
+							"name": "produto",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"\r",
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"    pm.expect(pm.response.code).to.equal(200);\r",
+											"});\r",
+											"\r",
+											"\r",
+											"pm.test(\"Response has the required fields\", function () {\r",
+											"    const responseData = pm.response.json();\r",
+											"    \r",
+											"    pm.expect(responseData).to.be.an('array');\r",
+											"    \r",
+											"    responseData.forEach(function(item) {\r",
+											"        pm.expect(item).to.include.all.keys('id', 'nome', 'foto', 'descricao', 'categoria', 'preco', 'ingredientes', 'data_criacao', 'data_atualizacao');\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/produtos",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"produtos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "produto",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"nome\": \"Batata Frita com Cheddar\",\r\n    \"foto\": \"batata_frita_cheddar.jpg\",\r\n    \"descricao\": \"Batatas com muito cheddar\",\r\n    \"categoria\": \"Acompanhamento\",\r\n    \"preco\": 7.99,\r\n    \"ingredientes\": [\"batata frita\", \"cheddar\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/produtos",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"produtos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "produto/id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response has the required fields\", function () {\r",
+											"    pm.expect(pm.response.json()).to.be.an('object').that.has.all.keys('id', 'nome', 'foto', 'descricao', 'categoria', 'preco', 'ingredientes', 'data_criacao', 'data_atualizacao');\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/produtos/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"produtos",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "produto/id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {",
+											"    pm.expect(pm.response.code).to.equal(200);",
+											"});",
+											"",
+											"pm.test(\"Response has the expected fields\", function () {",
+											"  const expectedFields = [\"id\", \"nome\", \"foto\", \"descricao\", \"categoria\", \"preco\", \"ingredientes\", \"data_criacao\", \"data_atualizacao\"];",
+											"  const responseData = pm.response.json();",
+											"  ",
+											"  expectedFields.forEach(function(field) {",
+											"    pm.expect(responseData).to.have.property(field);",
+											"  });",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"nome\": \"Hamburguer\",\r\n    \"foto\": \"hamburguer.jpg\",\r\n    \"descricao\": \"Delicioso hamburguer artesanal\",\r\n    \"categoria\": \"Lanche\",\r\n    \"preco\": 12.99,\r\n    \"ingredientes\": [\r\n        \"carne bovina\",\r\n        \"queijo cheddar\",\r\n        \"alface\"\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/produtos/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"produtos",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "produto/id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"    pm.expect(pm.response.code).to.equal(200);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/produtos/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"produtos",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Pedidos",
+					"item": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwicm9sZSI6IkFkbWluIiwiY29tcGFueSI6Indkcm9wcyIsImV4cCI6MTAwMDAwMDAwMDB9.giIiXFchxDDN2hRZcSArC-oKYn-U4sDTWF8WTfHFk1rBNpirk0JDk0pjaJmLcdsPxF7MKXFilCY7EEbDU21dOg",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}

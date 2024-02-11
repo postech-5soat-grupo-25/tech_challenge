@@ -90,19 +90,19 @@ async fn insert_produto(
     produto_id: usize,
 ) -> Result<Json<Pedido>, Status> {
     match categoria {
-        "lanche" => {
+        "Lanche" => {
             let pedido = pedidos_e_pagamentos_use_case
                 .adicionar_lanche_com_personalizacao(id, produto_id)
                 .await?;
             Ok(Json(pedido))
         }
-        "acompanhamento" => {
+        "Acompanhamento" => {
             let pedido = pedidos_e_pagamentos_use_case
                 .adicionar_acompanhamento(id, produto_id)
                 .await?;
             Ok(Json(pedido))
         }
-        "bebida" => {
+        "Bebida" => {
             let pedido = pedidos_e_pagamentos_use_case
                 .adicionar_bebida(id, produto_id)
                 .await?;

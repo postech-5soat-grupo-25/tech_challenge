@@ -6,7 +6,7 @@ use crate::core::domain::entities::pedido::PedidoFromRow;
 
 use super::table::{ColumnDefault, ColumnNullable, ColumnTypes};
 
-pub fn get_pedidos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
+pub fn get_pedido_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
 {
     let mut columns = HashMap::new();
     columns.insert(
@@ -18,7 +18,7 @@ pub fn get_pedidos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullab
         ),
     );
     columns.insert(
-        "cliente".to_string(),
+        "cliente_id".to_string(),
         (
             ColumnTypes::Integer,
             ColumnNullable(false),
@@ -26,7 +26,7 @@ pub fn get_pedidos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullab
         ),
     );
     columns.insert(
-        "lanche".to_string(),
+        "lanche_id".to_string(),
         (
             ColumnTypes::Integer,
             ColumnNullable(true),
@@ -34,7 +34,7 @@ pub fn get_pedidos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullab
         ),
     );
     columns.insert(
-        "acompanhamento".to_string(),
+        "acompanhamento_id".to_string(),
         (
             ColumnTypes::Integer,
             ColumnNullable(true),
@@ -42,7 +42,7 @@ pub fn get_pedidos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullab
         ),
     );
     columns.insert(
-        "bebida".to_string(),
+        "bebida_id".to_string(),
         (
             ColumnTypes::Integer,
             ColumnNullable(true),
@@ -89,10 +89,10 @@ pub fn get_pedidos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullab
 impl FromRow for PedidoFromRow {
     fn from_row(row: &tokio_postgres::Row) -> Self {
         let id: i32 = row.get("id");
-        let cliente_id: i32 = row.get("cliente");
-        let lanche_id: i32 = row.get("lanche");
-        let acompanhamento_id: i32 = row.get("acompanhamento");
-        let bebida_id: i32 = row.get("bebida");
+        let cliente_id: i32 = row.get("cliente_id");
+        let lanche_id: i32 = row.get("lanche_id");
+        let acompanhamento_id: i32 = row.get("acompanhamento_id");
+        let bebida_id: i32 = row.get("bebida_id");
         let status: i32 = row.get("status");
         
         PedidoFromRow::new(
@@ -110,10 +110,10 @@ impl FromRow for PedidoFromRow {
 
     fn try_from_row(row: &tokio_postgres::Row) -> Result<Self, tokio_postgres::Error> {
         let id: i32 = row.try_get("id")?;
-        let cliente_id: i32 = row.try_get("cliente")?;
-        let lanche_id: i32 = row.try_get("lanche")?;
-        let acompanhamento_id: i32 = row.try_get("acompanhamento")?;
-        let bebida_id: i32 = row.try_get("bebida")?;
+        let cliente_id: i32 = row.try_get("cliente_id")?;
+        let lanche_id: i32 = row.try_get("lanche_id")?;
+        let acompanhamento_id: i32 = row.try_get("acompanhamento_id")?;
+        let bebida_id: i32 = row.try_get("bebida_id")?;
         let status: i32 = row.try_get("status")?;
 
         Ok(PedidoFromRow::new(
