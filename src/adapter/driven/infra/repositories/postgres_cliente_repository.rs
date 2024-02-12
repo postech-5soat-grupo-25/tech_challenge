@@ -1,18 +1,20 @@
 use postgres_from_row::FromRow;
 use tokio_postgres::Client;
 
-use crate::core::domain::base::domain_error::DomainError;
-use crate::core::domain::entities::cliente::Cliente;
-use crate::core::domain::repositories::cliente_repository::ClienteRepository;
-use crate::core::domain::value_objects::cpf::Cpf;
+use crate::core::domain::{
+    base::domain_error::DomainError, 
+    entities::cliente::Cliente,
+    repositories::cliente_repository::ClienteRepository, 
+    value_objects::cpf::Cpf,
+};
 
 use super::super::postgres::table::Table;
 
-const CREATE_CLIENTE: &str = "INSERT INTO cliente (nome, email, cpf) VALUES ($1, $2, $3) RETURNING *";
+const CREATE_CLIENTE: &str = "INSERT INTO cliente (nome, email, cpf, data_criacao, data_atualizacao) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *";
 const QUERY_CLIENTE_BY_CPF: &str = "SELECT * FROM cliente WHERE cpf = $1";
 const QUERY_CLIENTE_BY_ID: &str = "SELECT * FROM cliente WHERE id = $1";
 const QUERY_CLIENTES: &str = "SELECT * FROM cliente";
-const DELETE_CLIENTE: &str = "DELETE FROM cliente WHERE cpf = $1";
+const DELETE_CLIENTE: &str = "DELETE FROM cliente WHERE cpf = $1 RETURNING *";
 
 pub struct PostgresClienteRepository {
     client: Client,

@@ -2,10 +2,12 @@ use chrono::Utc;
 use postgres_from_row::FromRow;
 use tokio_postgres::Client;
 
-use crate::core::domain::base::domain_error::DomainError;
-use crate::core::domain::entities::usuario::Usuario;
-use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
-use crate::core::domain::value_objects::cpf::Cpf;
+use crate::core::domain::{
+    base::domain_error::DomainError, 
+    entities::usuario::Usuario,
+    repositories::usuario_repository::UsuarioRepository, 
+    value_objects::cpf::Cpf,
+};
 
 use super::super::postgres::table::Table;
 pub struct PostgresUsuarioRepository {
@@ -14,11 +16,11 @@ pub struct PostgresUsuarioRepository {
 }
 
 const CREATE_USUARIO: &str = "INSERT INTO usuario (nome, email, cpf, senha, tipo, status, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *";
-const UPDATE_USUARIO: &str = "UPDATE usuario SET nome = $1, email = $2, cpf = $3, senha = $4, tipo = $5, status = $6 WHERE id = $7 RETURNING *";
+const UPDATE_USUARIO: &str = "UPDATE usuario SET nome = $1, email = $2, cpf = $3, senha = $4, tipo = $5, status = $6, data_atualizacao = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *";
 const QUERY_USUARIO_BY_CPF: &str = "SELECT * FROM usuario WHERE cpf = $1";
 const QUERY_USUARIO_BY_ID: &str = "SELECT * FROM usuario WHERE id = $1";
 const QUERY_USUARIOS: &str = "SELECT * FROM usuario";
-const DELETE_USUARIO: &str = "DELETE FROM usuario WHERE cpf = $1";
+const DELETE_USUARIO: &str = "DELETE FROM usuario WHERE cpf = $1 RETURNING *";
 
 impl PostgresUsuarioRepository {
     pub async fn new(client: Client, tables: Vec<Table>) -> Self {
@@ -119,27 +121,33 @@ impl UsuarioRepository for PostgresUsuarioRepository {
         }
     }
 
-    async fn update_usuario(&mut self, dados_usuario_atualizado: Usuario) -> Result<Usuario, DomainError> {
+    async fn update_usuario(
+        &mut self,
+        dados_usuario_atualizado: Usuario,
+    ) -> Result<Usuario, DomainError> {
         let id = dados_usuario_atualizado.id().clone() as i32;
-        let usuario_atualizado = self.client.query(UPDATE_USUARIO, &[
-          &dados_usuario_atualizado.nome(),
-          &dados_usuario_atualizado.email(),
-          &dados_usuario_atualizado.cpf().0,
-          &dados_usuario_atualizado.senha(),
-          &dados_usuario_atualizado.tipo().to_string(),
-          &dados_usuario_atualizado.status().to_string(),
-          &id,
-        ]).await.unwrap();
+        let usuario_atualizado = self
+            .client
+            .query(
+                UPDATE_USUARIO,
+                &[
+                    &dados_usuario_atualizado.nome(),
+                    &dados_usuario_atualizado.email(),
+                    &dados_usuario_atualizado.cpf().0,
+                    &dados_usuario_atualizado.senha(),
+                    &dados_usuario_atualizado.tipo().to_string(),
+                    &dados_usuario_atualizado.status().to_string(),
+                    &id,
+                ],
+            )
+            .await
+            .unwrap();
         let usuario_atualizado = usuario_atualizado.get(0);
         match usuario_atualizado {
-          Some(user) => {
-            Ok(Usuario::from_row(user))
-          },
-          None => {
-            Err(DomainError::NotFound)
-          }
+            Some(user) => Ok(Usuario::from_row(user)),
+            None => Err(DomainError::NotFound),
         }
-      }
+    }
 
     async fn delete_usuario(&mut self, cpf: Cpf) -> Result<(), DomainError> {
         let deleted_usuario = self.client.query_one(DELETE_USUARIO, &[&cpf.0]).await;

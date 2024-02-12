@@ -1,12 +1,20 @@
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::str::FromStr;
 
-use crate::core::domain::base::aggregate_root::AggregateRoot;
-use crate::core::domain::base::assertion_concern;
-use crate::core::domain::base::domain_error::DomainError;
-use crate::core::domain::entities::cliente::Cliente;
-use crate::core::domain::entities::produto::Produto;
+use crate::core::domain::{
+    base::{
+        assertion_concern,
+        aggregate_root::AggregateRoot,
+        domain_error::DomainError,
+    },
+    entities::{
+        cliente::Cliente,
+        produto::Produto,
+    },
+};
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Status {
@@ -19,121 +27,41 @@ pub enum Status {
     Invalido,
 }
 
-impl Status {
-    pub fn from_index(index: usize) -> Status {
-        match index {
-            0 => Status::Pendente,
-            1 => Status::Recebido,
-            2 => Status::EmPreparacao,
-            3 => Status::Pronto,
-            4 => Status::Finalizado,
-            5 => Status::Cancelado,
-            _ => Status::Invalido,
-        }
-    }
+impl FromStr for Status {
+    type Err = ();
 
-    pub fn to_index(&self) -> usize {
-        match *self {
-            Status::Pendente => 0,
-            Status::Recebido => 1,
-            Status::EmPreparacao => 2,
-            Status::Pronto => 3,
-            Status::Finalizado => 4,
-            Status::Cancelado => 5,
-            Status::Invalido => 6,
+    fn from_str(input: &str) -> Result<Status, Self::Err> {
+        match input {
+            "Recebido" => Ok(Status::Recebido),
+            "EmPreparacao" => Ok(Status::EmPreparacao),
+            "Pronto" => Ok(Status::Pronto),
+            "Pendente" => Ok(Status::Pendente),
+            "Finalizado" => Ok(Status::Finalizado),
+            "Cancelado" => Ok(Status::Cancelado),
+            "Invalido" => Ok(Status::Invalido),
+            _ => Err(()),
         }
-    }
-
-    pub fn from_string(string: String) -> Status {
-        let mut status_enum : Status = Status::Invalido;
-        match string.as_str() {
-            "recebido" => status_enum = Status::Recebido,
-            "em_preparacao" => status_enum = Status::EmPreparacao,
-            "pronto" => status_enum = Status::Pronto,
-            "finalizado" => status_enum = Status::Finalizado,
-            "set_pedido_cancelado" => status_enum = Status::Cancelado,
-            &_ => status_enum = Status::Invalido,
-        }
-        return status_enum.clone();
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
-pub struct PedidoFromRow {
-    id: usize,
-    cliente: i32,
-    lanche: i32,
-    acompanhamento: i32,
-    bebida: i32,
-    pagamento: String,
-    status: Status,
-    data_criacao: String,
-    data_atualizacao: String,
-}
-
-
-impl PedidoFromRow {
-    pub fn new(
-        id: usize,
-        cliente: i32,
-        lanche: i32,
-        acompanhamento: i32,
-        bebida: i32,
-        pagamento: String,
-        status: Status,
-        data_criacao: String,
-        data_atualizacao: String,
-    ) -> Self {
-        PedidoFromRow {
-            id,
-            cliente,
-            lanche,
-            acompanhamento,
-            bebida,
-            pagamento,
-            status,
-            data_criacao,
-            data_atualizacao,
-        }
-    }
-
-    // Getters
-    pub fn id(&self) -> &usize {
-        &self.id
-    }
-
-    pub fn cliente(&self) -> i32 {
-        self.cliente
-    }
-
-    pub fn lanche(&self) -> i32 {
-        self.lanche
-    }
-
-    pub fn acompanhamento(&self) -> i32 {
-        self.acompanhamento
-    }
-
-    pub fn bebida(&self) -> i32 {
-        self.bebida
-    }
-
-    pub fn pagamento(&self) -> &String {
-        &self.pagamento
-    }
-
-    pub fn status(&self) -> &Status {
-        &self.status
-    }
-
-    pub fn data_criacao(&self) -> &String {
-        &self.data_criacao
-    }
-
-    pub fn data_atualizacao(&self) -> &String {
-        &self.data_atualizacao
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Status::Recebido => "Recebido",
+                Status::EmPreparacao => "EmPreparacao",
+                Status::Pronto => "Pronto",
+                Status::Pendente => "Pendente",
+                Status::Finalizado => "Finalizado",
+                Status::Cancelado => "Cancelado",
+                Status::Invalido => "Invalido",
+            }
+        )
     }
 }
+
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Pedido {

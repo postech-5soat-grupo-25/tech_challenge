@@ -14,7 +14,7 @@ use crate::core::domain::entities::pedido::{self, Pedido};
 use crate::core::domain::entities::produto::Categoria;
 
 #[openapi(tag = "Pedidos")]
-#[get("/pedido")]
+#[get("/")]
 async fn get_pedidos(
     pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
     _logged_user_info: AuthenticatedUser,
@@ -24,7 +24,7 @@ async fn get_pedidos(
 }
 
 #[openapi(tag = "Pedidos")]
-#[post("/pedido", data = "<pedido_input>")]
+#[post("/", data = "<pedido_input>")]
 async fn post_novo_pedido(
     pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
     pedido_input: Json<CreatePedidoInput>,
@@ -48,7 +48,7 @@ async fn post_novo_pedido(
 // }
 
 #[openapi(tag = "Pedidos")]
-#[get("/pedido_novos")]
+#[get("/novos")]
 async fn get_pedidos_novos(
     preparacao_e_entrega_use_case: &State<PreparacaoeEntregaUseCase>,
     __logged_user_info: AuthenticatedUser,
@@ -90,19 +90,19 @@ async fn insert_produto(
     produto_id: usize,
 ) -> Result<Json<Pedido>, Status> {
     match categoria {
-        "lanche" => {
+        "Lanche" => {
             let pedido = pedidos_e_pagamentos_use_case
                 .adicionar_lanche_com_personalizacao(id, produto_id)
                 .await?;
             Ok(Json(pedido))
         }
-        "acompanhamento" => {
+        "Acompanhamento" => {
             let pedido = pedidos_e_pagamentos_use_case
                 .adicionar_acompanhamento(id, produto_id)
                 .await?;
             Ok(Json(pedido))
         }
-        "bebida" => {
+        "Bebida" => {
             let pedido = pedidos_e_pagamentos_use_case
                 .adicionar_bebida(id, produto_id)
                 .await?;

@@ -1,19 +1,15 @@
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use postgres_from_row::FromRow;
 use std::collections::HashMap;
-use std::io::prelude::*;
-use std::str::FromStr;
 use std::time::SystemTime;
 
 use crate::core::domain::entities::produto::Categoria;
 use crate::core::domain::entities::produto::Produto;
 use crate::core::domain::value_objects::ingredientes::Ingredientes;
-use tokio_postgres::error::Error as PgError;
-use tokio_postgres::types::{FromSql, Type};
 
 use super::table::{ColumnDefault, ColumnNullable, ColumnTypes};
 
-pub fn get_produtos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
+pub fn get_produto_table_columns() -> HashMap<String, (ColumnTypes, ColumnNullable, ColumnDefault)>
 {
     let mut columns = HashMap::new();
     columns.insert(
@@ -51,15 +47,7 @@ pub fn get_produtos_table_columns() -> HashMap<String, (ColumnTypes, ColumnNulla
     columns.insert(
         "categoria".to_string(),
         (
-            ColumnTypes::ENUM(
-                "categoria_type".to_string(),
-                vec![
-                    "lanche".to_string(),
-                    "bebida".to_string(),
-                    "acompanhamento".to_string(),
-                    "sobremesa".to_string(),
-                ],
-            ),
+            ColumnTypes::Text,
             ColumnNullable(false),
             ColumnDefault(None),
         ),
@@ -110,26 +98,23 @@ impl FromRow for Produto {
             Ok(ing) => ing,
             Err(e) => panic!("Failed to create Ingredientes: {:?}", e),
         };
-
-        let categoria: Categoria = row.get("categoria");
-        //let categoria = Categoria::from_str(&categoria_str.to_lowercase()).unwrap_or_else(|_| panic!("Invalid Categoria: {}", categoria_str));
-        let data_criacao:SystemTime = row.get("data_criacao");
-        let data_criacao_utc: DateTime<Utc> = data_criacao.into();
-        let data_criacao_string = data_criacao_utc.to_rfc3339();
-        let data_atualizacao:SystemTime =  row.get("data_atualizacao");
-        let data_atualizacao_utc: DateTime<Utc> = data_atualizacao.into();
-        let data_atualizacao_string = data_atualizacao_utc.to_rfc3339();
+        let data_criacao: std::time::SystemTime = row.get("data_criacao");
+        let data_criacao: DateTime<Utc> = data_criacao.into();
+        let data_atualizacao: std::time::SystemTime = row.get("data_atualizacao");
+        let data_atualizacao: DateTime<Utc> = data_atualizacao.into();
 
         Produto::new(
             id as usize,
             row.get("nome"),
             row.get("foto"),
             row.get("descricao"),
-            categoria,
+            row.get::<_, &str>("categoria").parse::<Categoria>().unwrap(),
             preco,
             ingredientes,
-            data_criacao_string,
-            data_atualizacao_string,
+            data_criacao.format("%Y-%m-%d %H:%M:%S%.3f%z").to_string(),
+            data_atualizacao
+                .format("%Y-%m-%d %H:%M:%S%.3f%z")
+                .to_string(),
         )
     }
 
@@ -145,18 +130,16 @@ impl FromRow for Produto {
             Err(e) => panic!("Failed to create Ingredientes: {:?}", e),
         };
 
-        let categoria: Categoria = row.get("categoria");
-
         Ok(Produto::new(
             id as usize,
             row.try_get("nome")?,
             row.try_get("foto")?,
             row.try_get("descricao")?,
-            categoria,
+            (row.try_get::<_, &str>("categoria")?).parse::<Categoria>().unwrap(),
             preco,
             ingredientes,
-            row.get("created_at"),
-            row.get("updated_at"),
+            row.get("data_criacao"),
+            row.get("data_atualizacao"),
         ))
     }
 }

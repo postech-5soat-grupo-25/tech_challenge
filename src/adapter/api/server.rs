@@ -1,29 +1,41 @@
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
-use std::process;
-
 use rocket::futures::lock::Mutex;
 use rocket::response::Redirect;
 use rocket_okapi::swagger_ui::*;
 use rocket_okapi::settings::UrlObject;
 
-use crate::adapter::driven::infra::repositories::postgres_produto_repository::PostgresProdutoRepository;
-use crate::adapter::driven::infra::{repositories, postgres};
-use crate::adapter::driven::pagamento::mock::MockPagamentoSuccesso;
-use crate::core::application::use_cases::{pedidos_e_pagamentos_use_case, produto_use_case};
-use crate::core::domain::repositories::produto_repository::ProdutoRepository;
-use crate::core::domain::repositories::usuario_repository::UsuarioRepository;
-use crate::core::domain::repositories::cliente_repository::ClienteRepository;
-use crate::core::domain::repositories::pedido_repository::PedidoRepository;
-use repositories::{in_memory_pedido_repository::InMemoryPedidoRepository, postgres_pedido_repository::PostgresPedidoRepository};
-use repositories::{in_memory_usuario_repository::InMemoryUsuarioRepository, postgres_usuario_repository::PostgresUsuarioRepository};
-use repositories::{in_memory_cliente_repository::InMemoryClienteRepository, postgres_cliente_repository::PostgresClienteRepository};
 use crate::adapter::api::config::{Config, Env};
-use crate::core::application::use_cases::usuario_use_case::UsuarioUseCase;
-use crate::core::application::use_cases::cliente_use_case::ClienteUseCase;
-use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
-
-use super::controllers::{auth_controller, usuario_controller, cliente_controller, pedido_controller, produto_controller};
+use crate::adapter::driven::{
+    infra::repositories,
+    infra::postgres,
+    pagamento::mock::MockPagamentoSuccesso,
+};
+use crate::core::domain::repositories::{
+    produto_repository::ProdutoRepository,
+    usuario_repository::UsuarioRepository,
+    cliente_repository::ClienteRepository,
+    pedido_repository::PedidoRepository,
+};
+use crate::core::application::use_cases::{
+    gerenciamento_de_usuarios_use_case::UsuarioUseCase,
+    gerenciamento_de_clientes_use_case::ClienteUseCase,
+    gerenciamento_de_produtos_use_case::ProdutoUseCase,
+    preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase,
+    pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase,
+};
+use repositories::{
+    in_memory_pedido_repository::InMemoryPedidoRepository, postgres_pedido_repository::PostgresPedidoRepository,
+    in_memory_usuario_repository::InMemoryUsuarioRepository, postgres_usuario_repository::PostgresUsuarioRepository,
+    in_memory_cliente_repository::InMemoryClienteRepository, postgres_cliente_repository::PostgresClienteRepository,
+};
+use super::controllers::{
+    auth_controller, 
+    usuario_controller, 
+    cliente_controller, 
+    pedido_controller, 
+    produto_controller
+};
 use super::error_handling::generic_catchers;
 
 #[get("/")]
@@ -71,7 +83,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone()).await.unwrap();
     let tables = postgres::get_tables();
     let produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>> =
-        Arc::new(Mutex::new(PostgresProdutoRepository::new(postgres_connection_manager.client, tables).await));
+        Arc::new(Mutex::new(repositories::postgres_produto_repository::PostgresProdutoRepository::new(postgres_connection_manager.client, tables).await));
 
     // Cloning produto_repository to share ownership
     let cloned_produto_repository = Arc::clone(&produto_repository);
@@ -90,9 +102,9 @@ pub async fn main() -> Result<(), rocket::Error> {
 
     let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(Arc::clone(&pedido_repository));
 
-    let produto_use_case = produto_use_case::ProdutoUseCase::new(Arc::clone(&produto_repository));
+    let produto_use_case = ProdutoUseCase::new(Arc::clone(&produto_repository));
 
-    let pedidos_e_pagamentos_use_case = pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase::new(
+    let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
         pedido_repository,
         cliente_repository,
         produto_repository,
@@ -113,8 +125,8 @@ pub async fn main() -> Result<(), rocket::Error> {
                 UrlObject::new("Auth", "/auth/openapi.json"),
                 UrlObject::new("Usuarios", "/usuarios/openapi.json"),
                 UrlObject::new("Clientes", "/clientes/openapi.json"),
-                UrlObject::new("Pedido", "/pedido/openapi.json"),
-                UrlObject::new("Produto", "/produto/openapi.json"),
+                UrlObject::new("Produtos", "/produtos/openapi.json"),
+                UrlObject::new("Pedidos", "/pedidos/openapi.json"),
             ],
             ..Default::default()
         }),
@@ -122,10 +134,12 @@ pub async fn main() -> Result<(), rocket::Error> {
     .mount("/auth", auth_controller::routes())
     .mount("/usuarios", usuario_controller::routes())
     .mount("/clientes", cliente_controller::routes())
-    .mount("/pedido", pedido_controller::routes())
-    .mount("/produto", produto_controller::routes())
+    .mount("/produtos", produto_controller::routes())
+    .mount("/pedidos", pedido_controller::routes())
     .register("/usuarios", usuario_controller::catchers())
     .register("/clientes", cliente_controller::catchers())
+    .register("/produtos", produto_controller::catchers())
+    .register("/pedidos", produto_controller::catchers())
     .manage(usuario_use_case)
     .manage(cliente_use_case)
     .manage(preparacao_e_entrega_use_case)

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::adapter::api::helpers::auth_helper::get_token;
 use crate::core::domain::value_objects::cpf::Cpf;
 use crate::core::{
-    application::use_cases::usuario_use_case::UsuarioUseCase, domain::entities::usuario::Usuario,
+    application::use_cases::gerenciamento_de_usuarios_use_case::UsuarioUseCase, domain::entities::usuario::Usuario,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]

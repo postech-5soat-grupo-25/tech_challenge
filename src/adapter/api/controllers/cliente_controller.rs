@@ -6,7 +6,7 @@ use rocket_okapi::{openapi, openapi_get_routes};
 
 use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::cliente_use_case::{ClienteUseCase, CreateClienteInput};
+use crate::core::application::use_cases::gerenciamento_de_clientes_use_case::{ClienteUseCase, CreateClienteInput};
 use crate::core::domain::entities::cliente::Cliente;
 use crate::core::domain::value_objects::cpf::Cpf;
 

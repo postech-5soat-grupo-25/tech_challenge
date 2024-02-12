@@ -7,11 +7,11 @@ use rocket_okapi::{openapi, openapi_get_routes};
 
 use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::produto_use_case::{ProdutoUseCase, CreateProdutoInput, UpdateProdutoInput};
+use crate::core::application::use_cases::gerenciamento_de_produtos_use_case::{ProdutoUseCase, CreateProdutoInput, UpdateProdutoInput};
 use crate::core::domain::entities::produto::Produto;
 use crate::adapter::api::request_guards::admin_guard::AdminUser;
 
-#[openapi(tag = "Produto")]
+#[openapi(tag = "Produtos")]
 #[get("/")]
 async fn get_produto(
     produto_use_case: &State<ProdutoUseCase>,
@@ -21,7 +21,7 @@ async fn get_produto(
     Ok(Json(produtos))
 }
 
-#[openapi(tag = "Produto")]
+#[openapi(tag = "Produtos")]
 #[get("/<id>")]
 async fn get_produto_by_id(
     produto_use_case: &State<ProdutoUseCase>,
@@ -32,7 +32,7 @@ async fn get_produto_by_id(
     Ok(Json(produto))
 }
 
-#[openapi(tag = "Produto")]
+#[openapi(tag = "Produtos")]
 #[post("/", data = "<produto_input>")]
 async fn create_produto(
     produto_use_case: &State<ProdutoUseCase>,
@@ -44,8 +44,8 @@ async fn create_produto(
     Ok(Json(produto))
 }
 
-#[openapi(tag = "Produto")]
-#[post("/<id>", data = "<produto_input>")]
+#[openapi(tag = "Produtos")]
+#[put("/<id>", data = "<produto_input>")]
 async fn update_produto(
     produto_use_case: &State<ProdutoUseCase>,
     produto_input: Json<CreateProdutoInput>,
@@ -57,7 +57,7 @@ async fn update_produto(
     Ok(Json(produto))
 }
 
-#[openapi(tag = "Produto")]
+#[openapi(tag = "Produtos")]
 #[delete("/<id>")]
 async fn delete_produto(
     produto_use_case: &State<ProdutoUseCase>,

@@ -4,10 +4,14 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
-use crate::core::domain::base::aggregate_root::AggregateRoot;
-use crate::core::domain::base::assertion_concern;
-use crate::core::domain::base::domain_error::DomainError;
-use crate::core::domain::value_objects::cpf::Cpf;
+use crate::core::domain::{
+    base::{
+        assertion_concern,
+        aggregate_root::AggregateRoot,
+        domain_error::DomainError,
+    },
+    value_objects::cpf::Cpf,
+};
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Status {

@@ -8,6 +8,9 @@ use crate::core::domain::entities::produto::{Produto,Categoria};
 
 use crate::core::domain::value_objects::cpf::Cpf;
 use crate::core::domain::value_objects::ingredientes::Ingredientes;
+
+use crate::core::domain::repositories::produto_repository::ProdutoRepository;
+use crate::core::domain::repositories::cliente_repository::ClienteRepository;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
 
 #[derive(Clone)]
@@ -124,6 +127,17 @@ impl PedidoRepository for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
+    async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche: Produto) -> Result<Pedido, DomainError> {
+        let pedidos = &mut self._pedidos;
+        for pedido in pedidos.iter_mut() {
+            if *pedido.id() == pedido_id {
+                pedido.set_lanche(Some(lanche.clone()));
+                return Ok(pedido.clone());
+            }
+        }
+        Err(DomainError::NotFound)
+    }
+
     async fn cadastrar_acompanhamento(&mut self, pedido_id: usize, acompanhamento: Produto) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
@@ -151,17 +165,6 @@ impl PedidoRepository for InMemoryPedidoRepository {
         for pedido in pedidos.iter_mut() {
             if *pedido.id() == pedido_id {
                 pedido.set_pagamento(pagamento.clone());
-                return Ok(pedido.clone());
-            }
-        }
-        Err(DomainError::NotFound)
-    }
-
-    async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche: Produto) -> Result<Pedido, DomainError> {
-        let pedidos = &mut self._pedidos;
-        for pedido in pedidos.iter_mut() {
-            if *pedido.id() == pedido_id {
-                pedido.set_lanche(Some(lanche.clone()));
                 return Ok(pedido.clone());
             }
         }

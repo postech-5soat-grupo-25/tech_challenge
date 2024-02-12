@@ -1,3 +1,15 @@
+-- Criacao do tipo enum para status do usuário
+CREATE TYPE STATUS_USUARIO_ENUM AS ENUM (
+    'Ativo',
+    'Inativo'
+);
+
+-- Criacao do tipo enum para tipo do usuário
+CREATE TYPE TIPO_USUARIO_ENUM AS ENUM (
+    'Admin',
+    'Cozinha'
+);
+
 -- Criacao da tabela de usuario
 CREATE TABLE IF NOT EXISTS usuario (
     id SERIAL PRIMARY KEY,
@@ -6,23 +18,28 @@ CREATE TABLE IF NOT EXISTS usuario (
     cpf TEXT NOT NULL,
     senha TEXT NOT NULL,
     tipo TEXT NOT NULL,
-    status TEXT NOT NULL, 
+    status TEXT NOT NULL,
     data_criacao TIMESTAMP,
     data_atualizacao TIMESTAMP
 );
 
 -- Criacao do tipo enum para categoria
-CREATE TYPE CATEGORIA_ENUM AS ENUM ('lanche', 'bebida', 'acompanhamento', 'sobremesa');
+CREATE TYPE CATEGORIA_ENUM AS ENUM (
+    'Lanche',
+    'Bebida',
+    'Acompanhamento',
+    'Sobremesa'
+);
 
 -- Criacao da tabela de produto
 CREATE TABLE IF NOT EXISTS produto (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
     foto TEXT NOT NULL,
-    descricao TEXT NOT NULL, 
+    descricao TEXT NOT NULL,
     categoria CATEGORIA_ENUM NOT NULL,
     preco FLOAT NOT NULL,
-    ingredientes TEXT[] NOT NULL,
+    ingredientes TEXT [] NOT NULL,
     data_criacao TIMESTAMP,
     data_atualizacao TIMESTAMP
 );
@@ -33,23 +50,34 @@ CREATE TABLE IF NOT EXISTS cliente (
     nome TEXT NOT NULL,
     email TEXT NOT NULL,
     cpf TEXT NOT NULL,
-    data_criacao TIMESTAMP ,
+    data_criacao TIMESTAMP,
     data_atualizacao TIMESTAMP
+);
+
+-- Criacao do tipo enum para status
+CREATE TYPE STATUS_PEDIDO_ENUM AS ENUM (
+    'Pendente',
+    'Recebido',
+    'EmPreparacao',
+    'Pronto',
+    'Finalizado',
+    'Cancelado',
+    'Invalido'
 );
 
 -- Criacao da tabela de pedido
 CREATE TABLE IF NOT EXISTS pedido (
     id SERIAL PRIMARY KEY,
-    cliente INT NOT NULL,
-    lanche INT,
-    acompanhamento INT,
-    bebida INT,
+    cliente_id INT,
+    lanche_id INT,
+    acompanhamento_id INT,
+    bebida_id INT,
     pagamento TEXT,
-    status INT NOT NULL,
+    status STATUS_PEDIDO_ENUM NOT NULL,
     data_criacao TIMESTAMP,
     data_atualizacao TIMESTAMP,
-    CONSTRAINT fk_cliente FOREIGN KEY (cliente) REFERENCES cliente(id),
-    CONSTRAINT fk_lanche FOREIGN KEY (lanche) REFERENCES produto(id),
-    CONSTRAINT fk_acompanhamento FOREIGN KEY (acompanhamento) REFERENCES produto(id),
-    CONSTRAINT fk_bebida FOREIGN KEY (bebida) REFERENCES produto(id)
+    CONSTRAINT fk_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id),
+    CONSTRAINT fk_lanche FOREIGN KEY (lanche_id) REFERENCES produto(id),
+    CONSTRAINT fk_acompanhamento FOREIGN KEY (acompanhamento_id) REFERENCES produto(id),
+    CONSTRAINT fk_bebida FOREIGN KEY (bebida_id) REFERENCES produto(id)
 );

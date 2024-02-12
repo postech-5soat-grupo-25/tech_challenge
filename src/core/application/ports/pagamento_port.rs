@@ -1,5 +1,6 @@
-use schemars::JsonSchema;
+use mockall::*;
 
+use schemars::JsonSchema;
 use crate::core::domain::base::domain_error::DomainError;
 
 #[derive(PartialEq, JsonSchema)]
@@ -8,6 +9,7 @@ pub enum StatusPagamento {
     Falha,
 }
 
+#[automock]
 pub trait PagamentoPort: Send + Sync {
     fn processa_pagamento(
         &self,
@@ -20,4 +22,3 @@ pub trait PagamentoPort: Send + Sync {
         pagamento_id: usize
     ) -> Result<StatusPagamento, DomainError>;
 }
-

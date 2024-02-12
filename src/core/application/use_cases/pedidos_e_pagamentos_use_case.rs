@@ -78,7 +78,7 @@ impl PedidosEPagamentosUseCase {
 
       let cliente = match pedido_input.cliente_id {
           Some(id) => {
-              let mut cliente_repository = self.cliente_repository.lock().await;
+              let cliente_repository = self.cliente_repository.lock().await;
               Some(cliente_repository.get_cliente_by_id(id).await?)
           },
           None => None,
@@ -161,3 +161,475 @@ impl PedidosEPagamentosUseCase {
 
 unsafe impl Send for PedidosEPagamentosUseCase {}
 unsafe impl Sync for PedidosEPagamentosUseCase {}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use crate::core::application::ports::pagamento_port::MockPagamentoPort;
+  use crate::core::domain::entities::{cliente::Cliente, pedido::Pedido};
+  use crate::core::domain::repositories::{
+      cliente_repository::MockClienteRepository, pedido_repository::MockPedidoRepository,
+      produto_repository::MockProdutoRepository,
+  };
+  use crate::core::domain::value_objects::{cpf::Cpf, ingredientes::Ingredientes};
+  use mockall::predicate::eq;
+  use rocket::futures::lock::Mutex;
+  use std::sync::Arc;
+  use tokio;
+
+  #[tokio::test]
+  async fn test_lista_pedidos() {
+      let mut mock = MockPedidoRepository::new();
+
+      let returned_pedido = Pedido::new(
+          1,
+          None,
+          None,
+          None,
+          None,
+          "id_pagamento".to_string(),
+          Status::Recebido,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_pedido = returned_pedido.clone();
+
+      mock.expect_lista_pedidos()
+          .times(1)
+          .returning(move || Ok(vec![returned_pedido.clone()]));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(mock)),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(MockProdutoRepository::new())),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+      let result = use_case.lista_pedidos().await;
+      assert_eq!(result.unwrap()[0].id(), expected_pedido.id());
+  }
+
+  #[tokio::test]
+  async fn test_seleciona_pedido_por_id() {
+      let mut mock = MockPedidoRepository::new();
+
+      let returned_pedido = Pedido::new(
+          1,
+          None,
+          None,
+          None,
+          None,
+          "id_pagamento".to_string(),
+          Status::Recebido,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_pedido = returned_pedido.clone();
+
+      mock.expect_get_pedido_by_id()
+          .times(1)
+          .returning(move |_| Ok(returned_pedido.clone()));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(mock)),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(MockProdutoRepository::new())),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+      let result = use_case.seleciona_pedido_por_id(1).await;
+      assert_eq!(result.unwrap().id(), expected_pedido.id());
+  }
+
+  #[tokio::test]
+  async fn test_novo_pedido() {
+      let mut mock_pedido_repository = MockPedidoRepository::new();
+      let mut mock_cliente_repository = MockClienteRepository::new();
+
+      let returned_cliente = Cliente::new(
+          1,
+          "nome".to_string(),
+          "email".to_string(),
+          Cpf::new("000.000.000-00".to_string()).unwrap(),
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let returned_pedido = Pedido::new(
+          1,
+          Some(returned_cliente.clone()),
+          None,
+          None,
+          None,
+          "id_pagamento".to_string(),
+          Status::Recebido,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_pedido = returned_pedido.clone();
+
+      mock_pedido_repository
+          .expect_create_pedido()
+          .times(1)
+          .returning(move |_| Ok(returned_pedido.clone()));
+
+      mock_cliente_repository
+          .expect_get_cliente_by_id()
+          .times(1)
+          .returning(move |_| Ok(returned_cliente.clone()));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(mock_pedido_repository)),
+          Arc::new(Mutex::new(mock_cliente_repository)),
+          Arc::new(Mutex::new(MockProdutoRepository::new())),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+      let result = use_case
+          .novo_pedido(CreatePedidoInput {
+              cliente_id: Some(1),
+          })
+          .await;
+      assert_eq!(result.unwrap().id(), expected_pedido.id());
+  }
+
+  #[tokio::test]
+  async fn test_lista_lanches() {
+      let mut mock = MockProdutoRepository::new();
+
+      let ingredientes = Ingredientes::new(vec![
+          "Pão".to_string(),
+          "Hambúrguer".to_string(),
+          "Queijo".to_string(),
+      ])
+      .unwrap();
+
+      let returned_produto = Produto::new(
+          1,
+          "X-Bacon".to_string(),
+          "foto.png".to_string(),
+          "Saundiche de queijo e bacon".to_string(),
+          Categoria::Lanche,
+          10.0,
+          ingredientes,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_produto = returned_produto.clone();
+
+      mock.expect_get_produtos_by_categoria()
+          .times(1)
+          .with(eq(Categoria::Lanche))
+          .returning(move |_| Ok(vec![returned_produto.clone()]));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(MockPedidoRepository::new())),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(mock)),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+      let result = use_case.lista_lanches().await;
+      assert_eq!(result.unwrap()[0].id(), expected_produto.id());
+  }
+
+  #[tokio::test]
+  async fn test_adicionar_lanche_com_personalizacao() {
+      let mut mock_produto_repository = MockProdutoRepository::new();
+
+      let mut mock_pedido_repository = MockPedidoRepository::new();
+
+      let ingredientes = Ingredientes::new(vec![
+          "Pão".to_string(),
+          "Hambúrguer".to_string(),
+          "Queijo".to_string(),
+      ])
+      .unwrap();
+
+      let returned_produto = Produto::new(
+          1,
+          "X-Bacon".to_string(),
+          "foto.png".to_string(),
+          "Saundiche de queijo e bacon".to_string(),
+          Categoria::Lanche,
+          10.0,
+          ingredientes,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let returned_pedido = Pedido::new(
+          1,
+          None,
+          Some(returned_produto.clone()),
+          None,
+          None,
+          "id_pagamento".to_string(),
+          Status::Recebido,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_pedido = returned_pedido.clone();
+
+      mock_produto_repository
+          .expect_get_produto_by_id()
+          .times(1)
+          .returning(move |_| Ok(returned_produto.clone()));
+
+      mock_pedido_repository
+          .expect_cadastrar_lanche()
+          .times(1)
+          .returning(move |_, _| Ok(returned_pedido.clone()));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(mock_pedido_repository)),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(mock_produto_repository)),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+      let result = use_case.adicionar_lanche_com_personalizacao(1, 1).await;
+      assert_eq!(result.unwrap().id(), expected_pedido.id());
+  }
+
+  #[tokio::test]
+  async fn test_lista_acompanhamentos() {
+      let mut mock = MockProdutoRepository::new();
+
+      let ingredientes = Ingredientes::new(vec![]).unwrap();
+
+      let returned_produto = Produto::new(
+          1,
+          "Batata Frita M".to_string(),
+          "foto.png".to_string(),
+          "Batata frita do tamanho médio".to_string(),
+          Categoria::Acompanhamento,
+          10.0,
+          ingredientes,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_produto = returned_produto.clone();
+
+      mock.expect_get_produtos_by_categoria()
+          .times(1)
+          .with(eq(Categoria::Acompanhamento))
+          .returning(move |_| Ok(vec![returned_produto.clone()]));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(MockPedidoRepository::new())),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(mock)),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+      let result = use_case.lista_acompanhamentos().await;
+      assert_eq!(result.unwrap()[0].id(), expected_produto.id());
+  }
+
+  #[tokio::test]
+  async fn test_adicionar_acompanhamento() {
+      let mut mock_produto_repository = MockProdutoRepository::new();
+
+      let mut mock_pedido_repository = MockPedidoRepository::new();
+
+      let ingredientes = Ingredientes::new(vec![]).unwrap();
+
+      let returned_produto = Produto::new(
+          1,
+          "Batata Frita M".to_string(),
+          "foto.png".to_string(),
+          "Batata frita do tamanho médio".to_string(),
+          Categoria::Acompanhamento,
+          10.0,
+          ingredientes,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let returned_pedido = Pedido::new(
+          1,
+          None,
+          Some(returned_produto.clone()),
+          None,
+          None,
+          "id_pagamento".to_string(),
+          Status::Recebido,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_pedido = returned_pedido.clone();
+
+      mock_produto_repository
+          .expect_get_produto_by_id()
+          .times(1)
+          .returning(move |_| Ok(returned_produto.clone()));
+
+      mock_pedido_repository
+          .expect_cadastrar_acompanhamento()
+          .times(1)
+          .returning(move |_, _| Ok(returned_pedido.clone()));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(mock_pedido_repository)),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(mock_produto_repository)),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+
+      let result = use_case.adicionar_acompanhamento(1, 1).await;
+      assert_eq!(result.unwrap().id(), expected_pedido.id());
+  }
+
+  #[tokio::test]
+  async fn test_lista_bebidas() {
+      let mut mock = MockProdutoRepository::new();
+
+      let ingredientes = Ingredientes::new(vec![]).unwrap();
+
+      let returned_produto = Produto::new(
+          1,
+          "Refrigerante de Cola M".to_string(),
+          "foto.png".to_string(),
+          "Refrigerante de Cola do tamanho médio".to_string(),
+          Categoria::Bebida,
+          10.0,
+          ingredientes,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_produto = returned_produto.clone();
+
+      mock.expect_get_produtos_by_categoria()
+          .times(1)
+          .with(eq(Categoria::Bebida))
+          .returning(move |_| Ok(vec![returned_produto.clone()]));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(MockPedidoRepository::new())),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(mock)),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+
+      let result = use_case.lista_bebidas().await;
+      assert_eq!(result.unwrap()[0].id(), expected_produto.id());
+  }
+
+  #[tokio::test]
+  async fn test_adicionar_bebida() {
+      let mut mock_produto_repository = MockProdutoRepository::new();
+
+      let mut mock_pedido_repository = MockPedidoRepository::new();
+
+      let ingredientes = Ingredientes::new(vec![]).unwrap();
+
+      let returned_produto = Produto::new(
+          1,
+          "Refrigerante de Cola M".to_string(),
+          "foto.png".to_string(),
+          "Refrigerante de Cola do tamanho médio".to_string(),
+          Categoria::Bebida,
+          10.0,
+          ingredientes,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let returned_pedido = Pedido::new(
+          1,
+          None,
+          Some(returned_produto.clone()),
+          None,
+          None,
+          "id_pagamento".to_string(),
+          Status::Recebido,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let expected_pedido = returned_pedido.clone();
+
+      mock_produto_repository
+          .expect_get_produto_by_id()
+          .times(1)
+          .returning(move |_| Ok(returned_produto.clone()));
+
+      mock_pedido_repository
+          .expect_cadastrar_bebida()
+          .times(1)
+          .returning(move |_, _| Ok(returned_pedido.clone()));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(mock_pedido_repository)),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(mock_produto_repository)),
+          Arc::new(Mutex::new(MockPagamentoPort::new())),
+      );
+
+      let result = use_case.adicionar_bebida(1, 1).await;
+      assert_eq!(result.unwrap().id(), expected_pedido.id());
+  }
+
+  #[tokio::test]
+  async fn test_realizar_pagamento_do_pedido() {
+      let mut mock = MockPedidoRepository::new();
+      let mut mock_pagamento = MockPagamentoPort::new();
+
+      let ingredientes = Ingredientes::new(vec![]).unwrap();
+
+      let bebida = Produto::new(
+          1,
+          "Refrigerante de Cola M".to_string(),
+          "foto.png".to_string(),
+          "Refrigerante de Cola do tamanho médio".to_string(),
+          Categoria::Bebida,
+          10.0,
+          ingredientes,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let returned_pedido = Pedido::new(
+          1,
+          None,
+          None,
+          None,
+          Some(bebida.clone()),
+          "id_pagamento".to_string(),
+          Status::Pendente,
+          "2021-10-10".to_string(),
+          "2021-10-10".to_string(),
+      );
+
+      let mut updated_pedido = returned_pedido.clone();
+      updated_pedido.set_status(Status::Recebido);
+
+      let expected_pedido = updated_pedido.clone();
+
+      mock.expect_get_pedido_by_id()
+          .times(1)
+          .returning(move |_| Ok(returned_pedido.clone()));
+
+      mock_pagamento
+          .expect_processa_pagamento()
+          .times(1)
+          .with(eq(1), eq(10.0))
+          .returning(move |_, _| Ok(StatusPagamento::Successo));
+
+      mock.expect_atualiza_status()
+          .times(1)
+          .returning(move |_, _| Ok(updated_pedido.clone()));
+
+      let use_case = PedidosEPagamentosUseCase::new(
+          Arc::new(Mutex::new(mock)),
+          Arc::new(Mutex::new(MockClienteRepository::new())),
+          Arc::new(Mutex::new(MockProdutoRepository::new())),
+          Arc::new(Mutex::new(mock_pagamento)),
+      );
+      let result = use_case.realizar_pagamento_do_pedido(1).await;
+      assert_eq!(result.unwrap().id(), expected_pedido.id());
+  }
+}

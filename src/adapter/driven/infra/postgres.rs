@@ -1,17 +1,18 @@
 
 pub mod table;
-pub mod usuarios;
-pub mod clientes;
-pub mod pedidos;
-pub mod produtos;
+pub mod usuario;
+pub mod cliente;
+pub mod pedido;
+pub mod produto;
 
 use tokio_postgres::{NoTls, Error, Client};
 use rocket::tokio;
 
 use self::table::{Table, TablesNames};
-use self::usuarios::get_usuario_table_columns;
-use self::clientes::get_cliente_table_columns;
-use self::pedidos::get_pedidos_table_columns;
+use self::usuario::get_usuario_table_columns;
+use self::cliente::get_cliente_table_columns;
+use self::produto::get_produto_table_columns;
+use self::pedido::get_pedido_table_columns;
 pub struct PgConnectionManager {
   pub client: Client,
 }
@@ -40,12 +41,12 @@ pub fn get_tables() -> Vec<Table> {
       columns: get_cliente_table_columns(),
     },
     Table {
-      name: TablesNames::Pedidos,
-      columns: get_pedidos_table_columns(),
+      name: TablesNames::Produto,
+      columns: get_produto_table_columns(),
     },
     Table {
-      name: TablesNames::Produtos,
-      columns: get_pedidos_table_columns(),
+      name: TablesNames::Pedido,
+      columns: get_pedido_table_columns(),
     },
   ]
 }
