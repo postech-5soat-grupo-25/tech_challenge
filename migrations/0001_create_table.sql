@@ -68,7 +68,7 @@ CREATE TYPE STATUS_PEDIDO_ENUM AS ENUM (
 -- Criacao da tabela de pedido
 CREATE TABLE IF NOT EXISTS pedido (
     id SERIAL PRIMARY KEY,
-    cliente_id INT NOT NULL,
+    cliente_id INT,
     lanche_id INT,
     acompanhamento_id INT,
     bebida_id INT,

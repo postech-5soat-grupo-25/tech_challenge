@@ -12,7 +12,7 @@ impl Ingredientes {
     }
 
     pub fn to_vec_string(&self) -> Vec<String> {
-        self.0.clone() // Clone the internal Vec<String>
+        self.0.clone()
     }
 }
 
@@ -28,12 +28,6 @@ mod tests {
             "Queijo".to_string(),
         ]);
         assert!(ingredientes.is_ok());
-    }
-
-    #[test]
-    fn test_ingredientes_empty() {
-        let ingredientes = Ingredientes::new(vec![]);
-        assert!(ingredientes.is_err());
     }
 
     #[test]

@@ -1,7 +1,9 @@
-use crate::core::domain::base::domain_error::DomainError;
+use mockall::*;
 
+use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::produto::{Produto, Categoria};
 
+#[automock]
 #[async_trait]
 pub trait ProdutoRepository: Send + Sync {
   async fn get_produtos(&self) -> Result<Vec<Produto>, DomainError>;

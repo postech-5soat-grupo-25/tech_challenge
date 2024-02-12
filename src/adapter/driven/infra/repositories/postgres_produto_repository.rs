@@ -24,7 +24,7 @@ const QUERY_PRODUCT_BY_ID: &str = "SELECT id, nome, foto, descricao, CAST(catego
 const QUERY_PRODUCTS: &str = "SELECT id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao FROM produto";
 const QUERY_PRODUCT_BY_CATEGORIA: &str = "SELECT id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao FROM produto WHERE categoria = $1";
 const UPDATE_PRODUCT: &str = "UPDATE produto SET nome = $1, foto = $2, descricao = $3, categoria = $4, preco = $5, ingredientes = $6, data_atualizacao = CURRENT_TIMESTAMP WHERE id = $7 RETURNING id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao";
-const DELETE_PRODUCT: &str = "DELETE FROM produto WHERE id = $1 RETURNING *";
+const DELETE_PRODUCT: &str = "DELETE FROM produto WHERE id = $1 RETURNING RETURNING id, nome, foto, descricao, CAST(categoria AS VARCHAR) AS categoria, preco, ingredientes, data_criacao, data_atualizacao";
 
 
 impl<'a> FromSql<'a> for Categoria {

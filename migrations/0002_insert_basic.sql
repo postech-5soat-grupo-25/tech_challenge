@@ -141,3 +141,47 @@ VALUES (
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
+
+-- Inserts para `pedido`
+-- Insert combo completo com 'cliente' identificado
+INSERT INTO pedido (
+        cliente_id,
+        lanche_id,
+        acompanhamento_id,
+        bebida_id,
+        pagamento,
+        status,
+        data_criacao,
+        data_atualizacao
+    )
+VALUES (
+        1,
+        1,
+        5,
+        4,
+        'Mercado Pago',
+        'Recebido',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
+-- Insert combo incompleto com 'cliente' não identificado
+INSERT INTO pedido (
+        cliente_id,
+        lanche_id,
+        acompanhamento_id,
+        bebida_id,
+        pagamento,
+        status,
+        data_criacao,
+        data_atualizacao
+    )
+VALUES (
+        NULL,
+        1,
+        NULL,
+        NULL,
+        'Mercado Pago',
+        'Pronto',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
