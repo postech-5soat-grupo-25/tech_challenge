@@ -1,3 +1,5 @@
+use mockall::*;
+
 use crate::core::domain::{
   base::domain_error::DomainError,
   entities::{
@@ -9,6 +11,7 @@ use crate::core::domain::{
   }
 };
 
+#[automock]
 #[async_trait]
 pub trait PedidoRepository {
   async fn create_pedido(&mut self, pedido: Pedido) -> Result<Pedido, DomainError>;

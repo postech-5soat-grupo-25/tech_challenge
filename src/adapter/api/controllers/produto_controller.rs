@@ -7,7 +7,7 @@ use rocket_okapi::{openapi, openapi_get_routes};
 
 use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::produto_use_case::{ProdutoUseCase, CreateProdutoInput, UpdateProdutoInput};
+use crate::core::application::use_cases::gerenciamento_de_produtos_use_case::{ProdutoUseCase, CreateProdutoInput, UpdateProdutoInput};
 use crate::core::domain::entities::produto::Produto;
 use crate::adapter::api::request_guards::admin_guard::AdminUser;
 

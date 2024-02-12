@@ -18,9 +18,9 @@ use crate::core::domain::repositories::{
     pedido_repository::PedidoRepository,
 };
 use crate::core::application::use_cases::{
-    usuario_use_case::UsuarioUseCase,
-    cliente_use_case::ClienteUseCase,
-    produto_use_case::ProdutoUseCase,
+    gerenciamento_de_usuarios_use_case::UsuarioUseCase,
+    gerenciamento_de_clientes_use_case::ClienteUseCase,
+    gerenciamento_de_produtos_use_case::ProdutoUseCase,
     preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase,
     pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase,
 };

@@ -7,8 +7,8 @@ use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::admin_guard::AdminUser;
 use crate::core::domain::entities::usuario::Usuario;
 use crate::core::domain::value_objects::cpf::Cpf;
-use crate::core::application::use_cases::usuario_use_case::UsuarioUseCase;
-use crate::core::application::use_cases::usuario_use_case::CreateUsuarioInput;
+use crate::core::application::use_cases::gerenciamento_de_usuarios_use_case::UsuarioUseCase;
+use crate::core::application::use_cases::gerenciamento_de_usuarios_use_case::CreateUsuarioInput;
 
 
 #[openapi(tag = "Usuarios")]
