@@ -127,6 +127,17 @@ impl PedidoRepository for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
+    async fn cadastrar_cliente(&mut self, pedido_id: usize, cliente: Cliente) -> Result<Pedido, DomainError> {
+        let pedidos = &mut self._pedidos;
+        for pedido in pedidos.iter_mut() {
+            if *pedido.id() == pedido_id {
+                pedido.set_cliente(Some(cliente.clone()));
+                return Ok(pedido.clone());
+            }
+        }
+        Err(DomainError::NotFound)
+    }
+
     async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche: Produto) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {

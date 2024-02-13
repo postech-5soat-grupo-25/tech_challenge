@@ -102,6 +102,13 @@ impl PedidosEPagamentosUseCase {
       Ok(pedido)
     }
 
+    pub async fn adicionar_cliente(&self, pedido_id: usize, cliente_id: usize) -> Result<Pedido, DomainError> {
+      let mut pedido_repository = self.pedido_repository.lock().await;
+      let mut cliente_repository = self.cliente_repository.lock().await;
+      let cliente = cliente_repository.get_cliente_by_id(cliente_id).await?;
+      pedido_repository.cadastrar_cliente(pedido_id, cliente).await
+    }
+
     pub async fn lista_lanches(&self) -> Result<Vec<Produto>, DomainError> {
       let produtos_repository = self.produto_repository.lock().await;
       produtos_repository.get_produtos_by_categoria(Categoria::Lanche).await
