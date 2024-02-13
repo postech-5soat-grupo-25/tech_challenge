@@ -718,7 +718,90 @@
 				},
 				{
 					"name": "Pedidos",
-					"item": []
+					"item": [
+						{
+							"name": "pedido",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test for 200 response status code\r",
+											"pm.test(\"Response status code is 200\", function () {\r",
+											"  pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// Test for the response body structure and values\r",
+											"pm.test(\"Response body structure and values are as expected\", function () {\r",
+											"  var jsonData = pm.response.json();\r",
+											"\r",
+											"  // Check if the response is an array\r",
+											"  pm.expect(jsonData).to.be.an('array');\r",
+											"\r",
+											"  // Check if each element in the array has the expected properties\r",
+											"  jsonData.forEach(function (pedido) {\r",
+											"    pm.expect(pedido).to.have.property('id');\r",
+											"    pm.expect(pedido.cliente).to.satisfy(function (value) {\r",
+											"      return typeof value === 'object' || value === '';\r",
+											"    });\r",
+											"    pm.expect(pedido.lanche).to.satisfy(function (value) {\r",
+											"      return typeof value === 'object' || value === '';\r",
+											"    });\r",
+											"    pm.expect(pedido.acompanhamento).to.satisfy(function (value) {\r",
+											"      return typeof value === 'object' || value === '';\r",
+											"    });\r",
+											"    pm.expect(pedido.bebida).to.satisfy(function (value) {\r",
+											"      return typeof value === 'object' || value === '';\r",
+											"    });\r",
+											"    pm.expect(pedido).to.have.property('pagamento');\r",
+											"    pm.expect(pedido).to.have.property('status');\r",
+											"    pm.expect(pedido).to.have.property('data_criacao');\r",
+											"    pm.expect(pedido).to.have.property('data_atualizacao');\r",
+											"  });\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido/novos",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos/novos",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos",
+										"novos"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			],
 			"auth": {

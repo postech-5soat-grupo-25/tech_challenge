@@ -8,6 +8,7 @@ use crate::core::domain::{
       Status
     },
     produto::Produto,
+    cliente::Cliente,
   }
 };
 
@@ -21,6 +22,8 @@ pub trait PedidoRepository {
   async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError>;
 
   async fn get_pedido_by_id(&self, pedido_id: usize) -> Result<Pedido, DomainError>;
+
+  async fn cadastrar_cliente(&mut self, pedido_id: usize, cliente: Cliente) -> Result<Pedido, DomainError>;
 
   async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche: Produto) -> Result<Pedido, DomainError>;
 

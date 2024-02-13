@@ -24,6 +24,17 @@ async fn get_pedidos(
 }
 
 #[openapi(tag = "Pedidos")]
+#[get("/<id>")]
+async fn get_pedido_by_id(
+    pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
+    id: usize,
+    _logged_user_info: AuthenticatedUser,
+) -> Result<Json<Pedido>, Status> {
+    let pedido = pedidos_e_pagamentos_use_case.seleciona_pedido_por_id(id).await?;
+    Ok(Json(pedido))
+}
+
+#[openapi(tag = "Pedidos")]
 #[post("/", data = "<pedido_input>")]
 async fn post_novo_pedido(
     pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
