@@ -249,15 +249,15 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/usuario/2",
+									"raw": "http://localhost:8080/usuarios/1",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
 									"port": "8080",
 									"path": [
-										"usuario",
-										"2"
+										"usuarios",
+										"1"
 									]
 								}
 							},
@@ -796,6 +796,168 @@
 									"path": [
 										"pedidos",
 										"novos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/pedidos",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido/status",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos/1/status/EmPreparacao",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos",
+										"1",
+										"status",
+										"EmPreparacao"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido/lanche",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos/1/produto/Lanche/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos",
+										"1",
+										"produto",
+										"Lanche",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido/acompanhamento",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos/2/produto/Acompanhamento/2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos",
+										"2",
+										"produto",
+										"Acompanhamento",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido/bebida",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos/1/produto/Bebida/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos",
+										"1",
+										"produto",
+										"Bebida",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido/cliente",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos/2/cliente/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos",
+										"2",
+										"cliente",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pedido/pagamento",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/pedidos/1/pagamento",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"pedidos",
+										"1",
+										"pagamento"
 									]
 								}
 							},
