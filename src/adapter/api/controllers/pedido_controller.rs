@@ -6,9 +6,7 @@ use serde::de::IntoDeserializer;
 
 use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::pedidos_e_pagamentos_use_case::{
-    CreatePedidoInput, PedidosEPagamentosUseCase,
-};
+use crate::core::application::use_cases::pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase;
 use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
 use crate::core::domain::entities::pedido::{self, Pedido};
 use crate::core::domain::entities::produto::Categoria;
@@ -35,28 +33,15 @@ async fn get_pedido_by_id(
 }
 
 #[openapi(tag = "Pedidos")]
-#[post("/", data = "<pedido_input>")]
+#[post("/")]
 async fn post_novo_pedido(
     pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
-    pedido_input: Json<CreatePedidoInput>,
 ) -> Result<Json<Pedido>, Status> {
-    let pedido_input = pedido_input.into_inner();
     let novo_pedido = pedido_e_pagamentos_use_case
-        .novo_pedido(pedido_input)
+        .novo_pedido()
         .await?;
     Ok(Json(novo_pedido))
 }
-
-// #[openapi(tag = "Pedidos")]
-// #[put("/pedido/<id>")]
-// async fn get_pedido_by_id(
-//     pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
-//     id: usize,
-//     _logged_user_info: AuthenticatedUser,
-// ) -> Result<Json<Pedido>, Status> {
-//     let pedido_atualizado = pedido_e_pagamentos_use_case.;
-//     Ok(Json(pedido_atualizado))
-// }
 
 #[openapi(tag = "Pedidos")]
 #[get("/novos")]
@@ -70,20 +55,20 @@ async fn get_pedidos_novos(
 
 #[openapi(tag = "Pedidos")]
 #[put("/<id>/status/<status>")]
-async fn update_status_pedido(
+async fn put_status_pedido(
     preparacao_e_entrega_use_case: &State<PreparacaoeEntregaUseCase>,
     id: usize,
     status: &str,
     __logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Pedido>, Status> {
     let status = match status {
-        "cancelado" => pedido::Status::Cancelado,
-        "emPreparacao" => pedido::Status::EmPreparacao,
-        "finalizado" => pedido::Status::Finalizado,
-        "invalido" => pedido::Status::Invalido,
-        "pendente" => pedido::Status::Pendente,
-        "pronto" => pedido::Status::Pronto,
-        "recebido" => pedido::Status::Recebido,
+        "Cancelado" => pedido::Status::Cancelado,
+        "EmPreparacao" => pedido::Status::EmPreparacao,
+        "Finalizado" => pedido::Status::Finalizado,
+        "Invalido" => pedido::Status::Invalido,
+        "Pendente" => pedido::Status::Pendente,
+        "Pronto" => pedido::Status::Pronto,
+        "Recebido" => pedido::Status::Recebido,
         _ => return Err(Status::BadRequest),
     };
     let pedido = preparacao_e_entrega_use_case
@@ -93,8 +78,22 @@ async fn update_status_pedido(
 }
 
 #[openapi(tag = "Pedidos")]
+#[put("/<id>/cliente/<cliente_id>")]
+async fn put_cliente_pedido(
+    pedidos_e_pagamento_use_case: &State<PedidosEPagamentosUseCase>,
+    id: usize,
+    cliente_id: usize,
+) -> Result<Json<Pedido>, Status> {
+    
+    let pedido = pedidos_e_pagamento_use_case
+        .adicionar_cliente(id, cliente_id)
+        .await?;
+    Ok(Json(pedido))
+}
+
+#[openapi(tag = "Pedidos")]
 #[put("/<id>/produto/<categoria>/<produto_id>")]
-async fn insert_produto(
+async fn put_produto_by_categoria(
     pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
     id: usize,
     categoria: &str,
@@ -140,8 +139,9 @@ pub fn routes() -> Vec<rocket::Route> {
         get_pedidos,
         post_novo_pedido,
         get_pedidos_novos,
-        update_status_pedido,
-        insert_produto,
+        put_status_pedido,
+        put_cliente_pedido,
+        put_produto_by_categoria,
         pagar,
     ]
 }

@@ -22,22 +22,6 @@ use crate::core::{
   }
 };
 
-#[derive(Clone, Serialize, Deserialize, JsonSchema)]
-pub struct CreatePedidoInput {
-  cliente_id: Option<usize>,
-}
-
-pub struct AtualizaPedidoInput {
-    lanche: i32,
-    acompanhamento: i32,
-    bebida: i32,
-    pagamento: String,
-    status: Status,
-    data_criacao: String,
-    data_atualizacao: String,
-}
-
-
 #[derive(Clone)]
 pub struct PedidosEPagamentosUseCase {
     pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
@@ -73,20 +57,11 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn novo_pedido(
       &self,
-      pedido_input: CreatePedidoInput,
     ) -> Result<Pedido, DomainError> {
-
-      let cliente = match pedido_input.cliente_id {
-          Some(id) => {
-              let cliente_repository = self.cliente_repository.lock().await;
-              Some(cliente_repository.get_cliente_by_id(id).await?)
-          },
-          None => None,
-      };
 
       let pedido = Pedido::new(
         0,
-        cliente,
+        None,
         None,
         None,
         None,
@@ -104,7 +79,7 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn adicionar_cliente(&self, pedido_id: usize, cliente_id: usize) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-      let mut cliente_repository = self.cliente_repository.lock().await;
+      let cliente_repository = self.cliente_repository.lock().await;
       let cliente = cliente_repository.get_cliente_by_id(cliente_id).await?;
       pedido_repository.cadastrar_cliente(pedido_id, cliente).await
     }
@@ -116,7 +91,7 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn adicionar_lanche_com_personalizacao(&self, pedido_id: usize, lanche_id: usize) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-      let mut produto_repository = self.produto_repository.lock().await;
+      let produto_repository = self.produto_repository.lock().await;
       let lanche = produto_repository.get_produto_by_id(lanche_id).await?;
       pedido_repository.cadastrar_lanche(pedido_id, lanche).await
     }
@@ -128,7 +103,7 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn adicionar_acompanhamento(&self, pedido_id: usize, acompanhamento_id: usize) -> Result<Pedido, DomainError> {
         let mut pedido_repository = self.pedido_repository.lock().await;
-        let mut produto_repository = self.produto_repository.lock().await;
+        let produto_repository = self.produto_repository.lock().await;
         let acompanhamento = produto_repository.get_produto_by_id(acompanhamento_id).await?;
         pedido_repository.cadastrar_acompanhamento(pedido_id, acompanhamento).await
 
@@ -141,14 +116,14 @@ impl PedidosEPagamentosUseCase {
 
     pub async fn adicionar_bebida(&self, pedido_id: usize, bebida_id: usize) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-      let mut produto_repository = self.produto_repository.lock().await;
+      let produto_repository = self.produto_repository.lock().await;
       let bebida = produto_repository.get_produto_by_id(bebida_id).await?;
       pedido_repository.cadastrar_bebida(pedido_id, bebida).await
     }
 
     pub async fn realizar_pagamento_do_pedido(&self, pedido_id: usize) -> Result<Pedido, DomainError> {
       let mut pedido_repository = self.pedido_repository.lock().await;
-      let mut pagamento_adapter = self.pagamento_adapter.lock().await;
+      let pagamento_adapter = self.pagamento_adapter.lock().await;
 
       let pedido = pedido_repository.get_pedido_by_id(pedido_id).await?;
 
@@ -293,9 +268,7 @@ mod tests {
           Arc::new(Mutex::new(MockPagamentoPort::new())),
       );
       let result = use_case
-          .novo_pedido(CreatePedidoInput {
-              cliente_id: Some(1),
-          })
+          .novo_pedido()
           .await;
       assert_eq!(result.unwrap().id(), expected_pedido.id());
   }
