@@ -139,7 +139,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     .register("/usuarios", usuario_controller::catchers())
     .register("/clientes", cliente_controller::catchers())
     .register("/produtos", produto_controller::catchers())
-    .register("/pedidos", produto_controller::catchers())
+    .register("/pedidos", pedido_controller::catchers())
     .manage(usuario_use_case)
     .manage(cliente_use_case)
     .manage(preparacao_e_entrega_use_case)

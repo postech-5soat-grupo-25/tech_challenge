@@ -1,10 +1,10 @@
-use std::error::Error;
 use bytes::BytesMut;
-use tokio_postgres::types::{FromSql, ToSql, Type};
 use postgres_from_row::FromRow;
-use std::sync::Arc;
-use tokio_postgres::Client;
 use rocket::futures::lock::Mutex;
+use std::error::Error;
+use std::sync::Arc;
+use tokio_postgres::types::{FromSql, ToSql, Type};
+use tokio_postgres::Client;
 
 use crate::core::domain::base::domain_error::DomainError;
 use crate::core::domain::entities::cliente::Cliente;
@@ -14,19 +14,19 @@ use crate::core::domain::repositories::cliente_repository::ClienteRepository;
 use crate::core::domain::repositories::pedido_repository::PedidoRepository;
 use crate::core::domain::repositories::produto_repository::ProdutoRepository;
 
-use super::super::postgres::table::Table;
 use super::super::postgres::pedido::ProxyPedido;
+use super::super::postgres::table::Table;
 
 const CREATE_PEDIDO: &str = "INSERT INTO pedido (cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, status, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const QUERY_PEDIDOS: &str = "SELECT id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao FROM pedido";
 const QUERY_PEDIDO_BY_ID: &str = "SELECT id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao FROM pedido WHERE id = $1";
 const QUERY_PEDIDOS_NOVOS: &str = "SELECT id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao FROM pedido WHERE status IN ('Recebido', 'EmPreparacao')";
-const SET_STATUS_PEDIDO: &str = "UPDATE pedido SET status = $2 WHERE id = $1";
-const SET_PEDIDO_CLIENTE: &str = "UPDATE pedido SET cliente = $2 WHERE id = $1";
-const SET_PEDIDO_LANCHE: &str = "UPDATE pedido SET lanche = $2 WHERE id = $1";
-const SET_PEDIDO_ACOMPANHAMENTO: &str = "UPDATE pedido SET acompanhamento = $2 WHERE id = $1";
-const SET_PEDIDO_BEBIDA: &str = "UPDATE pedido SET bebida = $2 WHERE id = $1";
-const SET_PEDIDO_PAGAMENTO: &str = "UPDATE pedido SET pagamento = $2 WHERE id = $1";
+const SET_PEDIDO_STATUS: &str = "UPDATE pedido SET status = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const SET_PEDIDO_CLIENTE: &str = "UPDATE pedido SET cliente_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const SET_PEDIDO_LANCHE: &str = "UPDATE pedido SET lanche_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const SET_PEDIDO_ACOMPANHAMENTO: &str = "UPDATE pedido SET acompanhamento_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const SET_PEDIDO_BEBIDA: &str = "UPDATE pedido SET bebida_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const SET_PEDIDO_PAGAMENTO: &str = "UPDATE pedido SET pagamento = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 
 impl<'a> FromSql<'a> for Status {
     fn from_sql(
@@ -118,33 +118,53 @@ impl PostgresPedidoRepository {
     async fn pedido_from_proxy(&self, pedido_row: &tokio_postgres::Row) -> Pedido {
         let cliente_repository_lock = self.cliente_repository.lock().await;
         let produto_repository_lock = self.produto_repository.lock().await;
-    
+
         let _pedido: ProxyPedido = ProxyPedido::from_row(&pedido_row);
-    
+
         let cliente = if let Some(cliente_id) = _pedido.cliente_id() {
-            Some(cliente_repository_lock.get_cliente_by_id(*cliente_id).await.unwrap())
+            Some(
+                cliente_repository_lock
+                    .get_cliente_by_id(*cliente_id)
+                    .await
+                    .unwrap(),
+            )
         } else {
             None
         };
-    
+
         let lanche = if let Some(lanche_id) = _pedido.lanche_id() {
-            Some(produto_repository_lock.get_produto_by_id(*lanche_id).await.unwrap())
+            Some(
+                produto_repository_lock
+                    .get_produto_by_id(*lanche_id)
+                    .await
+                    .unwrap(),
+            )
         } else {
             None
         };
-    
+
         let bebida = if let Some(bebida_id) = _pedido.bebida_id() {
-            Some(produto_repository_lock.get_produto_by_id(*bebida_id).await.unwrap())
+            Some(
+                produto_repository_lock
+                    .get_produto_by_id(*bebida_id)
+                    .await
+                    .unwrap(),
+            )
         } else {
             None
         };
-    
+
         let acompanhamento = if let Some(acompanhamento_id) = _pedido.acompanhamento_id() {
-            Some(produto_repository_lock.get_produto_by_id(*acompanhamento_id).await.unwrap())
+            Some(
+                produto_repository_lock
+                    .get_produto_by_id(*acompanhamento_id)
+                    .await
+                    .unwrap(),
+            )
         } else {
             None
         };
-    
+
         Pedido::new(
             *_pedido.id(),
             cliente,
@@ -174,12 +194,12 @@ impl PedidoRepository for PostgresPedidoRepository {
     async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
         let pedidos_rows = self.client.query(QUERY_PEDIDOS_NOVOS, &[]).await.unwrap();
         let mut pedidos_vec = Vec::new();
-    
+
         for pedido_row in pedidos_rows {
             let pedido = self.pedido_from_proxy(&pedido_row).await;
             pedidos_vec.push(pedido);
         }
-    
+
         Ok(pedidos_vec)
     }
 
@@ -187,7 +207,7 @@ impl PedidoRepository for PostgresPedidoRepository {
         let _id = id as i32;
         let updated_pedido = self
             .client
-            .query(SET_STATUS_PEDIDO, &[&_id, &status.to_string()])
+            .query(SET_PEDIDO_STATUS, &[&_id, &status])
             .await
             .unwrap();
 
@@ -201,39 +221,39 @@ impl PedidoRepository for PostgresPedidoRepository {
     async fn create_pedido(&mut self, pedido: Pedido) -> Result<Pedido, DomainError> {
         let cliente_id = pedido.cliente().map(|cliente| *cliente.id() as i32);
         let lanche_id = pedido.lanche().map(|lanche| *lanche.id() as i32);
-        let acompanhamento_id = pedido.acompanhamento().map(|acompanhamento| *acompanhamento.id() as i32);
+        let acompanhamento_id = pedido
+            .acompanhamento()
+            .map(|acompanhamento| *acompanhamento.id() as i32);
         let bebida_id = pedido.bebida().map(|bebida| *bebida.id() as i32);
-    
-        let status = pedido.status();
-    
-        let new_pedido_row = self
-        .client
-        .query_one(
-            CREATE_PEDIDO,
-            &[
-                &cliente_id,
-                &lanche_id,
-                &acompanhamento_id,
-                &bebida_id,
-                &pedido.pagamento(),
-                &status.to_string(),
-                &pedido.data_criacao(),
-                &pedido.data_atualizacao(),
-            ],
-        )
-        .await;
 
-    match new_pedido_row {
-        Ok(row) => {
-            let new_pedido = self.pedido_from_proxy(&row).await;
-            println!("Novo pedido cadastrado: {:?}", new_pedido);
-            Ok(new_pedido)
-        },
-        Err(_) => {
-            Err(DomainError::Invalid("Pedido".to_string()))
+        let status = pedido.status();
+
+        let new_pedido_row = self
+            .client
+            .query_one(
+                CREATE_PEDIDO,
+                &[
+                    &cliente_id,
+                    &lanche_id,
+                    &acompanhamento_id,
+                    &bebida_id,
+                    &pedido.pagamento(),
+                    &status,
+                    &pedido.data_criacao(),
+                    &pedido.data_atualizacao(),
+                ],
+            )
+            .await;
+
+        match new_pedido_row {
+            Ok(row) => {
+                let new_pedido = self.pedido_from_proxy(&row).await;
+                println!("Novo pedido cadastrado: {:?}", new_pedido);
+                Ok(new_pedido)
+            }
+            Err(_) => Err(DomainError::Invalid("Pedido".to_string())),
         }
     }
-}
 
     async fn get_pedido_by_id(&self, pedido_id: usize) -> Result<Pedido, DomainError> {
         let pedido_id = pedido_id as i32;
@@ -246,11 +266,9 @@ impl PedidoRepository for PostgresPedidoRepository {
             Ok(Some(row)) => {
                 let pedido = self.pedido_from_proxy(&row).await;
                 Ok(pedido)
-            },
-            Ok(None) => Err(DomainError::NotFound),
-            Err(_) => {
-                Err(DomainError::Invalid("Pedido".to_string()))
             }
+            Ok(None) => Err(DomainError::NotFound),
+            Err(_) => Err(DomainError::Invalid("Pedido".to_string())),
         }
     }
 
@@ -262,12 +280,14 @@ impl PedidoRepository for PostgresPedidoRepository {
         let _pedido_id: i32 = pedido_id as i32;
         let _cliente_id = *cliente.id() as i32;
 
+        println!("Executando query para adicionar cliente...");
         let updated_pedido = self
             .client
             .query(SET_PEDIDO_CLIENTE, &[&_pedido_id, &_cliente_id])
             .await
             .unwrap();
 
+        println!("Retornando pedido com cliente...");
         let updated_pedido = updated_pedido.get(0);
         match updated_pedido {
             Some(pedido) => Ok(self.pedido_from_proxy(&pedido).await),
@@ -306,7 +326,10 @@ impl PedidoRepository for PostgresPedidoRepository {
 
         let updated_pedido = self
             .client
-            .query(SET_PEDIDO_ACOMPANHAMENTO, &[&_pedido_id, &_acompanhamento_id])
+            .query(
+                SET_PEDIDO_ACOMPANHAMENTO,
+                &[&_pedido_id, &_acompanhamento_id],
+            )
             .await
             .unwrap();
 
@@ -357,5 +380,4 @@ impl PedidoRepository for PostgresPedidoRepository {
             None => Err(DomainError::NotFound),
         }
     }
-
 }
