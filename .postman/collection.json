@@ -1,9 +1,8 @@
 {
 	"info": {
-		"_postman_id": "9b9ba446-116b-455f-b360-3ed59cd6f419",
+		"_postman_id": "f0f01fc6-9b6b-4e19-a192-390687fafc87",
 		"name": "Tech Challenge | PosTech 5SOAT • Grupo 25",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "32609641"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
@@ -40,7 +39,11 @@
 											"  const responseData = pm.response.json();",
 											"  const validTipo = ['Admin', 'Cozinha'];",
 											"  pm.expect(responseData.usuario.tipo).to.be.oneOf(validTipo);",
-											"});"
+											"});",
+											"",
+											"const responseData = pm.response.json();",
+											"",
+											"pm.collectionVariables.set(\"token\", responseData.token)"
 										],
 										"type": "text/javascript"
 									}
@@ -62,12 +65,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:8080/auth/login",
-									"protocol": "http",
+									"raw": "{{host}}/auth/login",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"auth",
 										"login"
@@ -400,12 +401,10 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/clientes",
-									"protocol": "http",
+									"raw": "{{host}}/clientes",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"clientes"
 									]
@@ -551,12 +550,10 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/produtos",
-									"protocol": "http",
+									"raw": "{{host}}/produtos",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"produtos"
 									]
@@ -768,12 +765,10 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/pedidos",
-									"protocol": "http",
+									"raw": "{{host}}/pedidos",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"pedidos"
 									]
@@ -903,12 +898,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:8080/pedidos",
-									"protocol": "http",
+									"raw": "{{host}}/pedidos",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"pedidos"
 									]
@@ -944,18 +937,26 @@
 								"method": "PUT",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/pedidos/1/produto/Lanche/1",
-									"protocol": "http",
+									"raw": "{{host}}/pedidos/:pedidoId/produto/Lanche/:produtoId",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"pedidos",
-										"1",
+										":pedidoId",
 										"produto",
 										"Lanche",
-										"1"
+										":produtoId"
+									],
+									"variable": [
+										{
+											"key": "pedidoId",
+											"value": "6"
+										},
+										{
+											"key": "produtoId",
+											"value": "1"
+										}
 									]
 								}
 							},
@@ -967,18 +968,26 @@
 								"method": "PUT",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/pedidos/2/produto/Acompanhamento/2",
-									"protocol": "http",
+									"raw": "{{host}}/pedidos/:pedidoId/produto/Acompanhamento/:produtoId",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"pedidos",
-										"2",
+										":pedidoId",
 										"produto",
 										"Acompanhamento",
-										"2"
+										":produtoId"
+									],
+									"variable": [
+										{
+											"key": "pedidoId",
+											"value": "6"
+										},
+										{
+											"key": "produtoId",
+											"value": "1"
+										}
 									]
 								}
 							},
@@ -990,18 +999,26 @@
 								"method": "PUT",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/pedidos/1/produto/Bebida/1",
-									"protocol": "http",
+									"raw": "{{host}}/pedidos/:pedidoId/produto/Bebida/:produtoId",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"pedidos",
-										"1",
+										":pedidoId",
 										"produto",
 										"Bebida",
-										"1"
+										":produtoId"
+									],
+									"variable": [
+										{
+											"key": "pedidoId",
+											"value": "6"
+										},
+										{
+											"key": "produtoId",
+											"value": "1"
+										}
 									]
 								}
 							},
@@ -1013,17 +1030,25 @@
 								"method": "PUT",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8080/pedidos/2/cliente/1",
-									"protocol": "http",
+									"raw": "{{host}}/pedidos/:pedidoId/cliente/:clienteId",
 									"host": [
-										"localhost"
+										"{{host}}"
 									],
-									"port": "8080",
 									"path": [
 										"pedidos",
-										"2",
+										":pedidoId",
 										"cliente",
-										"1"
+										":clienteId"
+									],
+									"variable": [
+										{
+											"key": "pedidoId",
+											"value": "6"
+										},
+										{
+											"key": "clienteId",
+											"value": "1"
+										}
 									]
 								}
 							},
@@ -1095,7 +1120,7 @@
 				"bearer": [
 					{
 						"key": "token",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwicm9sZSI6IkFkbWluIiwiY29tcGFueSI6Indkcm9wcyIsImV4cCI6MTAwMDAwMDAwMDB9.giIiXFchxDDN2hRZcSArC-oKYn-U4sDTWF8WTfHFk1rBNpirk0JDk0pjaJmLcdsPxF7MKXFilCY7EEbDU21dOg",
+						"value": "{{token}}",
 						"type": "string"
 					}
 				]
@@ -1120,6 +1145,36 @@
 					}
 				}
 			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "token",
+			"value": ""
 		}
 	]
 }

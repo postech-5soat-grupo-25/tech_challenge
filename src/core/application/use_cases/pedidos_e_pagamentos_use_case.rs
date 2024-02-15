@@ -113,6 +113,7 @@ impl PedidosEPagamentosUseCase {
     ) -> Result<Pedido, DomainError> {
         let cliente_repo = self.cliente_repository.lock().await;
         let cliente = cliente_repo.get_cliente_by_id(cliente_id).await?;
+        drop(cliente_repo);
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository.cadastrar_cliente(pedido_id, cliente).await
     }
@@ -131,6 +132,7 @@ impl PedidosEPagamentosUseCase {
     ) -> Result<Pedido, DomainError> {
         let produto_repository = self.produto_repository.lock().await;
         let lanche = produto_repository.get_produto_by_id(lanche_id).await?;
+        drop(produto_repository);
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository.cadastrar_lanche(pedido_id, lanche).await
     }
@@ -151,6 +153,7 @@ impl PedidosEPagamentosUseCase {
         let acompanhamento = produto_repository
             .get_produto_by_id(acompanhamento_id)
             .await?;
+        drop(produto_repository);
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository
             .cadastrar_acompanhamento(pedido_id, acompanhamento)
@@ -171,6 +174,7 @@ impl PedidosEPagamentosUseCase {
     ) -> Result<Pedido, DomainError> {
         let produto_repository = self.produto_repository.lock().await;
         let bebida = produto_repository.get_produto_by_id(bebida_id).await?;
+        drop(produto_repository);
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository.cadastrar_bebida(pedido_id, bebida).await
     }
