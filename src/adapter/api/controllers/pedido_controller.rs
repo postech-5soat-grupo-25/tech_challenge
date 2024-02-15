@@ -6,7 +6,7 @@ use serde::de::IntoDeserializer;
 
 use crate::adapter::api::error_handling::ErrorResponse;
 use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase;
+use crate::core::application::use_cases::pedidos_e_pagamentos_use_case::{PedidosEPagamentosUseCase, CreatePedidoInput};
 use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
 use crate::core::domain::entities::pedido::{self, Pedido};
 use crate::core::domain::entities::produto::Categoria;
@@ -33,12 +33,14 @@ async fn get_pedido_by_id(
 }
 
 #[openapi(tag = "Pedidos")]
-#[post("/")]
+#[post("/", data = "<pedido_input>")]
 async fn post_novo_pedido(
     pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
+    pedido_input: Json<CreatePedidoInput>,
 ) -> Result<Json<Pedido>, Status> {
+    let pedido_input = pedido_input.into_inner();
     let novo_pedido = pedido_e_pagamentos_use_case
-        .novo_pedido()
+        .novo_pedido(pedido_input)
         .await?;
     Ok(Json(novo_pedido))
 }

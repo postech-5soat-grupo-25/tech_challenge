@@ -17,11 +17,11 @@ use crate::core::domain::repositories::produto_repository::ProdutoRepository;
 use super::super::postgres::pedido::ProxyPedido;
 use super::super::postgres::table::Table;
 
-const CREATE_PEDIDO: &str = "INSERT INTO pedido (cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, status, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const CREATE_PEDIDO: &str = "INSERT INTO pedido (cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, status, data_criacao, data_atualizacao) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const QUERY_PEDIDOS: &str = "SELECT id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao FROM pedido";
 const QUERY_PEDIDO_BY_ID: &str = "SELECT id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao FROM pedido WHERE id = $1";
 const QUERY_PEDIDOS_NOVOS: &str = "SELECT id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao FROM pedido WHERE status IN ('Recebido', 'EmPreparacao')";
-const SET_PEDIDO_STATUS: &str = "UPDATE pedido SET status = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const SET_PEDIDO_STATUS: &str = "UPDATE pedido SET status = $2, data_atualizacao = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const SET_PEDIDO_CLIENTE: &str = "UPDATE pedido SET cliente_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const SET_PEDIDO_LANCHE: &str = "UPDATE pedido SET lanche_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const SET_PEDIDO_ACOMPANHAMENTO: &str = "UPDATE pedido SET acompanhamento_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
@@ -116,51 +116,32 @@ impl PostgresPedidoRepository {
     }
 
     async fn pedido_from_proxy(&self, pedido_row: &tokio_postgres::Row) -> Pedido {
-        let cliente_repository_lock = self.cliente_repository.lock().await;
-        let produto_repository_lock = self.produto_repository.lock().await;
-
         let _pedido: ProxyPedido = ProxyPedido::from_row(&pedido_row);
-
+    
         let cliente = if let Some(cliente_id) = _pedido.cliente_id() {
-            Some(
-                cliente_repository_lock
-                    .get_cliente_by_id(*cliente_id)
-                    .await
-                    .unwrap(),
-            )
+            let cliente_repo = self.cliente_repository.lock().await;
+            cliente_repo.get_cliente_by_id(*cliente_id).await.ok()
         } else {
             None
         };
-
+    
         let lanche = if let Some(lanche_id) = _pedido.lanche_id() {
-            Some(
-                produto_repository_lock
-                    .get_produto_by_id(*lanche_id)
-                    .await
-                    .unwrap(),
-            )
+            let produto_repo = self.produto_repository.lock().await;
+            produto_repo.get_produto_by_id(*lanche_id).await.ok()
         } else {
             None
         };
-
+    
         let bebida = if let Some(bebida_id) = _pedido.bebida_id() {
-            Some(
-                produto_repository_lock
-                    .get_produto_by_id(*bebida_id)
-                    .await
-                    .unwrap(),
-            )
+            let produto_repo = self.produto_repository.lock().await;
+            produto_repo.get_produto_by_id(*bebida_id).await.ok()
         } else {
             None
         };
-
+    
         let acompanhamento = if let Some(acompanhamento_id) = _pedido.acompanhamento_id() {
-            Some(
-                produto_repository_lock
-                    .get_produto_by_id(*acompanhamento_id)
-                    .await
-                    .unwrap(),
-            )
+            let produto_repo = self.produto_repository.lock().await;
+            produto_repo.get_produto_by_id(*acompanhamento_id).await.ok()
         } else {
             None
         };
@@ -227,7 +208,6 @@ impl PedidoRepository for PostgresPedidoRepository {
         let bebida_id = pedido.bebida().map(|bebida| *bebida.id() as i32);
 
         let status = pedido.status();
-
         let new_pedido_row = self
             .client
             .query_one(
@@ -239,12 +219,9 @@ impl PedidoRepository for PostgresPedidoRepository {
                     &bebida_id,
                     &pedido.pagamento(),
                     &status,
-                    &pedido.data_criacao(),
-                    &pedido.data_atualizacao(),
                 ],
             )
             .await;
-
         match new_pedido_row {
             Ok(row) => {
                 let new_pedido = self.pedido_from_proxy(&row).await;
@@ -280,14 +257,12 @@ impl PedidoRepository for PostgresPedidoRepository {
         let _pedido_id: i32 = pedido_id as i32;
         let _cliente_id = *cliente.id() as i32;
 
-        println!("Executando query para adicionar cliente...");
         let updated_pedido = self
             .client
             .query(SET_PEDIDO_CLIENTE, &[&_pedido_id, &_cliente_id])
             .await
             .unwrap();
 
-        println!("Retornando pedido com cliente...");
         let updated_pedido = updated_pedido.get(0);
         match updated_pedido {
             Some(pedido) => Ok(self.pedido_from_proxy(&pedido).await),
