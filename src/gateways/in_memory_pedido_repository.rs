@@ -1,16 +1,14 @@
 use chrono::Utc;
-use rocket::tokio::time::{sleep, Duration};
+use tokio::time::{sleep, Duration};
 
 use crate::base::domain_error::DomainError;
-use crate::entities::pedido::{self, Pedido, Status};
+use crate::entities::pedido::{Pedido, Status};
 use crate::entities::cliente::Cliente;
 use crate::entities::produto::{Produto,Categoria};
 
 use crate::entities::cpf::Cpf;
 use crate::entities::ingredientes::Ingredientes;
 
-use crate::traits::produto_repository::ProdutoRepository;
-use crate::traits::cliente_repository::ClienteRepository;
 use crate::traits::pedido_repository::PedidoRepository;
 
 #[derive(Clone)]

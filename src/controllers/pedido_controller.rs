@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use rocket::serde::json::Json;
 use tokio::sync::Mutex;
 
 use crate::base::domain_error::DomainError;

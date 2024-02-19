@@ -6,7 +6,7 @@ pub mod pedido;
 pub mod produto;
 
 use tokio_postgres::{NoTls, Error, Client};
-use rocket::tokio;
+use tokio;
 
 use self::table::{Table, TablesNames};
 use self::usuario::get_usuario_table_columns;

@@ -1,5 +1,5 @@
 use chrono::Utc;
-use rocket::tokio::time::{sleep, Duration};
+use tokio::time::{sleep, Duration};
 
 use crate::base::domain_error::DomainError;
 use crate::entities::usuario::Usuario;

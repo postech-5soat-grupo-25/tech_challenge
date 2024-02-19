@@ -1,5 +1,5 @@
 use crate::{
-    entities::produto::{self, Produto},
+    entities::produto::Produto,
     traits::produto_repository::ProdutoRepository,
     base::domain_error::DomainError,
 };
@@ -8,7 +8,7 @@ use chrono::Utc;
 use crate::entities::produto::Categoria;
 use crate::entities::ingredientes::Ingredientes;
 
-use rocket::tokio::time::{sleep, Duration};
+use tokio::time::{sleep, Duration};
 
 pub struct InMemoryProdutoRepository {
     _produto: Vec<Produto>,
