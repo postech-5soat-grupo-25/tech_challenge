@@ -2,7 +2,7 @@ use tokio::sync::Mutex;
 use std::sync::Arc;
 
 use crate::base::domain_error::DomainError;
-use crate::traits::cliente_repository::ClienteRepository;
+use crate::traits::cliente_gateway::ClienteGateway;
 use crate::use_cases::gerenciamento_de_clientes_use_case::{ClienteUseCase, CreateClienteInput};
 use crate::entities::cliente::Cliente;
 use crate::entities::cpf::Cpf;
@@ -12,7 +12,7 @@ pub struct ClienteController {
 }
 
 impl ClienteController {
-    pub fn new(cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>> ) -> ClienteController {
+    pub fn new(cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>> ) -> ClienteController {
         let cliente_use_case = ClienteUseCase::new(cliente_repository);
         ClienteController {
             cliente_use_case

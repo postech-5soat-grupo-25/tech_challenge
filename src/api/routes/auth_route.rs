@@ -13,13 +13,13 @@ use crate::controllers::auth_controller::{
 };
 
 use crate::traits::authentication_adapter::AuthenticationAdapter;
-use crate::traits::usuario_repository::UsuarioRepository;
+use crate::traits::usuario_gateway::UsuarioGateway;
 
 
 #[openapi(tag = "Auth")]
 #[post("/login", data = "<login_input>")]
 async fn login(
-    usuario_repository: &State<Arc<Mutex<dyn UsuarioRepository + Send + Sync>>>,
+    usuario_repository: &State<Arc<Mutex<dyn UsuarioGateway + Send + Sync>>>,
     authentication_adapter: &State<Arc<dyn AuthenticationAdapter + Sync + Send>>,
     login_input: Json<LoginInput>,
 ) -> Result<Json<AuthenticationResponse>, Status> {

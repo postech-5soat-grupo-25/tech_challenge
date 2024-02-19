@@ -6,10 +6,10 @@ use crate::base::domain_error::DomainError;
 use crate::entities::pedido::{self, Pedido};
 
 use crate::traits::{
-    pedido_repository::PedidoRepository,
-    cliente_repository::ClienteRepository,
-    produto_repository::ProdutoRepository,
-    pagamento_port::PagamentoPort,
+    pedido_gateway::PedidoGateway,
+    cliente_gateway::ClienteGateway,
+    produto_gateway::ProdutoGateway,
+    pagamento_adapter::PagamentoAdapter,
 };
 
 use crate::use_cases::{
@@ -25,10 +25,10 @@ pub struct PedidoController {
 
 impl PedidoController {
     pub fn new(
-        pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
-        cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
-        produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
-        pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
+        pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>>,
+        cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
+        produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
+        pagamento_adapter: Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>,
     ) -> PedidoController {
         let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
             pedido_repository.clone(),

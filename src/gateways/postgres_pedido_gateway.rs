@@ -10,9 +10,9 @@ use crate::base::domain_error::DomainError;
 use crate::entities::cliente::Cliente;
 use crate::entities::pedido::{Pedido, Status};
 use crate::entities::produto::Produto;
-use crate::traits::cliente_repository::ClienteRepository;
-use crate::traits::pedido_repository::PedidoRepository;
-use crate::traits::produto_repository::ProdutoRepository;
+use crate::traits::cliente_gateway::ClienteGateway;
+use crate::traits::pedido_gateway::PedidoGateway;
+use crate::traits::produto_gateway::ProdutoGateway;
 
 use crate::external::postgres::pedido::ProxyPedido;
 use crate::external::postgres::table::Table;
@@ -87,16 +87,16 @@ impl ToSql for Status {
 pub struct PostgresPedidoRepository {
     client: Client,
     tables: Vec<Table>,
-    cliente_repository: Arc<Mutex<dyn ClienteRepository + Send + Sync>>,
-    produto_repository: Arc<Mutex<dyn ProdutoRepository + Send + Sync>>,
+    cliente_repository: Arc<Mutex<dyn ClienteGateway + Send + Sync>>,
+    produto_repository: Arc<Mutex<dyn ProdutoGateway + Send + Sync>>,
 }
 
 impl PostgresPedidoRepository {
     pub async fn new(
         client: Client,
         tables: Vec<Table>,
-        cliente_repository: Arc<Mutex<dyn ClienteRepository + Send + Sync>>,
-        produto_repository: Arc<Mutex<dyn ProdutoRepository + Send + Sync>>,
+        cliente_repository: Arc<Mutex<dyn ClienteGateway + Send + Sync>>,
+        produto_repository: Arc<Mutex<dyn ProdutoGateway + Send + Sync>>,
     ) -> Self {
         let repo = PostgresPedidoRepository {
             client,
@@ -161,7 +161,7 @@ impl PostgresPedidoRepository {
 }
 
 #[async_trait]
-impl PedidoRepository for PostgresPedidoRepository {
+impl PedidoGateway for PostgresPedidoRepository {
     async fn lista_pedidos(&mut self) -> Result<Vec<Pedido>, DomainError> {
         let pedidos = self.client.query(QUERY_PEDIDOS, &[]).await.unwrap();
         let mut pedidos_vec = Vec::new();

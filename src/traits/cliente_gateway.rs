@@ -8,7 +8,7 @@ use crate::entities::{
 
 #[automock]
 #[async_trait]
-pub trait ClienteRepository {
+pub trait ClienteGateway {
     async fn get_clientes(&self) -> Result<Vec<Cliente>, DomainError>;
 
     async fn get_cliente_by_cpf(&self, cpf: Cpf) -> Result<Cliente, DomainError>;

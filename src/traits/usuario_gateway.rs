@@ -5,7 +5,7 @@ use crate::entities::{cpf::Cpf, usuario::Usuario};
 
 #[automock]
 #[async_trait]
-pub trait UsuarioRepository {
+pub trait UsuarioGateway {
     async fn get_usuarios(&self) -> Result<Vec<Usuario>, DomainError>;
 
     async fn get_usuario_by_id(&self, id: usize) -> Result<Usuario, DomainError>;

@@ -14,19 +14,19 @@ use crate::external::pagamento::mock::MockPagamentoSuccesso;
 use crate::external::postgres;
 use crate::adapters::jwt_authentication_adapter::JWTAuthenticationAdapter;
 use crate::gateways::{
-    in_memory_cliente_repository::InMemoryClienteRepository,
-    in_memory_pedido_repository::InMemoryPedidoRepository,
-    in_memory_usuario_repository::InMemoryUsuarioRepository,
-    postgres_cliente_repository::PostgresClienteRepository,
-    postgres_pedido_repository::PostgresPedidoRepository,
-    postgres_usuario_repository::PostgresUsuarioRepository,
-    postgres_produto_repository::PostgresProdutoRepository,
+    in_memory_cliente_gateway::InMemoryClienteRepository,
+    in_memory_pedido_gateway::InMemoryPedidoRepository,
+    in_memory_usuario_gateway::InMemoryUsuarioRepository,
+    postgres_cliente_gateway::PostgresClienteRepository,
+    postgres_pedido_gateway::PostgresPedidoRepository,
+    postgres_usuario_gateway::PostgresUsuarioGateway,
+    postgres_produto_gateway::PostgresProdutoRepository,
 };
 use crate::traits::authentication_adapter::AuthenticationAdapter;
-use crate::traits::pagamento_port::PagamentoPort;
+use crate::traits::pagamento_adapter::PagamentoAdapter;
 use crate::traits::{
-    cliente_repository::ClienteRepository, pedido_repository::PedidoRepository,
-    produto_repository::ProdutoRepository, usuario_repository::UsuarioRepository,
+    cliente_gateway::ClienteGateway, pedido_gateway::PedidoGateway,
+    produto_gateway::ProdutoGateway, usuario_gateway::UsuarioGateway,
 };
 
 #[get("/")]
@@ -43,7 +43,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     ));
 
     println!("Loading environment variables...");
-    let usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>> = if config.env
+    let usuario_repository: Arc<Mutex<dyn UsuarioGateway + Sync + Send>> = if config.env
         == Env::Test
     {
         println!("Using in memory database");
@@ -56,11 +56,11 @@ pub async fn main() -> Result<(), rocket::Error> {
         let tables = postgres::get_tables();
 
         Arc::new(Mutex::new(
-            PostgresUsuarioRepository::new(postgres_connection_manager.client, tables).await,
+            PostgresUsuarioGateway::new(postgres_connection_manager.client, tables).await,
         ))
     };
 
-    let cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>> = if config.env
+    let cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>> = if config.env
         == Env::Test
     {
         println!("Using in memory database");
@@ -77,7 +77,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         ))
     };
 
-    let pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>> = Arc::new(Mutex::new(MockPagamentoSuccesso {}));
+    let pagamento_adapter: Arc<Mutex<dyn PagamentoAdapter + Sync + Send>> = Arc::new(Mutex::new(MockPagamentoSuccesso {}));
 
     // Cloning cliente_repository to share ownership
     let cloned_cliente_repository = Arc::clone(&cliente_repository);
@@ -86,14 +86,14 @@ pub async fn main() -> Result<(), rocket::Error> {
         .await
         .unwrap();
     let tables = postgres::get_tables();
-    let produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>> = Arc::new(Mutex::new(
+    let produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>> = Arc::new(Mutex::new(
         PostgresProdutoRepository::new(postgres_connection_manager.client, tables).await,
     ));
 
     // Cloning produto_repository to share ownership
     let cloned_produto_repository = Arc::clone(&produto_repository);
 
-    let pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>> = if config.env
+    let pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>> = if config.env
         == Env::Test
     {
         println!("Using in memory database");

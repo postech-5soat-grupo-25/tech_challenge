@@ -4,7 +4,7 @@ use tokio_postgres::Client;
 use crate::{
     base::domain_error::DomainError, 
     entities::cliente::Cliente,
-    traits::cliente_repository::ClienteRepository, 
+    traits::cliente_gateway::ClienteGateway, 
     entities::cpf::Cpf,
 };
 
@@ -37,7 +37,7 @@ impl PostgresClienteRepository {
 }
 
 #[async_trait]
-impl ClienteRepository for PostgresClienteRepository {
+impl ClienteGateway for PostgresClienteRepository {
     async fn get_clientes(&self) -> Result<Vec<Cliente>, DomainError> {
         let clientes = self.client.query(QUERY_CLIENTES, &[]).await.unwrap();
         let mut clientes_vec = Vec::new();

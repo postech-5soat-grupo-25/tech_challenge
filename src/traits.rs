@@ -1,6 +1,6 @@
 pub mod authentication_adapter;
-pub mod usuario_repository;
-pub mod cliente_repository;
-pub mod pedido_repository;
-pub mod produto_repository;
-pub mod pagamento_port;
+pub mod usuario_gateway;
+pub mod cliente_gateway;
+pub mod pedido_gateway;
+pub mod produto_gateway;
+pub mod pagamento_adapter;

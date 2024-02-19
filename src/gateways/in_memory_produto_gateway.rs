@@ -1,6 +1,6 @@
 use crate::{
     entities::produto::Produto,
-    traits::produto_repository::ProdutoRepository,
+    traits::produto_gateway::ProdutoGateway,
     base::domain_error::DomainError,
 };
 
@@ -48,7 +48,7 @@ impl InMemoryProdutoRepository {
 }
 
 #[async_trait]
-impl ProdutoRepository for InMemoryProdutoRepository {
+impl ProdutoGateway for InMemoryProdutoRepository {
     async fn get_produtos(&self) -> Result<Vec<Produto>, DomainError> {
         let produtos = self._produto.clone();
         sleep(Duration::from_secs(1)).await;

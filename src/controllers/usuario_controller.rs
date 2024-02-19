@@ -4,7 +4,7 @@ use tokio::sync::Mutex;
 use crate::base::domain_error::DomainError;
 use crate::entities::usuario::Usuario;
 use crate::entities::cpf::Cpf;
-use crate::traits::usuario_repository::UsuarioRepository;
+use crate::traits::usuario_gateway::UsuarioGateway;
 use crate::use_cases::gerenciamento_de_usuarios_use_case::{CreateUsuarioInput, UsuarioUseCase};
 
 pub struct UsuarioController {
@@ -12,7 +12,7 @@ pub struct UsuarioController {
 }
 
 impl UsuarioController {
-    pub fn new(usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>>) -> UsuarioController {
+    pub fn new(usuario_repository: Arc<Mutex<dyn UsuarioGateway + Sync + Send>>) -> UsuarioController {
         let usuario_use_case = UsuarioUseCase::new(usuario_repository);
         UsuarioController {
             usuario_use_case,

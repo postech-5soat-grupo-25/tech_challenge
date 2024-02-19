@@ -3,7 +3,7 @@ use tokio::sync::Mutex;
 
 use crate::base::domain_error::DomainError;
 use crate::entities::produto::Produto;
-use crate::traits::produto_repository::ProdutoRepository;
+use crate::traits::produto_gateway::ProdutoGateway;
 use crate::use_cases::gerenciamento_de_produtos_use_case::{CreateProdutoInput, ProdutoUseCase};
 
 pub struct ProdutoController {
@@ -11,7 +11,7 @@ pub struct ProdutoController {
 }
 
 impl ProdutoController {
-    pub fn new(produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>) -> ProdutoController {
+    pub fn new(produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>) -> ProdutoController {
         let produto_use_case = ProdutoUseCase::new(produto_repository);
         ProdutoController { produto_use_case }
     }

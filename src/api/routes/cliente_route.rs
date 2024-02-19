@@ -10,7 +10,7 @@ use tokio::sync::Mutex;
 use crate::api::error_handling::ErrorResponse;
 use crate::api::request_guards::authentication_guard::AuthenticatedUser;
 use crate::controllers::cliente_controller::ClienteController;
-use crate::traits::cliente_repository::ClienteRepository;
+use crate::traits::cliente_gateway::ClienteGateway;
 use crate::use_cases::gerenciamento_de_clientes_use_case::CreateClienteInput;
 use crate::entities::cliente::Cliente;
 use crate::entities::cpf::Cpf;
@@ -25,7 +25,7 @@ impl<'a> FromParam<'a> for Cpf {
 #[openapi(tag = "Clientes")]
 #[get("/")]
 async fn lista_clientes(
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Cliente>>, Status> {
     let cliente_controller = ClienteController::new(cliente_repository.inner().clone());
@@ -36,7 +36,7 @@ async fn lista_clientes(
 #[openapi(tag = "Clientes")]
 #[get("/<cpf>")]
 async fn busca_cliente_por_cpf(
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     cpf: Cpf,
 ) -> Result<Json<Cliente>, Status> {
     let cliente_controller = ClienteController::new(cliente_repository.inner().clone());
@@ -47,7 +47,7 @@ async fn busca_cliente_por_cpf(
 #[openapi(tag = "Clientes")]
 #[post("/", data = "<cliente_input>")]
 async fn cadastro_cliente(
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     cliente_input: Json<CreateClienteInput>,
 ) -> Result<Json<Cliente>, Status> {
     let cliente_controller = ClienteController::new(cliente_repository.inner().clone());

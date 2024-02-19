@@ -10,7 +10,7 @@ pub enum StatusPagamento {
 }
 
 #[automock]
-pub trait PagamentoPort: Send + Sync {
+pub trait PagamentoAdapter: Send + Sync {
     fn processa_pagamento(
         &self,
         pedido_id: usize,

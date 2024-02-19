@@ -9,7 +9,7 @@ use tokio::sync::Mutex;
 use crate::api::error_handling::ErrorResponse;
 use crate::api::request_guards::authentication_guard::AuthenticatedUser;
 use crate::controllers::produto_controller::ProdutoController;
-use crate::traits::produto_repository::ProdutoRepository;
+use crate::traits::produto_gateway::ProdutoGateway;
 use crate::use_cases::gerenciamento_de_produtos_use_case::CreateProdutoInput;
 use crate::entities::produto::Produto;
 use crate::api::request_guards::admin_guard::AdminUser;
@@ -17,7 +17,7 @@ use crate::api::request_guards::admin_guard::AdminUser;
 #[openapi(tag = "Produtos")]
 #[get("/")]
 async fn get_produto(
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Produto>>, Status> {
     let produto_controller = ProdutoController::new(produto_repository.inner().clone());
@@ -28,7 +28,7 @@ async fn get_produto(
 #[openapi(tag = "Produtos")]
 #[get("/<id>")]
 async fn get_produto_by_id(
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     id: usize,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Produto>, Status> {
@@ -40,7 +40,7 @@ async fn get_produto_by_id(
 #[openapi(tag = "Produtos")]
 #[post("/", data = "<produto_input>")]
 async fn create_produto(
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     produto_input: Json<CreateProdutoInput>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Produto>, Status> {
@@ -53,7 +53,7 @@ async fn create_produto(
 #[openapi(tag = "Produtos")]
 #[put("/<id>", data = "<produto_input>")]
 async fn update_produto(
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     produto_input: Json<CreateProdutoInput>,
     id: usize,
     _logged_user_info: AuthenticatedUser,
@@ -67,7 +67,7 @@ async fn update_produto(
 #[openapi(tag = "Produtos")]
 #[delete("/<id>")]
 async fn delete_produto(
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     id: usize,
     _logged_user_info: AdminUser,
 ) -> Result<Json<String>, Status> {

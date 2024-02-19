@@ -9,7 +9,7 @@ use crate::entities::{
     cliente::Cliente,
     cpf::Cpf,
 };
-use crate::traits::cliente_repository::ClienteRepository;
+use crate::traits::cliente_gateway::ClienteGateway;
 
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 pub struct CreateClienteInput {
@@ -20,11 +20,11 @@ pub struct CreateClienteInput {
 
 #[derive(Clone)]
 pub struct ClienteUseCase {
-    cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
+    cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
 }
 
 impl ClienteUseCase {
-    pub fn new(cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>) -> Self {
+    pub fn new(cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>) -> Self {
         ClienteUseCase { cliente_repository }
     }
 
@@ -75,14 +75,14 @@ mod tests {
     use super::*;
     use mockall::predicate::*;
     use crate::entities::cliente::Cliente;
-    use crate::traits::cliente_repository::MockClienteRepository;
+    use crate::traits::cliente_gateway::MockClienteGateway;
     use tokio::sync::Mutex;
     use std::sync::Arc;
     use tokio;
 
     #[tokio::test]
     async fn test_get_clientes() {
-        let mut mock = MockClienteRepository::new();
+        let mut mock = MockClienteGateway::new();
 
         let returned_cliente = Cliente::new(
             1,
@@ -106,7 +106,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cliente_by_cpf() {
-        let mut mock = MockClienteRepository::new();
+        let mut mock = MockClienteGateway::new();
 
         let returned_cliente = Cliente::new(
             1,
@@ -131,7 +131,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_cliente() {
-        let mut mock = MockClienteRepository::new();
+        let mut mock = MockClienteGateway::new();
 
         let returned_cliente = Cliente::new(
             1,
@@ -160,7 +160,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_cliente() {
-        let mut mock = MockClienteRepository::new();
+        let mut mock = MockClienteGateway::new();
 
         mock.expect_delete_cliente()
             .times(1)

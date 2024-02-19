@@ -1,9 +1,9 @@
 use crate::base::domain_error::DomainError;
-use crate::traits::pagamento_port::{ StatusPagamento, PagamentoPort };
+use crate::traits::pagamento_adapter::{ StatusPagamento, PagamentoAdapter };
 
 pub struct MockPagamentoSuccesso {}
 
-impl PagamentoPort for MockPagamentoSuccesso {
+impl PagamentoAdapter for MockPagamentoSuccesso {
     fn processa_pagamento(
         &self,
         pedido_id: usize,

@@ -5,15 +5,15 @@ use tokio::sync::Mutex;
 use crate::base::domain_error::DomainError;
 use crate::entities::pedido::{Pedido, Status};
 
-use crate::traits::pedido_repository::PedidoRepository;
+use crate::traits::pedido_gateway::PedidoGateway;
 
 #[derive(Clone)]
 pub struct PreparacaoeEntregaUseCase {
-    pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
+    pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>>,
 }
 
 impl PreparacaoeEntregaUseCase {
-    pub fn new(pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>) -> Self {
+    pub fn new(pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>>) -> Self {
         PreparacaoeEntregaUseCase { pedido_repository }
     }
 
@@ -36,14 +36,14 @@ mod tests {
     use super::*;
     use tokio;
     use crate::entities::pedido::Pedido;
-    use crate::traits::pedido_repository::MockPedidoRepository;
+    use crate::traits::pedido_gateway::MockPedidoGateway;
     use tokio::sync::Mutex;
     use std::sync::Arc;
     use mockall::predicate::*;
 
     #[tokio::test]
     async fn test_get_pedidos_novos() {
-        let mut mock = MockPedidoRepository::new();
+        let mut mock = MockPedidoGateway::new();
 
         let returned_pedido = Pedido::new(
             1,
@@ -70,7 +70,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_atualiza_status() {
-        let mut mock = MockPedidoRepository::new();
+        let mut mock = MockPedidoGateway::new();
 
         let returned_pedido = Pedido::new(
             1,

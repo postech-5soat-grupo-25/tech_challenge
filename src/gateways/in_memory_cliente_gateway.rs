@@ -3,7 +3,7 @@ use tokio::time::{sleep, Duration};
 
 use crate::base::domain_error::DomainError;
 use crate::entities::cliente::Cliente;
-use crate::traits::cliente_repository::ClienteRepository;
+use crate::traits::cliente_gateway::ClienteGateway;
 use crate::entities::cpf::Cpf;
 
 #[derive(Clone)]
@@ -33,7 +33,7 @@ impl InMemoryClienteRepository {
 }
 
 #[async_trait]
-impl ClienteRepository for InMemoryClienteRepository {
+impl ClienteGateway for InMemoryClienteRepository {
     async fn get_clientes(&self) -> Result<Vec<Cliente>, DomainError> {
         let clientes = self._clientes.clone();
         sleep(Duration::from_secs(1)).await;

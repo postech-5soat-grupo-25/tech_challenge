@@ -9,7 +9,7 @@ use crate::entities::{
 
 #[automock]
 #[async_trait]
-pub trait PedidoRepository {
+pub trait PedidoGateway {
     async fn create_pedido(&mut self, pedido: Pedido) -> Result<Pedido, DomainError>;
 
     async fn lista_pedidos(&mut self) -> Result<Vec<Pedido>, DomainError>;

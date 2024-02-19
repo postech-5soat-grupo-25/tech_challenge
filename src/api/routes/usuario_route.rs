@@ -11,14 +11,14 @@ use crate::api::request_guards::admin_guard::AdminUser;
 use crate::controllers::usuario_controller::UsuarioController;
 use crate::entities::usuario::Usuario;
 use crate::entities::cpf::Cpf;
-use crate::traits::usuario_repository::UsuarioRepository;
+use crate::traits::usuario_gateway::UsuarioGateway;
 use crate::use_cases::gerenciamento_de_usuarios_use_case::CreateUsuarioInput;
 
 
 #[openapi(tag = "Usuarios")]
 #[get("/")]
 async fn get_usuarios(
-    usuario_repository: &State<Arc<Mutex<dyn UsuarioRepository + Sync + Send>>>,
+    usuario_repository: &State<Arc<Mutex<dyn UsuarioGateway + Sync + Send>>>,
     _logged_user_info: AdminUser,
 ) -> Result<Json<Vec<Usuario>>, Status> {
     let usuario_controller = UsuarioController::new(usuario_repository.inner().clone());
@@ -29,7 +29,7 @@ async fn get_usuarios(
 #[openapi(tag = "Usuarios")]
 #[get("/<id>")]
 async fn get_usuario(
-    usuario_repository: &State<Arc<Mutex<dyn UsuarioRepository + Sync + Send>>>,
+    usuario_repository: &State<Arc<Mutex<dyn UsuarioGateway + Sync + Send>>>,
     id: usize,
     _logged_user_info: AdminUser,
 ) -> Result<Json<Usuario>, Status> {
@@ -41,7 +41,7 @@ async fn get_usuario(
 #[openapi(tag = "Usuarios")]
 #[post("/", data = "<usuario_input>")]
 async fn create_usuario(
-    usuario_repository: &State<Arc<Mutex<dyn UsuarioRepository + Sync + Send>>>,
+    usuario_repository: &State<Arc<Mutex<dyn UsuarioGateway + Sync + Send>>>,
     usuario_input: Json<CreateUsuarioInput>,
     _logged_user_info: AdminUser,
 ) -> Result<Json<Usuario>, Status> {
@@ -54,7 +54,7 @@ async fn create_usuario(
 #[openapi(tag = "Usuarios")]
 #[put("/<id>", data = "<usuario_input>")]
 async fn update_usuario(
-    usuario_repository: &State<Arc<Mutex<dyn UsuarioRepository + Sync + Send>>>,
+    usuario_repository: &State<Arc<Mutex<dyn UsuarioGateway + Sync + Send>>>,
     usuario_input: Json<CreateUsuarioInput>,
     id: usize,
     _logged_user_info: AdminUser,
@@ -68,7 +68,7 @@ async fn update_usuario(
 #[openapi(tag = "Usuarios")]
 #[delete("/<cpf>")]
 async fn delete_usuario(
-    usuario_repository: &State<Arc<Mutex<dyn UsuarioRepository + Sync + Send>>>,
+    usuario_repository: &State<Arc<Mutex<dyn UsuarioGateway + Sync + Send>>>,
     cpf: Cpf,
     _logged_user_info: AdminUser,
 ) -> Result<Json<String>, Status> {

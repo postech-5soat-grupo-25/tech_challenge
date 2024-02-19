@@ -3,14 +3,12 @@ use postgres_from_row::FromRow;
 use tokio_postgres::Client;
 
 use crate::{
-    base::domain_error::DomainError, 
-    entities::usuario::Usuario,
-    traits::usuario_repository::UsuarioRepository, 
-    entities::cpf::Cpf,
+    base::domain_error::DomainError, entities::cpf::Cpf, entities::usuario::Usuario,
+    traits::usuario_gateway::UsuarioGateway,
 };
 
 use crate::external::postgres::table::Table;
-pub struct PostgresUsuarioRepository {
+pub struct PostgresUsuarioGateway {
     client: Client,
     tables: Vec<Table>,
 }
@@ -22,9 +20,9 @@ const QUERY_USUARIO_BY_ID: &str = "SELECT * FROM usuario WHERE id = $1";
 const QUERY_USUARIOS: &str = "SELECT * FROM usuario";
 const DELETE_USUARIO: &str = "DELETE FROM usuario WHERE cpf = $1 RETURNING *";
 
-impl PostgresUsuarioRepository {
+impl PostgresUsuarioGateway {
     pub async fn new(client: Client, tables: Vec<Table>) -> Self {
-        let mut repo = PostgresUsuarioRepository { client, tables };
+        let mut repo = PostgresUsuarioGateway { client, tables };
 
         repo.check_for_tables().await;
         repo.check_for_usuario_admin().await;
@@ -68,7 +66,7 @@ impl PostgresUsuarioRepository {
 }
 
 #[async_trait]
-impl UsuarioRepository for PostgresUsuarioRepository {
+impl UsuarioGateway for PostgresUsuarioGateway {
     async fn get_usuarios(&self) -> Result<Vec<Usuario>, DomainError> {
         let usuarios = self.client.query(QUERY_USUARIOS, &[]).await.unwrap();
         let mut usuarios_vec = Vec::new();

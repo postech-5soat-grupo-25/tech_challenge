@@ -9,7 +9,7 @@ use crate::{
     base::domain_error::DomainError, 
     entities::produto::Categoria, 
     entities::produto::Produto,
-    traits::produto_repository::ProdutoRepository,
+    traits::produto_gateway::ProdutoGateway,
 };
 
 use crate::external::postgres::table::Table;
@@ -94,7 +94,7 @@ impl PostgresProdutoRepository {
 }
 
 #[async_trait]
-impl ProdutoRepository for PostgresProdutoRepository {
+impl ProdutoGateway for PostgresProdutoRepository {
     async fn get_produtos(&self) -> Result<Vec<Produto>, DomainError> {
         let produtos = self.client.query(QUERY_PRODUCTS, &[]).await.unwrap();
         let mut produtos_vec = Vec::new();

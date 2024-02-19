@@ -10,7 +10,7 @@ use crate::entities::{
     ingredientes::Ingredientes,
     produto::{Categoria, Produto},
 };
-use crate::traits::produto_repository::ProdutoRepository;
+use crate::traits::produto_gateway::ProdutoGateway;
 
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 pub struct CreateProdutoInput {
@@ -54,11 +54,11 @@ pub struct UpdateProdutoInput {
 
 #[derive(Clone)]
 pub struct ProdutoUseCase {
-    produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
+    produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
 }
 
 impl ProdutoUseCase {
-    pub fn new(produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>) -> Self {
+    pub fn new(produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>) -> Self {
         ProdutoUseCase { produto_repository }
     }
 
@@ -136,13 +136,13 @@ unsafe impl Sync for ProdutoUseCase {}
 mod tests {
     use super::*;
     use crate::entities::{ingredientes::Ingredientes, produto::Produto};
-    use crate::traits::produto_repository::MockProdutoRepository;
+    use crate::traits::produto_gateway::MockProdutoGateway;
     use mockall::predicate::*;
     use tokio;
 
     #[tokio::test]
     async fn test_get_produtos() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         let returned_produto = Produto::new(
             1,
@@ -170,7 +170,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_produto_by_id() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         let returned_produto = Produto::new(
             1,
@@ -199,7 +199,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_produto() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         let returned_produto = Produto::new(
             1,
@@ -237,7 +237,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_produto() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         let returned_produto = Produto::new(
             1,
@@ -278,7 +278,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_produto() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         mock.expect_delete_produto()
             .times(1)

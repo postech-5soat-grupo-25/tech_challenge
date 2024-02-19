@@ -9,7 +9,7 @@ use tokio::sync::Mutex;
 use crate::base::domain_error::DomainError;
 use crate::entities::cpf::Cpf;
 use crate::entities::usuario::{Status, Tipo, Usuario};
-use crate::traits::usuario_repository::UsuarioRepository;
+use crate::traits::usuario_gateway::UsuarioGateway;
 
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 pub struct CreateUsuarioInput {
@@ -23,11 +23,11 @@ pub struct CreateUsuarioInput {
 
 #[derive(Clone)]
 pub struct UsuarioUseCase {
-    usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>>,
+    usuario_repository: Arc<Mutex<dyn UsuarioGateway + Sync + Send>>,
 }
 
 impl UsuarioUseCase {
-    pub fn new(usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>>) -> Self {
+    pub fn new(usuario_repository: Arc<Mutex<dyn UsuarioGateway + Sync + Send>>) -> Self {
         UsuarioUseCase { usuario_repository }
     }
 
@@ -116,12 +116,12 @@ unsafe impl Sync for UsuarioUseCase {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::traits::usuario_repository::MockUsuarioRepository;
+    use crate::traits::usuario_gateway::MockUsuarioGateway;
     use tokio;
 
     #[tokio::test]
     async fn test_get_usuarios() {
-        let mut mock = MockUsuarioRepository::new();
+        let mut mock = MockUsuarioGateway::new();
 
         let returned_usuario = Usuario::new(
             1,
@@ -148,7 +148,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_usuario_by_id() {
-        let mut mock = MockUsuarioRepository::new();
+        let mut mock = MockUsuarioGateway::new();
 
         let returned_usuario = Usuario::new(
             1,
@@ -175,7 +175,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_usuario_by_cpf() {
-        let mut mock = MockUsuarioRepository::new();
+        let mut mock = MockUsuarioGateway::new();
 
         let returned_usuario = Usuario::new(
             1,
@@ -204,7 +204,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_usuario() {
-        let mut mock = MockUsuarioRepository::new();
+        let mut mock = MockUsuarioGateway::new();
 
         let returned_usuario = Usuario::new(
             1,
@@ -240,7 +240,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_usuario() {
-        let mut mock = MockUsuarioRepository::new();
+        let mut mock = MockUsuarioGateway::new();
 
         let returned_usuario = Usuario::new(
             1,
@@ -279,7 +279,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_usuario() {
-        let mut mock = MockUsuarioRepository::new();
+        let mut mock = MockUsuarioGateway::new();
 
         mock.expect_delete_usuario()
             .times(1)

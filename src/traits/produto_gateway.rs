@@ -5,7 +5,7 @@ use crate::entities::produto::{Produto, Categoria};
 
 #[automock]
 #[async_trait]
-pub trait ProdutoRepository {
+pub trait ProdutoGateway {
   async fn get_produtos(&self) -> Result<Vec<Produto>, DomainError>;
 
   async fn get_produto_by_id(&self, id: usize) -> Result<Produto, DomainError>;

@@ -9,7 +9,7 @@ use crate::entities::produto::{Produto,Categoria};
 use crate::entities::cpf::Cpf;
 use crate::entities::ingredientes::Ingredientes;
 
-use crate::traits::pedido_repository::PedidoRepository;
+use crate::traits::pedido_gateway::PedidoGateway;
 
 #[derive(Clone)]
 pub struct InMemoryPedidoRepository {
@@ -76,7 +76,7 @@ async fn get_status_by_string(status : String) -> Status {
 
 
 #[async_trait]
-impl PedidoRepository for InMemoryPedidoRepository {
+impl PedidoGateway for InMemoryPedidoRepository {
 
     async fn lista_pedidos(&mut self) -> Result<Vec<Pedido>, DomainError> {
         Ok(self._pedidos.clone())

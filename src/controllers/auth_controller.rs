@@ -8,7 +8,7 @@ use crate::base::domain_error::DomainError;
 use crate::entities::cpf::Cpf;
 use crate::traits::authentication_adapter::AuthenticationAdapter;
 use crate::use_cases::gerenciamento_de_usuarios_use_case::UsuarioUseCase;
-use crate::traits::usuario_repository::UsuarioRepository;
+use crate::traits::usuario_gateway::UsuarioGateway;
 use crate::entities::usuario::Usuario;
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
@@ -30,7 +30,7 @@ pub struct AuthController {
 
 impl AuthController {
     pub fn new(
-            usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>>,
+            usuario_repository: Arc<Mutex<dyn UsuarioGateway + Sync + Send>>,
             authentication_adapter: Arc<dyn AuthenticationAdapter + Sync + Send>
         ) -> AuthController {
         let usuario_use_case = UsuarioUseCase::new(usuario_repository);

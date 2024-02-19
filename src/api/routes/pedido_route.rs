@@ -12,20 +12,20 @@ use crate::controllers::pedido_controller::PedidoController;
 use crate::entities::pedido::Pedido;
 
 use crate::traits::{
-    pedido_repository::PedidoRepository,
-    cliente_repository::ClienteRepository,
-    produto_repository::ProdutoRepository,
-    pagamento_port::PagamentoPort,
+    pedido_gateway::PedidoGateway,
+    cliente_gateway::ClienteGateway,
+    produto_gateway::ProdutoGateway,
+    pagamento_adapter::PagamentoAdapter,
 };
 use crate::use_cases::pedidos_e_pagamentos_use_case::CreatePedidoInput;
 
 #[openapi(tag = "Pedidos")]
 #[get("/")]
 async fn get_pedidos(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Pedido>>, Status> {
     let pedido_controller = PedidoController::new(
@@ -41,10 +41,10 @@ async fn get_pedidos(
 #[openapi(tag = "Pedidos")]
 #[get("/<id>")]
 async fn get_pedido_by_id(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     id: usize,
     __logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Pedido>, Status> {
@@ -63,10 +63,10 @@ async fn get_pedido_by_id(
 #[openapi(tag = "Pedidos")]
 #[post("/", data = "<pedido_input>")]
 async fn post_novo_pedido(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     pedido_input: Json<CreatePedidoInput>,
 ) -> Result<Json<Pedido>, Status> {
     let pedido_controller = PedidoController::new(
@@ -85,10 +85,10 @@ async fn post_novo_pedido(
 #[openapi(tag = "Pedidos")]
 #[get("/novos")]
 async fn get_pedidos_novos(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     __logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Pedido>>, Status> {
     let pedido_controller = PedidoController::new(
@@ -104,10 +104,10 @@ async fn get_pedidos_novos(
 #[openapi(tag = "Pedidos")]
 #[put("/<id>/status/<status>")]
 async fn put_status_pedido(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     id: usize,
     status: &str,
     __logged_user_info: AuthenticatedUser,
@@ -127,10 +127,10 @@ async fn put_status_pedido(
 #[openapi(tag = "Pedidos")]
 #[put("/<id>/cliente/<cliente_id>")]
 async fn put_cliente_pedido(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     id: usize,
     cliente_id: usize,
 ) -> Result<Json<Pedido>, Status> {
@@ -149,10 +149,10 @@ async fn put_cliente_pedido(
 #[openapi(tag = "Pedidos")]
 #[put("/<id>/produto/<categoria>/<produto_id>")]
 async fn put_produto_by_categoria(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     id: usize,
     categoria: &str,
     produto_id: usize,
@@ -173,10 +173,10 @@ async fn put_produto_by_categoria(
 #[openapi(tag = "Pedidos")]
 #[put("/<id>/pagamento")]
 async fn pagar(
-    pedido_repository: &State<Arc<Mutex<dyn PedidoRepository + Sync + Send>>>,
-    cliente_repository: &State<Arc<Mutex<dyn ClienteRepository + Sync + Send>>>,
-    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoPort + Sync + Send>>>,
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
     id: usize,
 ) -> Result<Json<Pedido>, Status> {
     let pedido_controller = PedidoController::new(

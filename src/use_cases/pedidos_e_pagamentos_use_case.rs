@@ -4,10 +4,10 @@ use crate::entities::{
     produto::{Categoria, Produto},
 };
 use crate::traits::{
-    cliente_repository::ClienteRepository,
-    pagamento_port::{PagamentoPort, StatusPagamento},
-    pedido_repository::PedidoRepository,
-    produto_repository::ProdutoRepository,
+    cliente_gateway::ClienteGateway,
+    pagamento_adapter::{PagamentoAdapter, StatusPagamento},
+    pedido_gateway::PedidoGateway,
+    produto_gateway::ProdutoGateway,
 };
 use chrono::Utc;
 use tokio::sync::Mutex;
@@ -25,18 +25,18 @@ pub struct CreatePedidoInput {
 
 #[derive(Clone)]
 pub struct PedidosEPagamentosUseCase {
-    pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
-    cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
-    produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
-    pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
+    pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>>,
+    cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
+    produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
+    pagamento_adapter: Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>,
 }
 
 impl PedidosEPagamentosUseCase {
     pub fn new(
-        pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
-        cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
-        produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
-        pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
+        pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>>,
+        cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
+        produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
+        pagamento_adapter: Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>,
     ) -> Self {
         PedidosEPagamentosUseCase {
             pedido_repository,
@@ -225,8 +225,8 @@ mod tests {
     use super::*;
     use crate::entities::{cliente::Cliente, cpf::Cpf, ingredientes::Ingredientes, pedido::Pedido};
     use crate::traits::{
-        cliente_repository::MockClienteRepository, pagamento_port::MockPagamentoPort,
-        pedido_repository::MockPedidoRepository, produto_repository::MockProdutoRepository,
+        cliente_gateway::MockClienteGateway, pagamento_adapter::MockPagamentoAdapter,
+        pedido_gateway::MockPedidoGateway, produto_gateway::MockProdutoGateway,
     };
     use mockall::predicate::eq;
     use tokio::sync::Mutex;
@@ -235,7 +235,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_lista_pedidos() {
-        let mut mock = MockPedidoRepository::new();
+        let mut mock = MockPedidoGateway::new();
 
         let returned_pedido = Pedido::new(
             1,
@@ -257,9 +257,9 @@ mod tests {
 
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
-            Arc::new(Mutex::new(MockProdutoRepository::new())),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
+            Arc::new(Mutex::new(MockProdutoGateway::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
         let result = use_case.lista_pedidos().await;
         assert_eq!(result.unwrap()[0].id(), expected_pedido.id());
@@ -267,7 +267,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_seleciona_pedido_por_id() {
-        let mut mock = MockPedidoRepository::new();
+        let mut mock = MockPedidoGateway::new();
 
         let returned_pedido = Pedido::new(
             1,
@@ -289,9 +289,9 @@ mod tests {
 
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
-            Arc::new(Mutex::new(MockProdutoRepository::new())),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
+            Arc::new(Mutex::new(MockProdutoGateway::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
         let result = use_case.seleciona_pedido_por_id(1).await;
         assert_eq!(result.unwrap().id(), expected_pedido.id());
@@ -299,8 +299,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_novo_pedido() {
-        let mut mock_pedido_repository = MockPedidoRepository::new();
-        let mut mock_cliente_repository = MockClienteRepository::new();
+        let mut mock_pedido_repository = MockPedidoGateway::new();
+        let mut mock_cliente_repository = MockClienteGateway::new();
 
         let returned_cliente = Cliente::new(
             1,
@@ -338,8 +338,8 @@ mod tests {
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock_pedido_repository)),
             Arc::new(Mutex::new(mock_cliente_repository)),
-            Arc::new(Mutex::new(MockProdutoRepository::new())),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockProdutoGateway::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
         let result = use_case
             .novo_pedido(CreatePedidoInput {
@@ -354,7 +354,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_lista_lanches() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         let ingredientes = Ingredientes::new(vec![
             "Pão".to_string(),
@@ -383,10 +383,10 @@ mod tests {
             .returning(move |_| Ok(vec![returned_produto.clone()]));
 
         let use_case = PedidosEPagamentosUseCase::new(
-            Arc::new(Mutex::new(MockPedidoRepository::new())),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
+            Arc::new(Mutex::new(MockPedidoGateway::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
         let result = use_case.lista_lanches().await;
         assert_eq!(result.unwrap()[0].id(), expected_produto.id());
@@ -394,9 +394,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_adicionar_lanche_com_personalizacao() {
-        let mut mock_produto_repository = MockProdutoRepository::new();
+        let mut mock_produto_repository = MockProdutoGateway::new();
 
-        let mut mock_pedido_repository = MockPedidoRepository::new();
+        let mut mock_pedido_repository = MockPedidoGateway::new();
 
         let ingredientes = Ingredientes::new(vec![
             "Pão".to_string(),
@@ -443,9 +443,9 @@ mod tests {
 
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock_pedido_repository)),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock_produto_repository)),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
         let result = use_case.adicionar_lanche_com_personalizacao(1, 1).await;
         assert_eq!(result.unwrap().id(), expected_pedido.id());
@@ -453,7 +453,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_lista_acompanhamentos() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         let ingredientes = Ingredientes::new(vec![]).unwrap();
 
@@ -477,10 +477,10 @@ mod tests {
             .returning(move |_| Ok(vec![returned_produto.clone()]));
 
         let use_case = PedidosEPagamentosUseCase::new(
-            Arc::new(Mutex::new(MockPedidoRepository::new())),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
+            Arc::new(Mutex::new(MockPedidoGateway::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
         let result = use_case.lista_acompanhamentos().await;
         assert_eq!(result.unwrap()[0].id(), expected_produto.id());
@@ -488,9 +488,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_adicionar_acompanhamento() {
-        let mut mock_produto_repository = MockProdutoRepository::new();
+        let mut mock_produto_repository = MockProdutoGateway::new();
 
-        let mut mock_pedido_repository = MockPedidoRepository::new();
+        let mut mock_pedido_repository = MockPedidoGateway::new();
 
         let ingredientes = Ingredientes::new(vec![]).unwrap();
 
@@ -532,9 +532,9 @@ mod tests {
 
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock_pedido_repository)),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock_produto_repository)),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
 
         let result = use_case.adicionar_acompanhamento(1, 1).await;
@@ -543,7 +543,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_lista_bebidas() {
-        let mut mock = MockProdutoRepository::new();
+        let mut mock = MockProdutoGateway::new();
 
         let ingredientes = Ingredientes::new(vec![]).unwrap();
 
@@ -567,10 +567,10 @@ mod tests {
             .returning(move |_| Ok(vec![returned_produto.clone()]));
 
         let use_case = PedidosEPagamentosUseCase::new(
-            Arc::new(Mutex::new(MockPedidoRepository::new())),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
+            Arc::new(Mutex::new(MockPedidoGateway::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
 
         let result = use_case.lista_bebidas().await;
@@ -579,9 +579,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_adicionar_bebida() {
-        let mut mock_produto_repository = MockProdutoRepository::new();
+        let mut mock_produto_repository = MockProdutoGateway::new();
 
-        let mut mock_pedido_repository = MockPedidoRepository::new();
+        let mut mock_pedido_repository = MockPedidoGateway::new();
 
         let ingredientes = Ingredientes::new(vec![]).unwrap();
 
@@ -623,9 +623,9 @@ mod tests {
 
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock_pedido_repository)),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock_produto_repository)),
-            Arc::new(Mutex::new(MockPagamentoPort::new())),
+            Arc::new(Mutex::new(MockPagamentoAdapter::new())),
         );
 
         let result = use_case.adicionar_bebida(1, 1).await;
@@ -634,8 +634,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_realizar_pagamento_do_pedido() {
-        let mut mock = MockPedidoRepository::new();
-        let mut mock_pagamento = MockPagamentoPort::new();
+        let mut mock = MockPedidoGateway::new();
+        let mut mock_pagamento = MockPagamentoAdapter::new();
 
         let ingredientes = Ingredientes::new(vec![]).unwrap();
 
@@ -684,8 +684,8 @@ mod tests {
 
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockClienteRepository::new())),
-            Arc::new(Mutex::new(MockProdutoRepository::new())),
+            Arc::new(Mutex::new(MockClienteGateway::new())),
+            Arc::new(Mutex::new(MockProdutoGateway::new())),
             Arc::new(Mutex::new(mock_pagamento)),
         );
         let result = use_case.realizar_pagamento_do_pedido(1).await;
