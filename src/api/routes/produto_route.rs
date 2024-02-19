@@ -1,70 +1,78 @@
+use std::sync::Arc;
+
 use rocket::http::Status;
-use rocket::response::status::NotFound;
-use rocket::request::FromParam;
 use rocket::serde::json::Json;
 use rocket::State;
 use rocket_okapi::{openapi, openapi_get_routes};
+use tokio::sync::Mutex;
 
 use crate::api::error_handling::ErrorResponse;
 use crate::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::use_cases::gerenciamento_de_produtos_use_case::{ProdutoUseCase, CreateProdutoInput, UpdateProdutoInput};
+use crate::controllers::produto_controller::ProdutoController;
+use crate::traits::produto_repository::ProdutoRepository;
+use crate::use_cases::gerenciamento_de_produtos_use_case::CreateProdutoInput;
 use crate::entities::produto::Produto;
 use crate::api::request_guards::admin_guard::AdminUser;
 
 #[openapi(tag = "Produtos")]
 #[get("/")]
 async fn get_produto(
-    produto_use_case: &State<ProdutoUseCase>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Produto>>, Status> {
-    let produtos = produto_use_case.get_produtos().await?;
+    let produto_controller = ProdutoController::new(produto_repository.inner().clone());
+    let produtos = produto_controller.get_produto().await?;
     Ok(Json(produtos))
 }
 
 #[openapi(tag = "Produtos")]
 #[get("/<id>")]
 async fn get_produto_by_id(
-    produto_use_case: &State<ProdutoUseCase>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
     id: usize,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Produto>, Status> {
-    let produto = produto_use_case.get_produto_by_id(id).await?;
+    let produto_controller = ProdutoController::new(produto_repository.inner().clone());
+    let produto = produto_controller.get_produto_by_id(id).await?;
     Ok(Json(produto))
 }
 
 #[openapi(tag = "Produtos")]
 #[post("/", data = "<produto_input>")]
 async fn create_produto(
-    produto_use_case: &State<ProdutoUseCase>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
     produto_input: Json<CreateProdutoInput>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Produto>, Status> {
+    let produto_controller = ProdutoController::new(produto_repository.inner().clone());
     let produto_input = produto_input.into_inner();
-    let produto = produto_use_case.create_produto(produto_input).await?;
+    let produto = produto_controller.create_produto(produto_input).await?;
     Ok(Json(produto))
 }
 
 #[openapi(tag = "Produtos")]
 #[put("/<id>", data = "<produto_input>")]
 async fn update_produto(
-    produto_use_case: &State<ProdutoUseCase>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
     produto_input: Json<CreateProdutoInput>,
     id: usize,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Produto>, Status> {
+    let produto_controller = ProdutoController::new(produto_repository.inner().clone());
     let produto_input = produto_input.into_inner();
-    let produto = produto_use_case.update_produto(id, produto_input).await?;
+    let produto = produto_controller.update_produto(id, produto_input).await?;
     Ok(Json(produto))
 }
 
 #[openapi(tag = "Produtos")]
 #[delete("/<id>")]
 async fn delete_produto(
-    produto_use_case: &State<ProdutoUseCase>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoRepository + Sync + Send>>>,
     id: usize,
     _logged_user_info: AdminUser,
 ) -> Result<Json<String>, Status> {
-    produto_use_case.delete_produto(id).await?;
+    let produto_controller = ProdutoController::new(produto_repository.inner().clone());
+    produto_controller.delete_produto(id).await?;
     Ok(Json("success".to_string()))
 }
 

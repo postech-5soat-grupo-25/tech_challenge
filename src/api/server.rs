@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use super::error_handling::generic_catchers;
 use super::routes::{
-    auth_route, cliente_route, pedido_route, produto_controller, usuario_controller,
+    auth_route, cliente_route, pedido_route, produto_route, usuario_route,
 };
 use crate::api::config::{Config, Env};
 use crate::external::pagamento::mock::MockPagamentoSuccesso;
@@ -27,13 +27,6 @@ use crate::traits::pagamento_port::PagamentoPort;
 use crate::traits::{
     cliente_repository::ClienteRepository, pedido_repository::PedidoRepository,
     produto_repository::ProdutoRepository, usuario_repository::UsuarioRepository,
-};
-use crate::use_cases::{
-    gerenciamento_de_clientes_use_case::ClienteUseCase,
-    gerenciamento_de_produtos_use_case::ProdutoUseCase,
-    gerenciamento_de_usuarios_use_case::UsuarioUseCase,
-    pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase,
-    preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase,
 };
 
 #[get("/")]
@@ -66,7 +59,6 @@ pub async fn main() -> Result<(), rocket::Error> {
             PostgresUsuarioRepository::new(postgres_connection_manager.client, tables).await,
         ))
     };
-    let usuario_use_case = UsuarioUseCase::new(usuario_repository.clone());
 
     let cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>> = if config.env
         == Env::Test
@@ -89,8 +81,6 @@ pub async fn main() -> Result<(), rocket::Error> {
 
     // Cloning cliente_repository to share ownership
     let cloned_cliente_repository = Arc::clone(&cliente_repository);
-
-    let cliente_use_case = ClienteUseCase::new(Arc::clone(&cliente_repository));
 
     let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone())
         .await
@@ -126,18 +116,6 @@ pub async fn main() -> Result<(), rocket::Error> {
         ))
     };
 
-    let preparacao_e_entrega_use_case =
-        PreparacaoeEntregaUseCase::new(Arc::clone(&pedido_repository));
-
-    let produto_use_case = ProdutoUseCase::new(Arc::clone(&produto_repository));
-
-    let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
-        pedido_repository.clone(),
-        cliente_repository.clone(),
-        produto_repository.clone(),
-        pagamento_adapter.clone(),
-    );
-
     let server_config = rocket::Config::figment()
         .merge(("address", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))))
         .merge(("port", 3000));
@@ -159,19 +137,14 @@ pub async fn main() -> Result<(), rocket::Error> {
             }),
         )
         .mount("/auth", auth_route::routes())
-        .mount("/usuarios", usuario_controller::routes())
+        .mount("/usuarios", usuario_route::routes())
         .mount("/clientes", cliente_route::routes())
-        .mount("/produtos", produto_controller::routes())
+        .mount("/produtos", produto_route::routes())
         .mount("/pedidos", pedido_route::routes())
-        .register("/usuarios", usuario_controller::catchers())
+        .register("/usuarios", usuario_route::catchers())
         .register("/clientes", cliente_route::catchers())
-        .register("/produtos", produto_controller::catchers())
+        .register("/produtos", produto_route::catchers())
         .register("/pedidos", pedido_route::catchers())
-        .manage(usuario_use_case)
-        .manage(cliente_use_case)
-        .manage(preparacao_e_entrega_use_case)
-        .manage(pedidos_e_pagamentos_use_case)
-        .manage(produto_use_case)
         .manage(jwt_authentication_adapter)
         .manage(usuario_repository)
         .manage(cliente_repository)

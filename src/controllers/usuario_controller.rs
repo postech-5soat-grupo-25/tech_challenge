@@ -1,86 +1,56 @@
-use rocket::http::Status;
-use rocket::serde::json::Json;
-use rocket::State;
-use rocket_okapi::{openapi, openapi_get_routes};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
-use crate::adapter::api::error_handling::ErrorResponse;
-use crate::adapter::api::request_guards::admin_guard::AdminUser;
+use crate::base::domain_error::DomainError;
 use crate::entities::usuario::Usuario;
 use crate::entities::cpf::Cpf;
-use crate::core::application::use_cases::gerenciamento_de_usuarios_use_case::UsuarioUseCase;
-use crate::core::application::use_cases::gerenciamento_de_usuarios_use_case::CreateUsuarioInput;
+use crate::traits::usuario_repository::UsuarioRepository;
+use crate::use_cases::gerenciamento_de_usuarios_use_case::{CreateUsuarioInput, UsuarioUseCase};
 
-
-#[openapi(tag = "Usuarios")]
-#[get("/")]
-async fn get_usuarios(
-    usuario_use_case: &State<UsuarioUseCase>,
-    _logged_user_info: AdminUser,
-) -> Result<Json<Vec<Usuario>>, Status> {
-    let usuarios = usuario_use_case.get_usuarios().await?;
-    Ok(Json(usuarios))
+pub struct UsuarioController {
+    pub usuario_use_case: UsuarioUseCase,
 }
 
-#[openapi(tag = "Usuarios")]
-#[get("/<id>")]
-async fn get_usuario(
-    usuario_use_case: &State<UsuarioUseCase>,
-    id: usize,
-    _logged_user_info: AdminUser,
-) -> Result<Json<Usuario>, Status> {
-    let usuario = usuario_use_case.get_usuario_by_id(id).await?;
-    Ok(Json(usuario))
-}
+impl UsuarioController {
+    pub fn new(usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>>) -> UsuarioController {
+        let usuario_use_case = UsuarioUseCase::new(usuario_repository);
+        UsuarioController {
+            usuario_use_case,
+        }
+    }
 
-#[openapi(tag = "Usuarios")]
-#[post("/", data = "<usuario_input>")]
-async fn create_usuario(
-    usuario_use_case: &State<UsuarioUseCase>,
-    usuario_input: Json<CreateUsuarioInput>,
-    _logged_user_info: AdminUser,
-) -> Result<Json<Usuario>, Status> {
-    let usuario_input: CreateUsuarioInput = usuario_input.into_inner();
-    let usuario = usuario_use_case.create_usuario(usuario_input).await?;
-    Ok(Json(usuario))
-}
+    pub async fn get_usuarios(
+        &self,
+    ) -> Result<Vec<Usuario>, DomainError> {
+        self.usuario_use_case.get_usuarios().await
+    }
 
-#[openapi(tag = "Usuarios")]
-#[put("/<id>", data = "<usuario_input>")]
-async fn update_usuario(
-    usuario_use_case: &State<UsuarioUseCase>,
-    usuario_input: Json<CreateUsuarioInput>,
-    id: usize,
-    _logged_user_info: AdminUser,
-) -> Result<Json<Usuario>, Status> {
-    let usuario_input: CreateUsuarioInput = usuario_input.into_inner();
-    let usuario = usuario_use_case.update_usuario(id, usuario_input).await?;
-    Ok(Json(usuario))
-}
+    pub async fn get_usuario(
+        &self,
+        id: usize,
+    ) -> Result<Usuario, DomainError> {
+        self.usuario_use_case.get_usuario_by_id(id).await
+    }
 
-#[openapi(tag = "Usuarios")]
-#[delete("/<cpf>")]
-async fn delete_usuario(
-    usuario_use_case: &State<UsuarioUseCase>,
-    cpf: Cpf,
-    _logged_user_info: AdminUser,
-) -> Result<Json<String>, Status> {
-    usuario_use_case.delete_usuario(cpf).await?;
-    Ok(Json("success".to_string()))
-}
+    pub async fn create_usuario(
+        &self,
+        usuario_input: CreateUsuarioInput,
+    ) -> Result<Usuario, DomainError> {
+        self.usuario_use_case.create_usuario(usuario_input).await
+    }
 
-pub fn routes() -> Vec<rocket::Route> {
-    openapi_get_routes![get_usuarios, get_usuario, create_usuario, update_usuario, delete_usuario]
-}
+    pub async fn update_usuario(
+        &self,
+        id: usize,
+        usuario_input: CreateUsuarioInput,
+    ) -> Result<Usuario, DomainError> {
+        self.usuario_use_case.update_usuario(id, usuario_input).await
+    }
 
-#[catch(404)]
-fn usuario_not_found() -> Json<ErrorResponse> {
-    let error = ErrorResponse {
-        msg: "Usuário não encontrado!".to_string(),
-        status: 404,
-    };
-    Json(error)
-}
-
-pub fn catchers() -> Vec<rocket::Catcher> {
-    catchers![usuario_not_found]
+    pub async fn delete_usuario(
+        &self,
+        cpf: Cpf,
+    ) -> Result<(), DomainError> {
+        self.usuario_use_case.delete_usuario(cpf).await
+    }
 }

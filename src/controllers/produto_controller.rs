@@ -1,86 +1,53 @@
-use rocket::http::Status;
-use rocket::response::status::NotFound;
-use rocket::request::FromParam;
-use rocket::serde::json::Json;
-use rocket::State;
-use rocket_okapi::{openapi, openapi_get_routes};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
-use crate::adapter::api::error_handling::ErrorResponse;
-use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::gerenciamento_de_produtos_use_case::{ProdutoUseCase, CreateProdutoInput, UpdateProdutoInput};
+use crate::base::domain_error::DomainError;
 use crate::entities::produto::Produto;
-use crate::adapter::api::request_guards::admin_guard::AdminUser;
+use crate::traits::produto_repository::ProdutoRepository;
+use crate::use_cases::gerenciamento_de_produtos_use_case::{CreateProdutoInput, ProdutoUseCase};
 
-#[openapi(tag = "Produtos")]
-#[get("/")]
-async fn get_produto(
-    produto_use_case: &State<ProdutoUseCase>,
-    _logged_user_info: AuthenticatedUser,
-) -> Result<Json<Vec<Produto>>, Status> {
-    let produtos = produto_use_case.get_produtos().await?;
-    Ok(Json(produtos))
+pub struct ProdutoController {
+    produto_use_case: ProdutoUseCase,
 }
 
-#[openapi(tag = "Produtos")]
-#[get("/<id>")]
-async fn get_produto_by_id(
-    produto_use_case: &State<ProdutoUseCase>,
-    id: usize,
-    _logged_user_info: AuthenticatedUser,
-) -> Result<Json<Produto>, Status> {
-    let produto = produto_use_case.get_produto_by_id(id).await?;
-    Ok(Json(produto))
-}
+impl ProdutoController {
+    pub fn new(produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>) -> ProdutoController {
+        let produto_use_case = ProdutoUseCase::new(produto_repository);
+        ProdutoController { produto_use_case }
+    }
 
-#[openapi(tag = "Produtos")]
-#[post("/", data = "<produto_input>")]
-async fn create_produto(
-    produto_use_case: &State<ProdutoUseCase>,
-    produto_input: Json<CreateProdutoInput>,
-    _logged_user_info: AuthenticatedUser,
-) -> Result<Json<Produto>, Status> {
-    let produto_input = produto_input.into_inner();
-    let produto = produto_use_case.create_produto(produto_input).await?;
-    Ok(Json(produto))
-}
+    pub async fn get_produto(
+        &self,
+    ) -> Result<Vec<Produto>, DomainError> {
+        self.produto_use_case.get_produtos().await
+    }
 
-#[openapi(tag = "Produtos")]
-#[put("/<id>", data = "<produto_input>")]
-async fn update_produto(
-    produto_use_case: &State<ProdutoUseCase>,
-    produto_input: Json<CreateProdutoInput>,
-    id: usize,
-    _logged_user_info: AuthenticatedUser,
-) -> Result<Json<Produto>, Status> {
-    let produto_input = produto_input.into_inner();
-    let produto = produto_use_case.update_produto(id, produto_input).await?;
-    Ok(Json(produto))
-}
+    pub async fn get_produto_by_id(
+        &self,
+        id: usize,
+    ) -> Result<Produto, DomainError> {
+        self.produto_use_case.get_produto_by_id(id).await
+    }
 
-#[openapi(tag = "Produtos")]
-#[delete("/<id>")]
-async fn delete_produto(
-    produto_use_case: &State<ProdutoUseCase>,
-    id: usize,
-    _logged_user_info: AdminUser,
-) -> Result<Json<String>, Status> {
-    produto_use_case.delete_produto(id).await?;
-    Ok(Json("success".to_string()))
-}
+    pub async fn create_produto(
+        &self,
+        produto_input: CreateProdutoInput,
+    ) -> Result<Produto, DomainError> {
+        self.produto_use_case.create_produto(produto_input).await
+    }
 
-pub fn routes() -> Vec<rocket::Route> {
-    openapi_get_routes![get_produto, get_produto_by_id, create_produto, update_produto, delete_produto]
-}
+    pub async fn update_produto(
+        &self,
+        id: usize,
+        produto_input: CreateProdutoInput,
+    ) -> Result<Produto, DomainError> {
+        self.produto_use_case.update_produto(id, produto_input).await
+    }
 
-#[catch(404)]
-fn produto_not_found() -> Json<ErrorResponse> {
-    let error = ErrorResponse {
-        msg: "Produto não encontrado!".to_string(),
-        status: 404,
-    };
-    Json(error)
-}
-
-pub fn catchers() -> Vec<rocket::Catcher> {
-    catchers![produto_not_found]
+    pub async fn delete_produto(
+        &self,
+        id: usize,
+    ) -> Result<(), DomainError> {
+        self.produto_use_case.delete_produto(id).await
+    }
 }
