@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use super::error_handling::generic_catchers;
 use super::routes::{
-    auth_route, cliente_controller, pedido_controller, produto_controller, usuario_controller,
+    auth_route, cliente_route, pedido_controller, produto_controller, usuario_controller,
 };
 use crate::api::config::{Config, Env};
 use crate::external::pagamento::mock::MockPagamentoSuccesso;
@@ -132,7 +132,7 @@ pub async fn main() -> Result<(), rocket::Error> {
 
     let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
         pedido_repository,
-        cliente_repository,
+        cliente_repository.clone(),
         produto_repository,
         pagamento_adapter,
     );
@@ -159,11 +159,11 @@ pub async fn main() -> Result<(), rocket::Error> {
         )
         .mount("/auth", auth_route::routes())
         .mount("/usuarios", usuario_controller::routes())
-        .mount("/clientes", cliente_controller::routes())
+        .mount("/clientes", cliente_route::routes())
         .mount("/produtos", produto_controller::routes())
         .mount("/pedidos", pedido_controller::routes())
         .register("/usuarios", usuario_controller::catchers())
-        .register("/clientes", cliente_controller::catchers())
+        .register("/clientes", cliente_route::catchers())
         .register("/produtos", produto_controller::catchers())
         .register("/pedidos", pedido_controller::catchers())
         .manage(usuario_use_case)
@@ -173,6 +173,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         .manage(produto_use_case)
         .manage(usuario_repository)
         .manage(jwt_authentication_adapter)
+        .manage(cliente_repository)
         .configure(server_config)
         .launch()
         .await?;
