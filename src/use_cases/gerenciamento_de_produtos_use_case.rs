@@ -1,6 +1,6 @@
 use chrono::Utc;
 
-use rocket::futures::lock::Mutex;
+use tokio::sync::Mutex;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use std::sync::Arc;

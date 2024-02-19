@@ -1,7 +1,8 @@
 use rocket::{
     http::Status,
-    request::{self, FromRequest, Outcome, Request},
+    request::{self, FromRequest, Outcome, Request}
 };
+
 use rocket_okapi::{
     gen::OpenApiGenerator,
     okapi::openapi3::{Object, SecurityRequirement, SecurityScheme, SecuritySchemeData},
@@ -9,10 +10,10 @@ use rocket_okapi::{
     OpenApiError,
 };
 
-use crate::{
-    api::helpers::auth_helper::{validate_token, AuthError},
-    entities::usuario::Tipo,
-};
+use crate::{base::domain_error::DomainError, entities::usuario::Tipo};
+
+use std::sync::Arc;
+use crate::traits::authentication_adapter::AuthenticationAdapter;
 
 pub struct AdminUser {
     user_id: String,
@@ -20,20 +21,22 @@ pub struct AdminUser {
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for AdminUser {
-    type Error = AuthError;
+    type Error = DomainError;
 
     async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
         match req.headers().get_one("Authorization") {
             Some(token) => {
                 let token = token.replace("Bearer ", "");
-                match validate_token(token.to_string(), Some(Tipo::Admin)) {
+
+                let auth_adapter = req.rocket().state::<Arc<dyn AuthenticationAdapter + Sync + Send>>().unwrap();
+                match auth_adapter.validate_token(token.to_string(), Some(Tipo::Admin)).await {
                     Ok(user_id) => Outcome::Success(AdminUser { user_id }),
                     Err(_) => {
-                        return Outcome::Failure((Status::Unauthorized, AuthError::InvalidToken))
+                        return Outcome::Failure((Status::Unauthorized, DomainError::Unauthorized))
                     }
                 }
             }
-            None => Outcome::Failure((Status::BadRequest, AuthError::MissingToken)),
+            None => Outcome::Failure((Status::BadRequest, DomainError::Unauthorized)),
         }
     }
 }

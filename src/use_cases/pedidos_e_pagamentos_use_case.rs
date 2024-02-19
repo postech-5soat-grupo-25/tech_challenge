@@ -10,7 +10,7 @@ use crate::traits::{
     produto_repository::ProdutoRepository,
 };
 use chrono::Utc;
-use rocket::futures::lock::Mutex;
+use tokio::sync::Mutex;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -216,7 +216,7 @@ mod tests {
         pedido_repository::MockPedidoRepository, produto_repository::MockProdutoRepository,
     };
     use mockall::predicate::eq;
-    use rocket::futures::lock::Mutex;
+    use tokio::sync::Mutex;
     use std::sync::Arc;
     use tokio;
 

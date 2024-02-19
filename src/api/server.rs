@@ -1,17 +1,18 @@
-use rocket::futures::lock::Mutex;
 use rocket::response::Redirect;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::swagger_ui::*;
+use tokio::sync::Mutex;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 
 use super::error_handling::generic_catchers;
 use super::routes::{
-    auth_controller, cliente_controller, pedido_controller, produto_controller, usuario_controller,
+    auth_route, cliente_controller, pedido_controller, produto_controller, usuario_controller,
 };
 use crate::api::config::{Config, Env};
 use crate::external::pagamento::mock::MockPagamentoSuccesso;
 use crate::external::postgres;
+use crate::adapters::jwt_authentication_adapter::JWTAuthenticationAdapter;
 use crate::gateways::{
     in_memory_cliente_repository::InMemoryClienteRepository,
     in_memory_pedido_repository::InMemoryPedidoRepository,
@@ -21,6 +22,7 @@ use crate::gateways::{
     postgres_usuario_repository::PostgresUsuarioRepository,
     postgres_produto_repository::PostgresProdutoRepository,
 };
+use crate::traits::authentication_adapter::AuthenticationAdapter;
 use crate::traits::{
     cliente_repository::ClienteRepository, pedido_repository::PedidoRepository,
     produto_repository::ProdutoRepository, usuario_repository::UsuarioRepository,
@@ -42,6 +44,10 @@ fn redirect_to_docs() -> Redirect {
 pub async fn main() -> Result<(), rocket::Error> {
     let config = Config::build();
 
+    let jwt_authentication_adapter: Arc<dyn AuthenticationAdapter + Sync + Send>  = Arc::new(JWTAuthenticationAdapter::new(
+        config.secret.clone(),
+    ));
+
     println!("Loading environment variables...");
     let usuario_repository: Arc<Mutex<dyn UsuarioRepository + Sync + Send>> = if config.env
         == Env::Test
@@ -59,7 +65,7 @@ pub async fn main() -> Result<(), rocket::Error> {
             PostgresUsuarioRepository::new(postgres_connection_manager.client, tables).await,
         ))
     };
-    let usuario_use_case = UsuarioUseCase::new(usuario_repository);
+    let usuario_use_case = UsuarioUseCase::new(usuario_repository.clone());
 
     let cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>> = if config.env
         == Env::Test
@@ -151,7 +157,7 @@ pub async fn main() -> Result<(), rocket::Error> {
                 ..Default::default()
             }),
         )
-        .mount("/auth", auth_controller::routes())
+        .mount("/auth", auth_route::routes())
         .mount("/usuarios", usuario_controller::routes())
         .mount("/clientes", cliente_controller::routes())
         .mount("/produtos", produto_controller::routes())
@@ -165,6 +171,8 @@ pub async fn main() -> Result<(), rocket::Error> {
         .manage(preparacao_e_entrega_use_case)
         .manage(pedidos_e_pagamentos_use_case)
         .manage(produto_use_case)
+        .manage(usuario_repository)
+        .manage(jwt_authentication_adapter)
         .configure(server_config)
         .launch()
         .await?;

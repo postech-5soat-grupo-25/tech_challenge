@@ -1,5 +1,5 @@
 use chrono::Utc;
-use rocket::futures::lock::Mutex;
+use tokio::sync::Mutex;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -76,7 +76,7 @@ mod tests {
     use mockall::predicate::*;
     use crate::entities::cliente::Cliente;
     use crate::traits::cliente_repository::MockClienteRepository;
-    use rocket::futures::lock::Mutex;
+    use tokio::sync::Mutex;
     use std::sync::Arc;
     use tokio;
 

@@ -4,9 +4,9 @@ use rocket::serde::json::Json;
 use rocket::State;
 use rocket_okapi::{openapi, openapi_get_routes};
 
-use crate::adapter::api::error_handling::ErrorResponse;
-use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::gerenciamento_de_clientes_use_case::{ClienteUseCase, CreateClienteInput};
+use crate::api::error_handling::ErrorResponse;
+use crate::api::request_guards::authentication_guard::AuthenticatedUser;
+use crate::use_cases::gerenciamento_de_clientes_use_case::{ClienteUseCase, CreateClienteInput};
 use crate::entities::cliente::Cliente;
 use crate::entities::cpf::Cpf;
 

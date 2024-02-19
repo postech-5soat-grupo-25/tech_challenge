@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use rocket::futures::lock::Mutex;
+use tokio::sync::Mutex;
 
 use crate::base::domain_error::DomainError;
 use crate::entities::pedido::{Pedido, Status};
@@ -37,7 +37,7 @@ mod tests {
     use tokio;
     use crate::entities::pedido::Pedido;
     use crate::traits::pedido_repository::MockPedidoRepository;
-    use rocket::futures::lock::Mutex;
+    use tokio::sync::Mutex;
     use std::sync::Arc;
     use mockall::predicate::*;
 

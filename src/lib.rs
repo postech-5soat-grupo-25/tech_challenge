@@ -5,7 +5,7 @@
 mod adapters;
 pub mod api;
 mod base;
-// mod controllers;
+mod controllers;
 mod entities;
 mod external;
 mod gateways;

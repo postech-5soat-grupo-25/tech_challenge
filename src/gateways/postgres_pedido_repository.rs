@@ -1,6 +1,6 @@
 use bytes::BytesMut;
 use postgres_from_row::FromRow;
-use rocket::futures::lock::Mutex;
+use tokio::sync::Mutex;
 use std::error::Error;
 use std::sync::Arc;
 use tokio_postgres::types::{FromSql, ToSql, Type};

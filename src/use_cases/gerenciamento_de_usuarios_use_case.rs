@@ -1,8 +1,10 @@
+use std::sync::Arc;
+
 use chrono::Utc;
-use rocket::futures::lock::Mutex;
+
 use schemars::JsonSchema;
 use serde::Deserialize;
-use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use crate::base::domain_error::DomainError;
 use crate::entities::cpf::Cpf;
@@ -114,12 +116,8 @@ unsafe impl Sync for UsuarioUseCase {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::entities::usuario::Usuario;
     use crate::traits::usuario_repository::MockUsuarioRepository;
     use tokio;
-    // TODO: não importar de rocket
-    use rocket::futures::lock::Mutex;
-    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_get_usuarios() {

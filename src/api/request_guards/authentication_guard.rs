@@ -9,7 +9,10 @@ use rocket_okapi::{
     OpenApiError,
 };
 
-use crate::api::helpers::auth_helper::{validate_token, AuthError};
+use crate::base::domain_error::DomainError;
+
+use std::sync::Arc;
+use crate::traits::authentication_adapter::AuthenticationAdapter;
 
 pub struct AuthenticatedUser {
     user_id: String,
@@ -17,20 +20,21 @@ pub struct AuthenticatedUser {
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for AuthenticatedUser {
-    type Error = AuthError;
+    type Error = DomainError;
 
     async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
         match req.headers().get_one("Authorization") {
             Some(token) => {
                 let token = token.replace("Bearer ", "");
-                match validate_token(token.to_string(), None) {
+                let auth_adapter = req.rocket().state::<Arc<dyn AuthenticationAdapter + Sync + Send>>().unwrap();
+                match auth_adapter.validate_token(token.to_string(), None).await {
                     Ok(user_id) => Outcome::Success(AuthenticatedUser { user_id }),
                     Err(_) => {
-                        return Outcome::Failure((Status::Unauthorized, AuthError::InvalidToken))
+                        return Outcome::Failure((Status::Unauthorized, DomainError::Unauthorized))
                     }
                 }
             }
-            None => Outcome::Failure((Status::BadRequest, AuthError::MissingToken)),
+            None => Outcome::Failure((Status::BadRequest, DomainError::Invalid("Missing Token".to_string()))),
         }
     }
 }
