@@ -1,162 +1,142 @@
-use rocket::http::Status;
+use std::sync::Arc;
+
 use rocket::serde::json::Json;
-use rocket::State;
-use rocket_okapi::{openapi, openapi_get_routes};
-use serde::de::IntoDeserializer;
+use tokio::sync::Mutex;
 
-use crate::adapter::api::error_handling::ErrorResponse;
-use crate::adapter::api::request_guards::authentication_guard::AuthenticatedUser;
-use crate::core::application::use_cases::pedidos_e_pagamentos_use_case::{PedidosEPagamentosUseCase, CreatePedidoInput};
-use crate::core::application::use_cases::preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase;
+use crate::base::domain_error::DomainError;
 use crate::entities::pedido::{self, Pedido};
-use crate::entities::produto::Categoria;
 
-#[openapi(tag = "Pedidos")]
-#[get("/")]
-async fn get_pedidos(
-    pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
-    _logged_user_info: AuthenticatedUser,
-) -> Result<Json<Vec<Pedido>>, Status> {
-    let pedidos = pedidos_e_pagamentos_use_case.lista_pedidos().await?;
-    Ok(Json(pedidos))
+use crate::traits::{
+    pedido_repository::PedidoRepository,
+    cliente_repository::ClienteRepository,
+    produto_repository::ProdutoRepository,
+    pagamento_port::PagamentoPort,
+};
+
+use crate::use_cases::{
+    pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase,
+    preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase,
+    pedidos_e_pagamentos_use_case::CreatePedidoInput,
+};
+
+pub struct PedidoController {
+    pedidos_e_pagamentos_use_case: PedidosEPagamentosUseCase,
+    preparacao_e_entrega_use_case: PreparacaoeEntregaUseCase,
 }
 
-#[openapi(tag = "Pedidos")]
-#[get("/<id>")]
-async fn get_pedido_by_id(
-    pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
-    id: usize,
-    _logged_user_info: AuthenticatedUser,
-) -> Result<Json<Pedido>, Status> {
-    let pedido = pedidos_e_pagamentos_use_case.seleciona_pedido_por_id(id).await?;
-    Ok(Json(pedido))
-}
+impl PedidoController {
+    pub fn new(
+        pedido_repository: Arc<Mutex<dyn PedidoRepository + Sync + Send>>,
+        cliente_repository: Arc<Mutex<dyn ClienteRepository + Sync + Send>>,
+        produto_repository: Arc<Mutex<dyn ProdutoRepository + Sync + Send>>,
+        pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>>,
+    ) -> PedidoController {
+        let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
+            pedido_repository.clone(),
+            cliente_repository,
+            produto_repository,
+            pagamento_adapter,
+        );
+        let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);
 
-#[openapi(tag = "Pedidos")]
-#[post("/", data = "<pedido_input>")]
-async fn post_novo_pedido(
-    pedido_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
-    pedido_input: Json<CreatePedidoInput>,
-) -> Result<Json<Pedido>, Status> {
-    let pedido_input = pedido_input.into_inner();
-    let novo_pedido = pedido_e_pagamentos_use_case
-        .novo_pedido(pedido_input)
-        .await?;
-    Ok(Json(novo_pedido))
-}
-
-#[openapi(tag = "Pedidos")]
-#[get("/novos")]
-async fn get_pedidos_novos(
-    preparacao_e_entrega_use_case: &State<PreparacaoeEntregaUseCase>,
-    __logged_user_info: AuthenticatedUser,
-) -> Result<Json<Vec<Pedido>>, Status> {
-    let pedidos_novos = preparacao_e_entrega_use_case.get_pedidos_novos().await?;
-    Ok(Json(pedidos_novos))
-}
-
-#[openapi(tag = "Pedidos")]
-#[put("/<id>/status/<status>")]
-async fn put_status_pedido(
-    preparacao_e_entrega_use_case: &State<PreparacaoeEntregaUseCase>,
-    id: usize,
-    status: &str,
-    __logged_user_info: AuthenticatedUser,
-) -> Result<Json<Pedido>, Status> {
-    let status = match status {
-        "Cancelado" => pedido::Status::Cancelado,
-        "EmPreparacao" => pedido::Status::EmPreparacao,
-        "Finalizado" => pedido::Status::Finalizado,
-        "Invalido" => pedido::Status::Invalido,
-        "Pendente" => pedido::Status::Pendente,
-        "Pronto" => pedido::Status::Pronto,
-        "Recebido" => pedido::Status::Recebido,
-        _ => return Err(Status::BadRequest),
-    };
-    let pedido = preparacao_e_entrega_use_case
-        .atualiza_status(id, status)
-        .await?;
-    Ok(Json(pedido))
-}
-
-#[openapi(tag = "Pedidos")]
-#[put("/<id>/cliente/<cliente_id>")]
-async fn put_cliente_pedido(
-    pedidos_e_pagamento_use_case: &State<PedidosEPagamentosUseCase>,
-    id: usize,
-    cliente_id: usize,
-) -> Result<Json<Pedido>, Status> {
-    
-    let pedido = pedidos_e_pagamento_use_case
-        .adicionar_cliente(id, cliente_id)
-        .await?;
-    Ok(Json(pedido))
-}
-
-#[openapi(tag = "Pedidos")]
-#[put("/<id>/produto/<categoria>/<produto_id>")]
-async fn put_produto_by_categoria(
-    pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
-    id: usize,
-    categoria: &str,
-    produto_id: usize,
-) -> Result<Json<Pedido>, Status> {
-    match categoria {
-        "Lanche" => {
-            let pedido = pedidos_e_pagamentos_use_case
-                .adicionar_lanche_com_personalizacao(id, produto_id)
-                .await?;
-            Ok(Json(pedido))
+        PedidoController {
+            pedidos_e_pagamentos_use_case,
+            preparacao_e_entrega_use_case,
         }
-        "Acompanhamento" => {
-            let pedido = pedidos_e_pagamentos_use_case
-                .adicionar_acompanhamento(id, produto_id)
-                .await?;
-            Ok(Json(pedido))
-        }
-        "Bebida" => {
-            let pedido = pedidos_e_pagamentos_use_case
-                .adicionar_bebida(id, produto_id)
-                .await?;
-            Ok(Json(pedido))
-        }
-        _ => Err(Status::BadRequest),
     }
-}
 
-#[openapi(tag = "Pedidos")]
-#[put("/<id>/pagamento")]
-async fn pagar(
-    pedidos_e_pagamentos_use_case: &State<PedidosEPagamentosUseCase>,
-    id: usize,
-) -> Result<Json<Pedido>, Status> {
-    let pedido = pedidos_e_pagamentos_use_case
-        .realizar_pagamento_do_pedido(id)
-        .await?;
-    Ok(Json(pedido))
-}
+    pub async fn get_pedidos(
+        &self
+    ) -> Result<Vec<Pedido>, DomainError> {
+        self.pedidos_e_pagamentos_use_case.lista_pedidos().await
+    }
 
-pub fn routes() -> Vec<rocket::Route> {
-    openapi_get_routes![
-        get_pedidos,
-        post_novo_pedido,
-        get_pedidos_novos,
-        put_status_pedido,
-        put_cliente_pedido,
-        put_produto_by_categoria,
-        pagar,
-    ]
-}
+    pub async fn get_pedido_by_id(
+        &self,
+        id: usize,
+    ) -> Result<Pedido, DomainError> {
+        self.pedidos_e_pagamentos_use_case
+            .seleciona_pedido_por_id(id)
+            .await
+    }
 
-#[catch(404)]
-fn pedido_not_found() -> Json<ErrorResponse> {
-    let error = ErrorResponse {
-        msg: "Pedido não encontrado!".to_string(),
-        status: 404,
-    };
-    Json(error)
-}
+    pub async fn novo_pedido(
+        &self,
+        pedido_input: CreatePedidoInput,
+    ) -> Result<Pedido, DomainError> {
+        self.pedidos_e_pagamentos_use_case
+            .novo_pedido(pedido_input)
+            .await
+    }
 
-pub fn catchers() -> Vec<rocket::Catcher> {
-    catchers![pedido_not_found]
+    pub async fn get_pedidos_novos(
+        &self,
+    ) -> Result<Vec<Pedido>, DomainError> {
+        self.preparacao_e_entrega_use_case.get_pedidos_novos().await
+    }
+
+    pub async fn atualiza_status_pedido(
+        &self,
+        id: usize,
+        status: &str,
+    ) -> Result<Pedido, DomainError> {
+        let status = match status {
+            "Cancelado" => pedido::Status::Cancelado,
+            "EmPreparacao" => pedido::Status::EmPreparacao,
+            "Finalizado" => pedido::Status::Finalizado,
+            "Invalido" => pedido::Status::Invalido,
+            "Pendente" => pedido::Status::Pendente,
+            "Pronto" => pedido::Status::Pronto,
+            "Recebido" => pedido::Status::Recebido,
+            _ => return Err(DomainError::Invalid("Status inválido".to_string())),
+        };
+        self.preparacao_e_entrega_use_case
+            .atualiza_status(id, status)
+            .await
+    }
+
+    pub async fn atualiza_cliente_pedido(
+        &self,
+        id: usize,
+        cliente_id: usize,
+    ) -> Result<Pedido, DomainError> {
+        self.pedidos_e_pagamentos_use_case
+            .adicionar_cliente(id, cliente_id)
+            .await
+    }
+
+    pub async fn atualiza_produto_by_categoria(
+        &self,
+        id: usize,
+        categoria: &str,
+        produto_id: usize,
+    ) -> Result<Pedido, DomainError> {
+        match categoria {
+            "Lanche" => {
+                self.pedidos_e_pagamentos_use_case
+                    .adicionar_lanche_com_personalizacao(id, produto_id)
+                    .await
+            }
+            "Acompanhamento" => {
+                self.pedidos_e_pagamentos_use_case
+                    .adicionar_acompanhamento(id, produto_id)
+                    .await
+            }
+            "Bebida" => {
+                self.pedidos_e_pagamentos_use_case
+                    .adicionar_bebida(id, produto_id)
+                    .await
+            }
+            _ => Err(DomainError::Invalid("Categoria inválida".to_string()))
+        }
+    }
+
+    pub async fn pagar(
+        &self,
+        id: usize,
+    ) -> Result<Pedido, DomainError> {
+        self.pedidos_e_pagamentos_use_case
+            .realizar_pagamento_do_pedido(id)
+            .await
+    }
 }

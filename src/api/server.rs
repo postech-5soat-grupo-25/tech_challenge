@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use super::error_handling::generic_catchers;
 use super::routes::{
-    auth_route, cliente_route, pedido_controller, produto_controller, usuario_controller,
+    auth_route, cliente_route, pedido_route, produto_controller, usuario_controller,
 };
 use crate::api::config::{Config, Env};
 use crate::external::pagamento::mock::MockPagamentoSuccesso;
@@ -23,6 +23,7 @@ use crate::gateways::{
     postgres_produto_repository::PostgresProdutoRepository,
 };
 use crate::traits::authentication_adapter::AuthenticationAdapter;
+use crate::traits::pagamento_port::PagamentoPort;
 use crate::traits::{
     cliente_repository::ClienteRepository, pedido_repository::PedidoRepository,
     produto_repository::ProdutoRepository, usuario_repository::UsuarioRepository,
@@ -84,7 +85,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         ))
     };
 
-    let pagamento_adapter = Arc::new(Mutex::new(MockPagamentoSuccesso {}));
+    let pagamento_adapter: Arc<Mutex<dyn PagamentoPort + Sync + Send>> = Arc::new(Mutex::new(MockPagamentoSuccesso {}));
 
     // Cloning cliente_repository to share ownership
     let cloned_cliente_repository = Arc::clone(&cliente_repository);
@@ -131,10 +132,10 @@ pub async fn main() -> Result<(), rocket::Error> {
     let produto_use_case = ProdutoUseCase::new(Arc::clone(&produto_repository));
 
     let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
-        pedido_repository,
+        pedido_repository.clone(),
         cliente_repository.clone(),
-        produto_repository,
-        pagamento_adapter,
+        produto_repository.clone(),
+        pagamento_adapter.clone(),
     );
 
     let server_config = rocket::Config::figment()
@@ -161,19 +162,22 @@ pub async fn main() -> Result<(), rocket::Error> {
         .mount("/usuarios", usuario_controller::routes())
         .mount("/clientes", cliente_route::routes())
         .mount("/produtos", produto_controller::routes())
-        .mount("/pedidos", pedido_controller::routes())
+        .mount("/pedidos", pedido_route::routes())
         .register("/usuarios", usuario_controller::catchers())
         .register("/clientes", cliente_route::catchers())
         .register("/produtos", produto_controller::catchers())
-        .register("/pedidos", pedido_controller::catchers())
+        .register("/pedidos", pedido_route::catchers())
         .manage(usuario_use_case)
         .manage(cliente_use_case)
         .manage(preparacao_e_entrega_use_case)
         .manage(pedidos_e_pagamentos_use_case)
         .manage(produto_use_case)
-        .manage(usuario_repository)
         .manage(jwt_authentication_adapter)
+        .manage(usuario_repository)
         .manage(cliente_repository)
+        .manage(produto_repository)
+        .manage(pedido_repository)
+        .manage(pagamento_adapter)
         .configure(server_config)
         .launch()
         .await?;
