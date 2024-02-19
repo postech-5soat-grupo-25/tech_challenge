@@ -1,4 +1,4 @@
-use tech_challenge::adapter::api;
+use tech_challenge::api;
 
 fn main() {
   match api::server::main() {
