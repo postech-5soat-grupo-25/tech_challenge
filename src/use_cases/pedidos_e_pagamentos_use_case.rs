@@ -12,7 +12,7 @@ use crate::traits::{
 use chrono::Utc;
 use tokio::sync::Mutex;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
@@ -134,6 +134,11 @@ impl PedidosEPagamentosUseCase {
         let produto_repository = self.produto_repository.lock().await;
         let lanche = produto_repository.get_produto_by_id(lanche_id).await?;
         drop(produto_repository);
+        if lanche.categoria().clone() != Categoria::Lanche {
+            Err(DomainError::Invalid(
+                "Produto não é um lanche".to_string(),
+            ))?;
+        }
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository.cadastrar_lanche(pedido_id, lanche).await
     }
@@ -155,6 +160,11 @@ impl PedidosEPagamentosUseCase {
             .get_produto_by_id(acompanhamento_id)
             .await?;
         drop(produto_repository);
+        if acompanhamento.categoria().clone() != Categoria::Acompanhamento {
+            Err(DomainError::Invalid(
+                "Produto não é um acompanhamento".to_string(),
+            ))?;
+        }
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository
             .cadastrar_acompanhamento(pedido_id, acompanhamento)
@@ -176,6 +186,9 @@ impl PedidosEPagamentosUseCase {
         let produto_repository = self.produto_repository.lock().await;
         let bebida = produto_repository.get_produto_by_id(bebida_id).await?;
         drop(produto_repository);
+        if bebida.categoria().clone() != Categoria::Bebida {
+            Err(DomainError::Invalid("Produto não é uma bebida".to_string()))?;
+        }
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository.cadastrar_bebida(pedido_id, bebida).await
     }
