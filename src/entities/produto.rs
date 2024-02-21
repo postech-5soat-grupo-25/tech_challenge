@@ -1,8 +1,6 @@
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::str::FromStr;
 
 use crate::{
     base::{
@@ -18,35 +16,6 @@ pub enum Categoria {
     Bebida,
     Acompanhamento,
     Sobremesa,
-}
-
-impl FromStr for Categoria {
-    type Err = ();
-
-    fn from_str(input: &str) -> Result<Categoria, Self::Err> {
-        match input {
-            "Lanche" => Ok(Categoria::Lanche),
-            "Acompanhamento" => Ok(Categoria::Acompanhamento),
-            "Bebida" => Ok(Categoria::Bebida),
-            "Sobremesa" => Ok(Categoria::Sobremesa),
-            _ => Err(()),
-        }
-    }
-}
-
-impl fmt::Display for Categoria {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Categoria::Lanche => "Lanche",
-                Categoria::Acompanhamento => "Acompanhamento",
-                Categoria::Bebida => "Bebida",
-                Categoria::Sobremesa => "Sobremesa",
-            }
-        )
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]

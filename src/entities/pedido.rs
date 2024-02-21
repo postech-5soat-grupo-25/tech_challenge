@@ -1,8 +1,6 @@
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::str::FromStr;
 
 use crate::{
     base::{assertion_concern, domain_error::DomainError},
@@ -20,44 +18,6 @@ pub enum Status {
     Invalido,
 }
 
-// TODO: mover para o Gateway
-impl FromStr for Status {
-    type Err = ();
-
-    fn from_str(input: &str) -> Result<Status, Self::Err> {
-        match input {
-            "Recebido" => Ok(Status::Recebido),
-            "EmPreparacao" => Ok(Status::EmPreparacao),
-            "Pronto" => Ok(Status::Pronto),
-            "Pendente" => Ok(Status::Pendente),
-            "Finalizado" => Ok(Status::Finalizado),
-            "Cancelado" => Ok(Status::Cancelado),
-            "Invalido" => Ok(Status::Invalido),
-            _ => Err(()),
-        }
-    }
-}
-
-// TODO: mover para o Adapter
-impl fmt::Display for Status {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Status::Recebido => "Recebido",
-                Status::EmPreparacao => "EmPreparacao",
-                Status::Pronto => "Pronto",
-                Status::Pendente => "Pendente",
-                Status::Finalizado => "Finalizado",
-                Status::Cancelado => "Cancelado",
-                Status::Invalido => "Invalido",
-            }
-        )
-    }
-}
-
-// TODO: mover para o Adapter/Gateway?
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Pedido {
     id: usize,

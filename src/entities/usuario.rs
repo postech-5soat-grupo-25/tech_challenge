@@ -18,31 +18,6 @@ pub enum Status {
     Inativo,
 }
 
-impl FromStr for Status {
-    type Err = ();
-
-    fn from_str(input: &str) -> Result<Status, Self::Err> {
-        match input {
-            "Ativo" => Ok(Status::Ativo),
-            "Inativo" => Ok(Status::Inativo),
-            _ => Err(()),
-        }
-    }
-}
-
-impl fmt::Display for Status {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Status::Ativo => "Ativo",
-                Status::Inativo => "Inativo",
-            }
-        )
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Tipo {
     Admin,

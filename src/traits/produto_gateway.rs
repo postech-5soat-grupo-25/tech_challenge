@@ -2,6 +2,37 @@ use mockall::*;
 
 use crate::base::domain_error::DomainError;
 use crate::entities::produto::{Produto, Categoria};
+use std::fmt;
+use std::str::FromStr;
+
+impl FromStr for Categoria {
+  type Err = ();
+
+  fn from_str(input: &str) -> Result<Categoria, Self::Err> {
+      match input {
+          "Lanche" => Ok(Categoria::Lanche),
+          "Acompanhamento" => Ok(Categoria::Acompanhamento),
+          "Bebida" => Ok(Categoria::Bebida),
+          "Sobremesa" => Ok(Categoria::Sobremesa),
+          _ => Err(()),
+      }
+  }
+}
+
+impl fmt::Display for Categoria {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+      write!(
+          f,
+          "{}",
+          match self {
+              Categoria::Lanche => "Lanche",
+              Categoria::Acompanhamento => "Acompanhamento",
+              Categoria::Bebida => "Bebida",
+              Categoria::Sobremesa => "Sobremesa",
+          }
+      )
+  }
+}
 
 #[automock]
 #[async_trait]

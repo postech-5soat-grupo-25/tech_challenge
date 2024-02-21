@@ -6,6 +6,43 @@ use crate::entities::{
     pedido::{Pedido, Status},
     produto::Produto,
 };
+use std::fmt;
+use std::str::FromStr;
+
+impl FromStr for Status {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Status, Self::Err> {
+        match input {
+            "Recebido" => Ok(Status::Recebido),
+            "EmPreparacao" => Ok(Status::EmPreparacao),
+            "Pronto" => Ok(Status::Pronto),
+            "Pendente" => Ok(Status::Pendente),
+            "Finalizado" => Ok(Status::Finalizado),
+            "Cancelado" => Ok(Status::Cancelado),
+            "Invalido" => Ok(Status::Invalido),
+            _ => Err(()),
+        }
+    }
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Status::Recebido => "Recebido",
+                Status::EmPreparacao => "EmPreparacao",
+                Status::Pronto => "Pronto",
+                Status::Pendente => "Pendente",
+                Status::Finalizado => "Finalizado",
+                Status::Cancelado => "Cancelado",
+                Status::Invalido => "Invalido",
+            }
+        )
+    }
+}
 
 #[automock]
 #[async_trait]

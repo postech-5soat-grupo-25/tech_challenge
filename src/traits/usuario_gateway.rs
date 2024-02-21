@@ -1,7 +1,37 @@
 use mockall::*;
 
 use crate::base::domain_error::DomainError;
-use crate::entities::{cpf::Cpf, usuario::Usuario};
+use crate::entities::{
+    cpf::Cpf,
+    usuario::{Status, Usuario},
+};
+use std::fmt;
+use std::str::FromStr;
+
+impl FromStr for Status {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Status, Self::Err> {
+        match input {
+            "Ativo" => Ok(Status::Ativo),
+            "Inativo" => Ok(Status::Inativo),
+            _ => Err(()),
+        }
+    }
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Status::Ativo => "Ativo",
+                Status::Inativo => "Inativo",
+            }
+        )
+    }
+}
 
 #[automock]
 #[async_trait]
