@@ -2,5 +2,12 @@
 
 #[macro_use] extern crate rocket;
 
-mod core;
-pub mod adapter;
+mod adapters;
+pub mod api;
+mod base;
+mod controllers;
+mod entities;
+mod external;
+mod gateways;
+mod traits;
+mod use_cases;
