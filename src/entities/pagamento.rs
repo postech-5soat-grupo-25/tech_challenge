@@ -13,6 +13,7 @@ use crate::{
 pub struct Pagamento {
     id: usize,
     id_pedido: usize,
+    estado: String,
     metodo: String,
     referencia_pagamento: String,
     data_criacao: String,
@@ -22,6 +23,7 @@ impl Pagamento {
     pub fn new(
         id: usize,
         id_pedido: usize,
+        estado: String,
         metodo: String,
         referencia_pagamento: String,
         data_criacao: String,
@@ -29,6 +31,7 @@ impl Pagamento {
         Pagamento {
             id: usize,
             id_pedido: usize,
+            estado: String,
             metodo: String,
             referencia_pagamento: String,
             data_criacao: String,
@@ -50,6 +53,10 @@ impl Pagamento {
         &self.id_pedido
     }
 
+    pub fn estado(&self) -> &String {
+        &self.estado
+    }
+
     pub fn metodo(&self) -> &String {
         &self.metodo
     }
@@ -64,6 +71,12 @@ impl Pagamento {
     }
 
     // Setters
+    pub fn set_estado(&mut self, estado: String) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_not_empty(estado.clone())?;
+        self.estado = estado;
+        Ok(())
+    }
+    
     pub fn set_metodo(&mut self, metodo: String) -> Result<(), DomainError> {
         assertion_concern::assert_argument_not_empty(metodo.clone())?;
         self.metodo = metodo;
@@ -87,6 +100,7 @@ mod tests {
             1,
             1,
             "MercadoPago".to_string(),
+            "pendente".to_string(),
             "aaabbbccc".to_string(),
             _now.clone(),
         )
@@ -97,6 +111,7 @@ mod tests {
         let pagamento = create_valid_pagamento();
         assert_eq!(pagamento.id(), &1);
         assert_eq!(pagamento.id_pedido(), &1);
+        assert_eq!(pagamento.estado(), "pendente");
         assert_eq!(pagamento.metodo(), "MercadoPago");
         assert_eq!(pagamento.referencia_pagamento(), "aaabbbccc");
 
@@ -111,14 +126,15 @@ mod tests {
     #[test]
     fn test_pagamento_validate_entity_empty_metodo() {
         let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
-        let pagamento = Produto::new(
+        let pagamento = Pagamento::new(
             1,
             1,
+            "pendente".to_string(),
             "".to_string(),
             "aaabbbccc".to_string(),
             _now.clone(),
         );
-        let result = produto.validate_entity();
+        let result = pagamento.validate_entity();
         assert!(
             matches!(result, Err(DomainError::Empty)),
             "Esperado Err(DomainError::Empty), obtido {:?}",
@@ -129,11 +145,13 @@ mod tests {
     
     #[test]
     fn test_pagamento_setters_valid() {
-        let mut pagamento = create_valid_produto();
+        let mut pagamento = create_valid_pagamento();
+        let _ = pagamento.set_estado("aprovado".to_string());
         let _ = pagamento.set_metodo("PIX".to_string());
         let _ = pagamento.set_referencia_pagamento("dddeeefff".to_string());
-        assert_eq!(produto.metodo(), "PIX");
-        assert_eq!(produto.referencia_pagamento(), "dddeeefff");
+        assert_eq!(pagamento.estado(), "aprovado");
+        assert_eq!(pagamento.metodo(), "PIX");
+        assert_eq!(pagamento.referencia_pagamento(), "dddeeefff");
     }
 
 }

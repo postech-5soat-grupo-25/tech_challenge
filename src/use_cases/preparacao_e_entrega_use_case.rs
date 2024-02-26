@@ -52,7 +52,7 @@ mod tests {
             None,
             None,
             "id_pagamento".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             "2021-10-10".to_string(),
             "2021-10-10".to_string()
         );

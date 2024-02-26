@@ -48,7 +48,7 @@ impl InMemoryPedidoRepository {
             None,
             None,
             "mercadopago".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             current_date.clone(),
             current_date,
         );
@@ -62,9 +62,9 @@ impl InMemoryPedidoRepository {
 }
 
 async fn get_status_by_string(status : String) -> Status {
-    let mut status_enum : Status = Status::Recebido;
+    let mut status_enum : Status = Status::Pendente;
     match status.as_str() {
-        "recebido" => status_enum = Status::Recebido,
+        "pendente" => status_enum = Status::Pendente,
         "em_preparacao" => status_enum = Status::EmPreparacao,
         "pronto" => status_enum = Status::Pronto,
         "finalizado" => status_enum = Status::Finalizado,
@@ -85,7 +85,7 @@ impl PedidoGateway for InMemoryPedidoRepository {
     async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
         let mut pedidos : Vec<Pedido> = Vec::new();
         for pedido in &self._pedidos {
-            if *pedido.status() == Status::Recebido{
+            if *pedido.status() == Status::Pendente{
                 pedidos.push(pedido.clone());
             }
         }

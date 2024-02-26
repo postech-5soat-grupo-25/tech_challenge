@@ -207,7 +207,7 @@ impl PedidosEPagamentosUseCase {
 
         if status_pagamento == StatusPagamento::Successo {
             pedido_repository
-                .atualiza_status(pedido_id, Status::Recebido)
+                .atualiza_status(pedido_id, Status::Pago)
                 .await?;
         } else {
             Err(DomainError::Invalid("Pagamento não realizado".to_string()))?;
@@ -244,7 +244,7 @@ mod tests {
             None,
             None,
             "id_pagamento".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             "2021-10-10".to_string(),
             "2021-10-10".to_string(),
         );
@@ -276,7 +276,7 @@ mod tests {
             None,
             None,
             "id_pagamento".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             "2021-10-10".to_string(),
             "2021-10-10".to_string(),
         );
@@ -318,7 +318,7 @@ mod tests {
             None,
             None,
             "id_pagamento".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             "2021-10-10".to_string(),
             "2021-10-10".to_string(),
         );
@@ -424,7 +424,7 @@ mod tests {
             None,
             None,
             "id_pagamento".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             "2021-10-10".to_string(),
             "2021-10-10".to_string(),
         );
@@ -513,7 +513,7 @@ mod tests {
             None,
             None,
             "id_pagamento".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             "2021-10-10".to_string(),
             "2021-10-10".to_string(),
         );
@@ -604,7 +604,7 @@ mod tests {
             None,
             None,
             "id_pagamento".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             "2021-10-10".to_string(),
             "2021-10-10".to_string(),
         );
@@ -664,7 +664,7 @@ mod tests {
         );
 
         let mut updated_pedido = returned_pedido.clone();
-        updated_pedido.set_status(Status::Recebido);
+        updated_pedido.set_status(Status::Pendente);
 
         let expected_pedido = updated_pedido.clone();
 
