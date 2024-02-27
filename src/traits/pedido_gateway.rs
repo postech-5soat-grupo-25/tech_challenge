@@ -5,6 +5,7 @@ use crate::entities::{
     cliente::Cliente,
     pedido::{Pedido, Status},
     produto::Produto,
+    pagamento::Pagamento,
 };
 use std::fmt;
 use std::str::FromStr;
@@ -81,9 +82,8 @@ pub trait PedidoGateway {
 
     async fn cadastrar_pagamento(
         &mut self,
-        pedido_id: usize,
-        pagamento_id: String,
-    ) -> Result<Pedido, DomainError>;
+        pagamento: Pagamento,
+    ) -> Result<Pagamento, DomainError>;
 
     async fn atualiza_status(
         &mut self,

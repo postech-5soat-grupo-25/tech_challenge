@@ -4,3 +4,4 @@ pub mod cliente;
 pub mod pedido;
 pub mod cpf;
 pub mod ingredientes;
+pub mod pagamento;
