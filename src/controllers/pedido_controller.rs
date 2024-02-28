@@ -84,9 +84,9 @@ impl PedidoController {
             "EmPreparacao" => pedido::Status::EmPreparacao,
             "Finalizado" => pedido::Status::Finalizado,
             "Invalido" => pedido::Status::Invalido,
+            "Pago" => pedido::Status::Pago,
             "Pendente" => pedido::Status::Pendente,
             "Pronto" => pedido::Status::Pronto,
-            "Recebido" => pedido::Status::Recebido,
             _ => return Err(DomainError::Invalid("Status inválido".to_string())),
         };
         self.preparacao_e_entrega_use_case

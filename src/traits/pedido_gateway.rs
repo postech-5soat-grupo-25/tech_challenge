@@ -14,7 +14,7 @@ impl FromStr for Status {
 
     fn from_str(input: &str) -> Result<Status, Self::Err> {
         match input {
-            "Recebido" => Ok(Status::Recebido),
+            "Pago" => Ok(Status::Pago),
             "EmPreparacao" => Ok(Status::EmPreparacao),
             "Pronto" => Ok(Status::Pronto),
             "Pendente" => Ok(Status::Pendente),
@@ -32,7 +32,7 @@ impl fmt::Display for Status {
             f,
             "{}",
             match self {
-                Status::Recebido => "Recebido",
+                Status::Pago => "Pago",
                 Status::EmPreparacao => "EmPreparacao",
                 Status::Pronto => "Pronto",
                 Status::Pendente => "Pendente",

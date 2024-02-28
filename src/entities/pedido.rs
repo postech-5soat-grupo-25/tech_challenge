@@ -7,10 +7,13 @@ use crate::{
     entities::{cliente::Cliente, produto::Produto},
 };
 
+// Considerar Ordem de Status
+// Pendente => Pago => EmPreparacao => Pronto => Finalizado => (Cancelado)
+// Cancelado em qualquer ponto
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema, PartialEq)]
 pub enum Status {
-    Recebido,
     EmPreparacao,
+    Pago,
     Pronto,
     Pendente,
     Finalizado,
@@ -64,8 +67,8 @@ impl Pedido {
             ));
         };
         match self.status {
-            Status::Recebido
-            | Status::EmPreparacao
+            Status::EmPreparacao
+            | Status::Pago
             | Status::Pronto
             | Status::Finalizado
             | Status::Cancelado => (),
@@ -221,7 +224,7 @@ mod tests {
             None,
             None,
             "Cartão de Crédito".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             _now.clone(),
             _now,
         )
@@ -235,7 +238,7 @@ mod tests {
         assert!(pedido.acompanhamento().is_none());
         assert!(pedido.bebida().is_none());
         assert_eq!(pedido.pagamento(), "Cartão de Crédito");
-        assert_eq!(pedido.status(), &Status::Recebido);
+        assert_eq!(pedido.status(), &Status::Pendente);
     }
 
     #[test]
@@ -255,7 +258,7 @@ mod tests {
             None,
             None,
             "Mercado Pago".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             _now.clone(),
             _now,
         );

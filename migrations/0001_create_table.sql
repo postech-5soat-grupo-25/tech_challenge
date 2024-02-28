@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS cliente (
 -- Criacao do tipo enum para status
 CREATE TYPE STATUS_PEDIDO_ENUM AS ENUM (
     'Pendente',
-    'Recebido',
+    'Pago'
     'EmPreparacao',
     'Pronto',
     'Finalizado',
@@ -80,4 +80,14 @@ CREATE TABLE IF NOT EXISTS pedido (
     CONSTRAINT fk_lanche FOREIGN KEY (lanche_id) REFERENCES produto(id),
     CONSTRAINT fk_acompanhamento FOREIGN KEY (acompanhamento_id) REFERENCES produto(id),
     CONSTRAINT fk_bebida FOREIGN KEY (bebida_id) REFERENCES produto(id)
+);
+
+-- Criacao da tabela de pagamento
+CREATE TABLE IF NOT EXISTS pagamento (
+    id SERIAL PRIMARY KEY,
+    id_pedido INT,
+    estado  TEXT NOT NULL,
+    metodo TEXT NOT NULL,
+    referencia TEXT NOT NULL,
+    data_criacao TIMESTAMP,
 );
