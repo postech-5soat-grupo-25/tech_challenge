@@ -2,6 +2,7 @@ use crate::base::domain_error::DomainError;
 use crate::entities::{
     pedido::{Pedido, Status},
     produto::{Categoria, Produto},
+    pagamento::Pagamento
 };
 use crate::traits::{
     cliente_gateway::ClienteGateway,
@@ -98,11 +99,27 @@ impl PedidosEPagamentosUseCase {
             String::from("Mercado Pago"),
             Status::Pendente,
             _now.clone(),
-            _now,
+            _now.clone(),
         );
 
         let mut pedido_repository = self.pedido_repository.lock().await;
-        pedido_repository.create_pedido(pedido).await
+        let result: Result<Pedido, DomainError> = pedido_repository.create_pedido(pedido).await;
+        match result {
+            Ok(pedido) =>  {
+                let pagamento = Pagamento::new(
+                    0,
+                    pedido.id().clone(),
+                    String::from("pendente"),
+                    String::from("Mercado Pago"),
+                    String::from(""),
+                    _now,
+                );
+                let mut pagamento_repository = self.pedido_repository.lock().await;
+                let result: Result<Pagamento, DomainError> = pedido_repository.cadastrar_pagamento(pagamento).await;
+                Ok(pedido)
+            },
+            Err(err) => Err(err),
+        }
     }
 
     pub async fn adicionar_cliente(

@@ -89,5 +89,5 @@ CREATE TABLE IF NOT EXISTS pagamento (
     estado  TEXT NOT NULL,
     metodo TEXT NOT NULL,
     referencia TEXT NOT NULL,
-    data_criacao TIMESTAMP,
+    data_criacao TIMESTAMP
 );

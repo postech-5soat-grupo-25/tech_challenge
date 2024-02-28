@@ -29,12 +29,12 @@ impl Pagamento {
         data_criacao: String,
     ) -> Self {
         Pagamento {
-            id: usize,
-            id_pedido: usize,
-            estado: String,
-            metodo: String,
-            referencia_pagamento: String,
-            data_criacao: String,
+            id,
+            id_pedido,
+            estado,
+            metodo,
+            referencia_pagamento,
+            data_criacao,
         }
     }
 

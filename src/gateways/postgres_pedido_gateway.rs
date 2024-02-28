@@ -10,6 +10,7 @@ use crate::base::domain_error::DomainError;
 use crate::entities::cliente::Cliente;
 use crate::entities::pedido::{Pedido, Status};
 use crate::entities::produto::Produto;
+use crate::entities::pagamento::Pagamento;
 use crate::traits::cliente_gateway::ClienteGateway;
 use crate::traits::pedido_gateway::PedidoGateway;
 use crate::traits::produto_gateway::ProdutoGateway;
@@ -27,6 +28,8 @@ const SET_PEDIDO_LANCHE: &str = "UPDATE pedido SET lanche_id = $2 WHERE id = $1 
 const SET_PEDIDO_ACOMPANHAMENTO: &str = "UPDATE pedido SET acompanhamento_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const SET_PEDIDO_BEBIDA: &str = "UPDATE pedido SET bebida_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const SET_PEDIDO_PAGAMENTO: &str = "UPDATE pedido SET pagamento = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
+const CREATE_PAGAMENTO: &str = "INSERT INTO pagamento (id_pedido, estado, metodo, referencia, data_criacao) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)";
+
 
 impl<'a> FromSql<'a> for Status {
     fn from_sql(
@@ -158,7 +161,24 @@ impl PostgresPedidoRepository {
             _pedido.data_atualizacao().clone(),
         )
     }
+
+    async fn pagamento_from_proxy(&self, pagamento_row: &tokio_postgres::Row) -> Pagamento {
+
+        // TODO create proxypagamento
+        let _pagamento: ProxyPedido = ProxyPagamento::from_row(&pagamento_row);
+
+        Pagamento::new(
+            *_pagamento.id(),
+            _pagamento.id_pedido().clone(),
+            _pagamento.estado().clone(),
+            _pagamento.metodo().clone(),
+            _pagamento.referencia_pagamento().clone(),
+            _pagamento.data_criacao().clone(),
+        )
+    }
 }
+
+
 
 #[async_trait]
 impl PedidoGateway for PostgresPedidoRepository {
@@ -338,21 +358,28 @@ impl PedidoGateway for PostgresPedidoRepository {
 
     async fn cadastrar_pagamento(
         &mut self,
-        pedido_id: usize,
-        pagamento: String,
-    ) -> Result<Pedido, DomainError> {
-        let _pedido_id: i32 = pedido_id as i32;
-
-        let updated_pedido = self
+        pagamento: Pagamento,
+    ) -> Result<Pagamento, DomainError> {
+        let _id_pedido = *pagamento.id_pedido() as i32;
+        let new_pagamento_row = self
             .client
-            .query(SET_PEDIDO_PAGAMENTO, &[&_pedido_id, &pagamento])
-            .await
-            .unwrap();
-
-        let updated_pedido = updated_pedido.get(0);
-        match updated_pedido {
-            Some(pedido) => Ok(self.pedido_from_proxy(&pedido).await),
-            None => Err(DomainError::NotFound),
+            .query_one(
+                CREATE_PAGAMENTO,
+                &[
+                    &_id_pedido,
+                    &String::from("pendente"),
+                    &pagamento.metodo(),
+                    &pagamento.referencia_pagamento(),
+                ],
+            )
+            .await;
+        match new_pagamento_row {
+            Ok(row) => {
+                let new_pagamento = self.pagamento_from_proxy(&row).await;
+                println!("Novo pedido cadastrado: {:?}", new_pagamento);
+                Ok(new_pagamento)
+            }
+            Err(_) => Err(DomainError::Invalid("Pagamento".to_string())),
         }
     }
 }
