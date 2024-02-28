@@ -4,12 +4,13 @@ use tokio::sync::Mutex;
 
 use crate::base::domain_error::DomainError;
 use crate::entities::pedido::{self, Pedido};
+use crate::entities::pagamento::Pagamento;
 
 use crate::traits::{
     pedido_gateway::PedidoGateway,
     cliente_gateway::ClienteGateway,
     produto_gateway::ProdutoGateway,
-    pagamento_adapter::PagamentoAdapter,
+    pagamento_gateway::PagamentoGateway,
 };
 
 use crate::use_cases::{
@@ -28,13 +29,13 @@ impl PedidoController {
         pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>>,
         cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
         produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
-        pagamento_adapter: Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>,
+        pagamento_repository: Arc<Mutex<dyn PagamentoGateway + Sync + Send>>,
     ) -> PedidoController {
         let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
             pedido_repository.clone(),
             cliente_repository,
             produto_repository,
-            pagamento_adapter,
+            pagamento_repository,
         );
         let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);
 
@@ -133,9 +134,9 @@ impl PedidoController {
     pub async fn pagar(
         &self,
         id: usize,
-    ) -> Result<Pedido, DomainError> {
+    ) -> Result<Pagamento, DomainError> {
         self.pedidos_e_pagamentos_use_case
-            .realizar_pagamento_do_pedido(id)
+            .criar_pagamento_do_pedido(id)
             .await
     }
 }

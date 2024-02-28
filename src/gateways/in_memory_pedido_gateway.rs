@@ -7,6 +7,7 @@ use crate::entities::cliente::Cliente;
 use crate::entities::produto::{Produto,Categoria};
 
 use crate::entities::cpf::Cpf;
+use crate::entities::pagamento::Pagamento;
 use crate::entities::ingredientes::Ingredientes;
 
 use crate::traits::pedido_gateway::PedidoGateway;
@@ -14,6 +15,7 @@ use crate::traits::pedido_gateway::PedidoGateway;
 #[derive(Clone)]
 pub struct InMemoryPedidoRepository {
     _pedidos: Vec<Pedido>,
+    _pagamentos: Vec<Pagamento>,
 }
 
 impl InMemoryPedidoRepository {
@@ -50,6 +52,15 @@ impl InMemoryPedidoRepository {
             "mercadopago".to_string(),
             Status::Pendente,
             current_date.clone(),
+            current_date.clone(),
+        );
+
+        let pagamento = Pagamento::new(
+            1,
+            1,
+            "pago".to_string(),
+            "MercadoPago".to_string(),
+            "1234".to_string(),
             current_date,
         );
 
@@ -57,6 +68,7 @@ impl InMemoryPedidoRepository {
 
         InMemoryPedidoRepository {
             _pedidos: vec![pedido],
+            _pagamentos: vec![pagamento],
         }
     }
 }
@@ -169,12 +181,14 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn cadastrar_pagamento(&mut self, pedido_id: usize, pagamento: String) -> Result<Pedido, DomainError> {
+    async fn cadastrar_pagamento( &mut self,
+        pagamento: Pagamento) -> Result<Pagamento, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
-            if *pedido.id() == pedido_id {
-                pedido.set_pagamento(pagamento.clone());
-                return Ok(pedido.clone());
+            if *pedido.id() == *pagamento.id_pedido() {
+                let pagamentos = &mut self._pagamentos;
+                pagamentos.push(pagamento.clone());
+                return Ok(pagamento.clone());
             }
         }
         Err(DomainError::NotFound)

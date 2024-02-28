@@ -15,7 +15,7 @@ pub struct Pagamento {
     id_pedido: usize,
     estado: String,
     metodo: String,
-    referencia_pagamento: String,
+    referencia: String,
     data_criacao: String,
 }
 
@@ -25,7 +25,7 @@ impl Pagamento {
         id_pedido: usize,
         estado: String,
         metodo: String,
-        referencia_pagamento: String,
+        referencia: String,
         data_criacao: String,
     ) -> Self {
         Pagamento {
@@ -33,7 +33,7 @@ impl Pagamento {
             id_pedido,
             estado,
             metodo,
-            referencia_pagamento,
+            referencia,
             data_criacao,
         }
     }
@@ -61,8 +61,8 @@ impl Pagamento {
         &self.metodo
     }
 
-    pub fn referencia_pagamento(&self) -> &String {
-        &self.referencia_pagamento
+    pub fn referencia(&self) -> &String {
+        &self.referencia
     }
 
 
@@ -83,8 +83,8 @@ impl Pagamento {
         Ok(())
     }
 
-    pub fn set_referencia_pagamento(&mut self, referencia_pagamento: String) {
-        self.referencia_pagamento = referencia_pagamento;
+    pub fn set_referencia(&mut self, referencia: String) {
+        self.referencia = referencia;
     }
 
 }
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(pagamento.id_pedido(), &1);
         assert_eq!(pagamento.estado(), "pendente");
         assert_eq!(pagamento.metodo(), "MercadoPago");
-        assert_eq!(pagamento.referencia_pagamento(), "aaabbbccc");
+        assert_eq!(pagamento.referencia(), "aaabbbccc");
 
     }
 
@@ -148,10 +148,10 @@ mod tests {
         let mut pagamento = create_valid_pagamento();
         let _ = pagamento.set_estado("aprovado".to_string());
         let _ = pagamento.set_metodo("PIX".to_string());
-        let _ = pagamento.set_referencia_pagamento("dddeeefff".to_string());
+        let _ = pagamento.set_referencia("dddeeefff".to_string());
         assert_eq!(pagamento.estado(), "aprovado");
         assert_eq!(pagamento.metodo(), "PIX");
-        assert_eq!(pagamento.referencia_pagamento(), "dddeeefff");
+        assert_eq!(pagamento.referencia(), "dddeeefff");
     }
 
 }

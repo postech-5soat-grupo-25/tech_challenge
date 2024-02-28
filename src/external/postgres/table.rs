@@ -6,6 +6,7 @@ pub enum TablesNames {
   Cliente,
   Pedido,
   Produto,
+  Pagamento
 }
 
 impl TablesNames {
@@ -15,6 +16,7 @@ impl TablesNames {
       TablesNames::Cliente => "cliente".to_string(),
       TablesNames::Pedido => "pedido".to_string(),
       TablesNames::Produto => "produto".to_string(),
+      TablesNames::Pagamento => "pagamento".to_string(),
     }
   }
 }

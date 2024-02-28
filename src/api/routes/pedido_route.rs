@@ -10,12 +10,13 @@ use crate::api::error_handling::ErrorResponse;
 use crate::api::request_guards::authentication_guard::AuthenticatedUser;
 use crate::controllers::pedido_controller::PedidoController;
 use crate::entities::pedido::Pedido;
+use crate::entities::pagamento::Pagamento;
 
 use crate::traits::{
     pedido_gateway::PedidoGateway,
     cliente_gateway::ClienteGateway,
     produto_gateway::ProdutoGateway,
-    pagamento_adapter::PagamentoAdapter,
+    pagamento_gateway::PagamentoGateway,
 };
 use crate::use_cases::pedidos_e_pagamentos_use_case::CreatePedidoInput;
 
@@ -25,14 +26,14 @@ async fn get_pedidos(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Pedido>>, Status> {
     let pedido_controller = PedidoController::new(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
     let pedidos = pedido_controller.get_pedidos().await?;
     Ok(Json(pedidos))
@@ -44,7 +45,7 @@ async fn get_pedido_by_id(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     id: usize,
     __logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Pedido>, Status> {
@@ -52,7 +53,7 @@ async fn get_pedido_by_id(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
     let pedido = pedido_controller
         .get_pedido_by_id(id)
@@ -66,14 +67,14 @@ async fn post_novo_pedido(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     pedido_input: Json<CreatePedidoInput>,
 ) -> Result<Json<Pedido>, Status> {
     let pedido_controller = PedidoController::new(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
     let pedido_input = pedido_input.into_inner();
     let novo_pedido = pedido_controller
@@ -88,14 +89,14 @@ async fn get_pedidos_novos(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     __logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Pedido>>, Status> {
     let pedido_controller = PedidoController::new(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
     let pedidos_novos = pedido_controller.get_pedidos_novos().await?;
     Ok(Json(pedidos_novos))
@@ -107,7 +108,7 @@ async fn put_status_pedido(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     id: usize,
     status: &str,
     __logged_user_info: AuthenticatedUser,
@@ -116,7 +117,7 @@ async fn put_status_pedido(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
     let pedido = pedido_controller
         .atualiza_status_pedido(id, status)
@@ -130,7 +131,7 @@ async fn put_cliente_pedido(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     id: usize,
     cliente_id: usize,
 ) -> Result<Json<Pedido>, Status> {
@@ -138,7 +139,7 @@ async fn put_cliente_pedido(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
     let pedido = pedido_controller
         .atualiza_cliente_pedido(id, cliente_id)
@@ -152,7 +153,7 @@ async fn put_produto_by_categoria(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     id: usize,
     categoria: &str,
     produto_id: usize,
@@ -161,7 +162,7 @@ async fn put_produto_by_categoria(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
     let pedido = pedido_controller
         .atualiza_produto_by_categoria(id, categoria, produto_id)
@@ -176,19 +177,19 @@ async fn pagar(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
-    pagamento_adapter: &State<Arc<Mutex<dyn PagamentoAdapter + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
     id: usize,
-) -> Result<Json<Pedido>, Status> {
+) -> Result<Json<Pagamento>, Status> {
     let pedido_controller = PedidoController::new(
         pedido_repository.inner().clone(),
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
-        pagamento_adapter.inner().clone(),
+        pagamento_repository.inner().clone(),
     );
-    let pedido = pedido_controller
+    let pagamento = pedido_controller
         .pagar(id)
         .await?;
-    Ok(Json(pedido))
+    Ok(Json(pagamento))
 }
 
 pub fn routes() -> Vec<rocket::Route> {

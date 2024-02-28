@@ -1,16 +1,16 @@
 use bytes::BytesMut;
 use postgres_from_row::FromRow;
-use tokio::sync::Mutex;
 use std::error::Error;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Client;
 
 use crate::base::domain_error::DomainError;
 use crate::entities::cliente::Cliente;
+use crate::entities::pagamento::Pagamento;
 use crate::entities::pedido::{Pedido, Status};
 use crate::entities::produto::Produto;
-use crate::entities::pagamento::Pagamento;
 use crate::traits::cliente_gateway::ClienteGateway;
 use crate::traits::pedido_gateway::PedidoGateway;
 use crate::traits::produto_gateway::ProdutoGateway;
@@ -29,7 +29,6 @@ const SET_PEDIDO_ACOMPANHAMENTO: &str = "UPDATE pedido SET acompanhamento_id = $
 const SET_PEDIDO_BEBIDA: &str = "UPDATE pedido SET bebida_id = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const SET_PEDIDO_PAGAMENTO: &str = "UPDATE pedido SET pagamento = $2 WHERE id = $1 RETURNING id, cliente_id, lanche_id, acompanhamento_id, bebida_id, pagamento, CAST(status AS VARCHAR), data_criacao, data_atualizacao";
 const CREATE_PAGAMENTO: &str = "INSERT INTO pagamento (id_pedido, estado, metodo, referencia, data_criacao) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)";
-
 
 impl<'a> FromSql<'a> for Status {
     fn from_sql(
@@ -120,31 +119,34 @@ impl PostgresPedidoRepository {
 
     async fn pedido_from_proxy(&self, pedido_row: &tokio_postgres::Row) -> Pedido {
         let _pedido: ProxyPedido = ProxyPedido::from_row(&pedido_row);
-    
+
         let cliente = if let Some(cliente_id) = _pedido.cliente_id() {
             let cliente_repo = self.cliente_repository.lock().await;
             cliente_repo.get_cliente_by_id(*cliente_id).await.ok()
         } else {
             None
         };
-    
+
         let lanche = if let Some(lanche_id) = _pedido.lanche_id() {
             let produto_repo = self.produto_repository.lock().await;
             produto_repo.get_produto_by_id(*lanche_id).await.ok()
         } else {
             None
         };
-    
+
         let bebida = if let Some(bebida_id) = _pedido.bebida_id() {
             let produto_repo = self.produto_repository.lock().await;
             produto_repo.get_produto_by_id(*bebida_id).await.ok()
         } else {
             None
         };
-    
+
         let acompanhamento = if let Some(acompanhamento_id) = _pedido.acompanhamento_id() {
             let produto_repo = self.produto_repository.lock().await;
-            produto_repo.get_produto_by_id(*acompanhamento_id).await.ok()
+            produto_repo
+                .get_produto_by_id(*acompanhamento_id)
+                .await
+                .ok()
         } else {
             None
         };
@@ -162,23 +164,7 @@ impl PostgresPedidoRepository {
         )
     }
 
-    async fn pagamento_from_proxy(&self, pagamento_row: &tokio_postgres::Row) -> Pagamento {
-
-        // TODO create proxypagamento
-        let _pagamento: ProxyPedido = ProxyPagamento::from_row(&pagamento_row);
-
-        Pagamento::new(
-            *_pagamento.id(),
-            _pagamento.id_pedido().clone(),
-            _pagamento.estado().clone(),
-            _pagamento.metodo().clone(),
-            _pagamento.referencia_pagamento().clone(),
-            _pagamento.data_criacao().clone(),
-        )
-    }
 }
-
-
 
 #[async_trait]
 impl PedidoGateway for PostgresPedidoRepository {
@@ -358,7 +344,7 @@ impl PedidoGateway for PostgresPedidoRepository {
 
     async fn cadastrar_pagamento(
         &mut self,
-        pagamento: Pagamento,
+        pagamento: Pagamento
     ) -> Result<Pagamento, DomainError> {
         let _id_pedido = *pagamento.id_pedido() as i32;
         let new_pagamento_row = self
@@ -369,14 +355,14 @@ impl PedidoGateway for PostgresPedidoRepository {
                     &_id_pedido,
                     &String::from("pendente"),
                     &pagamento.metodo(),
-                    &pagamento.referencia_pagamento(),
+                    &pagamento.referencia(),
                 ],
             )
             .await;
         match new_pagamento_row {
             Ok(row) => {
-                let new_pagamento = self.pagamento_from_proxy(&row).await;
-                println!("Novo pedido cadastrado: {:?}", new_pagamento);
+                let new_pagamento = Pagamento::from_row(&row);
+                println!("Novo pagamento cadastrado: {:?}", new_pagamento);
                 Ok(new_pagamento)
             }
             Err(_) => Err(DomainError::Invalid("Pagamento".to_string())),
