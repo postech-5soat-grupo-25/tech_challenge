@@ -1,22 +1,21 @@
 use std::sync::Arc;
 
+use rocket::http::hyper::Method;
 use tokio::sync::Mutex;
 
 use crate::base::domain_error::DomainError;
+use crate::entities::pagamento::{self, Pagamento};
 use crate::entities::pedido::{self, Pedido};
-use crate::entities::pagamento::Pagamento;
-
+use serde_json::Value;
 use crate::traits::{
-    pedido_gateway::PedidoGateway,
-    cliente_gateway::ClienteGateway,
-    produto_gateway::ProdutoGateway,
-    pagamento_gateway::PagamentoGateway,
+    cliente_gateway::ClienteGateway, pagamento_gateway::PagamentoGateway,
+    pedido_gateway::PedidoGateway, produto_gateway::ProdutoGateway,
 };
 
 use crate::use_cases::{
+    pedidos_e_pagamentos_use_case::CreatePedidoInput,
     pedidos_e_pagamentos_use_case::PedidosEPagamentosUseCase,
     preparacao_e_entrega_use_case::PreparacaoeEntregaUseCase,
-    pedidos_e_pagamentos_use_case::CreatePedidoInput,
 };
 
 pub struct PedidoController {
@@ -45,16 +44,11 @@ impl PedidoController {
         }
     }
 
-    pub async fn get_pedidos(
-        &self
-    ) -> Result<Vec<Pedido>, DomainError> {
+    pub async fn get_pedidos(&self) -> Result<Vec<Pedido>, DomainError> {
         self.pedidos_e_pagamentos_use_case.lista_pedidos().await
     }
 
-    pub async fn get_pedido_by_id(
-        &self,
-        id: usize,
-    ) -> Result<Pedido, DomainError> {
+    pub async fn get_pedido_by_id(&self, id: usize) -> Result<Pedido, DomainError> {
         self.pedidos_e_pagamentos_use_case
             .seleciona_pedido_por_id(id)
             .await
@@ -69,9 +63,7 @@ impl PedidoController {
             .await
     }
 
-    pub async fn get_pedidos_novos(
-        &self,
-    ) -> Result<Vec<Pedido>, DomainError> {
+    pub async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
         self.preparacao_e_entrega_use_case.get_pedidos_novos().await
     }
 
@@ -127,14 +119,26 @@ impl PedidoController {
                     .adicionar_bebida(id, produto_id)
                     .await
             }
-            _ => Err(DomainError::Invalid("Categoria inválida".to_string()))
+            _ => Err(DomainError::Invalid("Categoria inválida".to_string())),
         }
     }
 
-    pub async fn pagar(
+    pub async fn pagar(&self, id: usize) -> Result<Pagamento, DomainError> {
+        self.pedidos_e_pagamentos_use_case
+            .criar_pagamento_do_pedido(id)
+            .await
+    }
+
+    pub async fn webhook_pagamento(
         &self,
         id: usize,
+        payment_data: &Value,
     ) -> Result<Pagamento, DomainError> {
+        // TODO
+        // verify metodo pagamento
+        // load specific adapter depending on Method
+        // run adapter function webhook apagamento
+
         self.pedidos_e_pagamentos_use_case
             .criar_pagamento_do_pedido(id)
             .await

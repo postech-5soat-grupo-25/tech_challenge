@@ -3,20 +3,19 @@ use std::sync::Arc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
+use rocket::Data;
 use rocket_okapi::{openapi, openapi_get_routes};
 use tokio::sync::Mutex;
 
 use crate::api::error_handling::ErrorResponse;
 use crate::api::request_guards::authentication_guard::AuthenticatedUser;
 use crate::controllers::pedido_controller::PedidoController;
-use crate::entities::pedido::Pedido;
 use crate::entities::pagamento::Pagamento;
+use crate::entities::pedido::Pedido;
 
 use crate::traits::{
-    pedido_gateway::PedidoGateway,
-    cliente_gateway::ClienteGateway,
-    produto_gateway::ProdutoGateway,
-    pagamento_gateway::PagamentoGateway,
+    cliente_gateway::ClienteGateway, pagamento_gateway::PagamentoGateway,
+    pedido_gateway::PedidoGateway, produto_gateway::ProdutoGateway,
 };
 use crate::use_cases::pedidos_e_pagamentos_use_case::CreatePedidoInput;
 
@@ -55,9 +54,7 @@ async fn get_pedido_by_id(
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
     );
-    let pedido = pedido_controller
-        .get_pedido_by_id(id)
-        .await?;
+    let pedido = pedido_controller.get_pedido_by_id(id).await?;
     Ok(Json(pedido))
 }
 
@@ -77,9 +74,7 @@ async fn post_novo_pedido(
         pagamento_repository.inner().clone(),
     );
     let pedido_input = pedido_input.into_inner();
-    let novo_pedido = pedido_controller
-        .novo_pedido(pedido_input)
-        .await?;
+    let novo_pedido = pedido_controller.novo_pedido(pedido_input).await?;
     Ok(Json(novo_pedido))
 }
 
@@ -119,9 +114,7 @@ async fn put_status_pedido(
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
     );
-    let pedido = pedido_controller
-        .atualiza_status_pedido(id, status)
-        .await?;
+    let pedido = pedido_controller.atualiza_status_pedido(id, status).await?;
     Ok(Json(pedido))
 }
 
@@ -172,7 +165,7 @@ async fn put_produto_by_categoria(
 }
 
 #[openapi(tag = "Pedidos")]
-#[put("/<id>/pagamento")]
+#[post("/<id>/pagamento")]
 async fn pagar(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
@@ -186,9 +179,29 @@ async fn pagar(
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
     );
-    let pagamento = pedido_controller
-        .pagar(id)
-        .await?;
+    let pagamento = pedido_controller.pagar(id).await?;
+    Ok(Json(pagamento))
+}
+
+#[openapi(tag = "Pedidos")]
+#[put("/<id>/pagamento", data = "<data>")]
+async fn webhook_pagamento(
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    id: usize,
+    data: Json<Value>,
+) -> Result<Json<Pagamento>, Status> {
+    let pedido_controller = PedidoController::new(
+        pedido_repository.inner().clone(),
+        cliente_repository.inner().clone(),
+        produto_repository.inner().clone(),
+        pagamento_repository.inner().clone(),
+    );
+
+    let data_pagamento = data.into_inner();
+    let pagamento = pedido_controller.webhook_pagamento(id, data_pagamento).await?;
     Ok(Json(pagamento))
 }
 
@@ -201,6 +214,7 @@ pub fn routes() -> Vec<rocket::Route> {
         put_cliente_pedido,
         put_produto_by_categoria,
         pagar,
+        webhook_pagamento,
     ]
 }
 
