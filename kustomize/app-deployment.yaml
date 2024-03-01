@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rust-app
+  labels:
+    app: rust-app
+spec:
+  template:
+    metadata:
+      name: rust-app
+      labels:
+        app: rust-app
+    spec:
+      containers:
+        - name: rust-app-container
+          image: brunomafra/grupo-25-tech-challenge:latest
+          ports:
+            - containerPort: 3000   
+          envFrom:
+          - configMapRef:
+              name: app-configmap      
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: 80
+          #   periodSeconds: 10
+          #   failureThreshold: 3
+          #   initialDelaySeconds: 20
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: 80
+          #   periodSeconds: 10
+          #   failureThreshold: 5
+          #   initialDelaySeconds: 3
+          resources:
+            requests:
+              cpu: 1m
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rust-app
