@@ -237,15 +237,17 @@ impl PedidosEPagamentosUseCase {
         let mut pedido_repository = self.pedido_repository.lock().await;
         let mut pagamento_repository = self.pagamento_repository.lock().await;
         let pedido: Pedido = pedido_repository.get_pedido_by_id(pedido_id).await?;
-        let pagamento: Pagamento = pagamento_repository.get_pagamento_by_id_pedido(pedido_id).await?;
+        let mut pagamento: Pagamento = pagamento_repository.get_pagamento_by_id_pedido(pedido_id).await?;
         match pedido.pagamento().as_str() {
             "Mercado Pago" => {
                 let mercado_pago_adapter: Arc<dyn PagamentoWebhookAdapter + Sync + Send>  = Arc::new(MercadoPagoPagamentoWebhookAdapter::new());
 
-                let pagamento = mercado_pago_adapter.processa_webhook(data_pagamento, pagamento);
-                // TODO
-                // update pagamento then
-                // add check for estado pagamento (if approved update status pedido)
+                pagamento = mercado_pago_adapter.processa_webhook(data_pagamento, pagamento);
+                pagamento_repository.update_pagamento(pagamento.clone()).await?;
+                println!("{}", *pagamento.estado());
+                if *pagamento.estado() == String::from("aprovado") && *pedido.status() == Status::Pendente {
+                    pedido_repository.atualiza_status(*pedido.id(), Status::Pago).await?;
+                }
                 Ok(pagamento)
             }
             _ => {

@@ -134,10 +134,6 @@ impl PedidoController {
         id: usize,
         data_pagamento: Value,
     ) -> Result<Pagamento, DomainError> {
-        // TODO
-        // verify metodo pagamento
-        // load specific adapter depending on Method
-        // run adapter function webhook apagamento
         self.pedidos_e_pagamentos_use_case
             .webhook_pagamento(id, data_pagamento)
             .await

@@ -23,7 +23,6 @@ impl PagamentoWebhookAdapter for MercadoPagoPagamentoWebhookAdapter {
     ) -> Pagamento {
         if let Some(obj) = data.as_object() {
             if let Some(action) = obj.get("action") {
-                // Check if the action attribute is a string and if it equals "payment.approved"
                 if let Some(action_str) = action.as_str() {
                     if action_str == "payment.approved" {
                         pagamento.set_estado(String::from("aprovado"));

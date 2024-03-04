@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS cliente (
 -- Criacao do tipo enum para status
 CREATE TYPE STATUS_PEDIDO_ENUM AS ENUM (
     'Pendente',
-    'Pago'
+    'Pago',
     'EmPreparacao',
     'Pronto',
     'Finalizado',

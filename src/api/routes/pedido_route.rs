@@ -181,6 +181,9 @@ async fn pagar(
         pagamento_repository.inner().clone(),
     );
     let pagamento = pedido_controller.pagar(id).await?;
+
+    // TODO
+    // should send webhook link (or inside pagar)
     Ok(Json(pagamento))
 }
 

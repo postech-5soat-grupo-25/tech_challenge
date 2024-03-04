@@ -47,10 +47,20 @@ impl PagamentoGateway for InMemoryPagamentoRepository {
 
     async fn get_pagamento_by_id_pedido(&mut self, id_pagamento: usize) -> Result<Pagamento, DomainError> {
         let id = id_pagamento as i32;
-        let pagamentos = &mut self._pagamentos;
         sleep(Duration::from_secs(1)).await;
         for pagamento in &self._pagamentos {
             if pagamento.id_pedido().to_owned() == id as usize {
+                return Ok(pagamento.clone());
+            }
+        }
+        Err(DomainError::NotFound)
+    }
+
+    async fn update_pagamento(&mut self, updated_pagamento: Pagamento) -> Result<Pagamento, DomainError> {
+        sleep(Duration::from_secs(1)).await;
+        for pagamento in &mut self._pagamentos {
+            if pagamento.id() == updated_pagamento.id() {
+                *pagamento = updated_pagamento.clone();
                 return Ok(pagamento.clone());
             }
         }

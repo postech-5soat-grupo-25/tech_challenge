@@ -10,6 +10,8 @@ pub trait PagamentoGateway {
 
     async fn get_pagamento_by_id_pedido(&mut self, id_pagamento: usize) -> Result<Pagamento, DomainError>;
 
+    async fn update_pagamento(&mut self, pagamento: Pagamento) -> Result<Pagamento, DomainError>;
+
     // async fn get_pagamento_by_id(&self, id: usize) -> Result<Pagamento, DomainError>;
 
     // async fn update_pagamento(&mut self, pagamento: Pagamento) -> Result<Pagamento, DomainError>;

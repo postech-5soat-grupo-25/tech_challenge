@@ -20,7 +20,9 @@ use crate::external::postgres::table::Table;
 
 
 const CREATE_PAGAMENTO: &str = "INSERT INTO pagamento (id_pedido, estado, metodo, referencia, data_criacao) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)";
-const QUERY_PAGAMENTO_BY_ID_PEDIDO: &str = "SELECT * FROM pagamento WHERE id_pedido = $1";
+const QUERY_PAGAMENTO_BY_ID_PEDIDO: &str = "SELECT * FROM pagamento WHERE id_pedido = $1 order by data_criacao DESC limit 1";
+const UPDATE_PAGAMENTO: &str = "UPDATE pagamento SET id_pedido = $2, estado = $3, metodo = $4, referencia = $5 WHERE id = $1 RETURNING id, id_pedido, estado, metodo, referencia, pagamento, data_criacao";
+
 
 pub struct PostgresPagamentoRepository {
     client: Client,
@@ -84,10 +86,39 @@ impl PagamentoGateway for PostgresPagamentoRepository {
     async fn get_pagamento_by_id_pedido(&mut self, id_pedido: usize) -> Result<Pagamento, DomainError> {
         let _id_pedido = id_pedido as i32;
 
-        let pagamento = self.client.query_one(QUERY_PAGAMENTO_BY_ID_PEDIDO, &[&_id_pedido]).await;
+        let pagamento_row = self.client.query(QUERY_PAGAMENTO_BY_ID_PEDIDO, &[&_id_pedido]).await.unwrap();
+        let pagamento = pagamento_row.get(0);
         match pagamento {
-            Ok(pagamento) => Ok(Pagamento::from_row(&pagamento)),
-            Err(_) => Err(DomainError::NotFound),
+            Some(pagamento) => Ok(Pagamento::from_row(&pagamento)),
+            None => Err(DomainError::NotFound),
+        }
+    }
+
+    async fn update_pagamento(
+        &mut self,
+        pagamento: Pagamento
+    ) -> Result<Pagamento, DomainError> {
+        let _id = *pagamento.id() as i32;
+        let _id_pedido = *pagamento.id_pedido() as i32;
+        let update_pagamento_row = self
+            .client
+            .query_one(
+                UPDATE_PAGAMENTO,
+                &[
+                    &_id,
+                    &_id_pedido,
+                    &pagamento.estado(),
+                    &pagamento.metodo(),
+                    &pagamento.referencia(),
+                ],
+            )
+            .await;
+        match update_pagamento_row {
+            Ok(row) => {
+                let updated_pagamento: Pagamento = Pagamento::from_row(&row);
+                Ok(updated_pagamento)
+            }
+            Err(_) => Err(DomainError::Invalid("Pagamento".to_string())),
         }
     }
 
