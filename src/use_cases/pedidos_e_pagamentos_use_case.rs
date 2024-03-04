@@ -1,4 +1,5 @@
 use crate::base::domain_error::DomainError;
+use crate::entities::pagamento;
 use crate::entities::{
     pedido::{Pedido, Status},
     produto::{Categoria, Produto},
@@ -10,10 +11,15 @@ use crate::traits::{
     pedido_gateway::PedidoGateway,
     produto_gateway::ProdutoGateway,
 };
+
+
+use crate::traits::pagamento_webhook_adapter::PagamentoWebhookAdapter;
+use crate::adapters::mercadopago_pagamento_webhook_adapter::MercadoPagoPagamentoWebhookAdapter;
 use chrono::Utc;
 use tokio::sync::Mutex;
 use schemars::JsonSchema;
 use serde::Deserialize;
+use rocket::serde::json::Value;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
@@ -220,19 +226,35 @@ impl PedidosEPagamentosUseCase {
         );
         let pagamento = pagamento_repository.create_pagamento(pagamento).await?;
         Ok(pagamento)
-        
-        // let total_pedido = pedido.get_total_valor_pedido();
-
-        // let status_pagamento = pagamento_repository.processa_pagamento(pedido_id, total_pedido)?;
-
-        // if status_pagamento == StatusPagamento::Successo {
-        //     pedido_repository
-        //         .atualiza_status(pedido_id, Status::Pago)
-        //         .await?;
-        // } else {
-        //     Err(DomainError::Invalid("Pagamento não realizado".to_string()))?;
-        // }
     }
+
+    pub async fn webhook_pagamento(
+        &self,
+        pedido_id: usize,
+        data_pagamento: Value
+    ) -> Result<Pagamento, DomainError>
+    {
+        let mut pedido_repository = self.pedido_repository.lock().await;
+        let mut pagamento_repository = self.pagamento_repository.lock().await;
+        let pedido: Pedido = pedido_repository.get_pedido_by_id(pedido_id).await?;
+        let pagamento: Pagamento = pagamento_repository.get_pagamento_by_id_pedido(pedido_id).await?;
+        match pedido.pagamento().as_str() {
+            "Mercado Pago" => {
+                let mercado_pago_adapter: Arc<dyn PagamentoWebhookAdapter + Sync + Send>  = Arc::new(MercadoPagoPagamentoWebhookAdapter::new());
+
+                let pagamento = mercado_pago_adapter.processa_webhook(data_pagamento, pagamento);
+                // TODO
+                // update pagamento then
+                // add check for estado pagamento (if approved update status pedido)
+                Ok(pagamento)
+            }
+            _ => {
+                println!("Metodo de pagamento invalido");
+                Err(DomainError::Invalid("Internal server error".to_string()))
+            }
+        }   
+    }
+
 }
 
 unsafe impl Send for PedidosEPagamentosUseCase {}

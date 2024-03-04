@@ -5,3 +5,4 @@ pub mod pedido_gateway;
 pub mod produto_gateway;
 pub mod pagamento_gateway;
 pub mod pagamento_adapter;
+pub mod pagamento_webhook_adapter;

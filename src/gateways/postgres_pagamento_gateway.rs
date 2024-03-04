@@ -20,6 +20,7 @@ use crate::external::postgres::table::Table;
 
 
 const CREATE_PAGAMENTO: &str = "INSERT INTO pagamento (id_pedido, estado, metodo, referencia, data_criacao) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)";
+const QUERY_PAGAMENTO_BY_ID_PEDIDO: &str = "SELECT * FROM pagamento WHERE id_pedido = $1";
 
 pub struct PostgresPagamentoRepository {
     client: Client,
@@ -80,7 +81,15 @@ impl PagamentoGateway for PostgresPagamentoRepository {
         }
     }
 
+    async fn get_pagamento_by_id_pedido(&mut self, id_pedido: usize) -> Result<Pagamento, DomainError> {
+        let _id_pedido = id_pedido as i32;
 
+        let pagamento = self.client.query_one(QUERY_PAGAMENTO_BY_ID_PEDIDO, &[&_id_pedido]).await;
+        match pagamento {
+            Ok(pagamento) => Ok(Pagamento::from_row(&pagamento)),
+            Err(_) => Err(DomainError::NotFound),
+        }
+    }
 
     // async fn atualiza_status(&mut self, id: usize, status: Status) -> Result<Pagamento, DomainError> {
     //     let _id = id as i32;
