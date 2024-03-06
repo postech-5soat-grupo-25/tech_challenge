@@ -7,3 +7,4 @@ data:
   POSTGRES_PASSWORD: postgres
   POSTGRES_USER: postgres
   DB_URL: postgres://postgres:postgres@db-svc:5432
+  MOCK_PAGAMENTOS_URL: mock-pagamentos-svc:9000
