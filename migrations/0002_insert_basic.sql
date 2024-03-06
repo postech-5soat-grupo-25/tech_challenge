@@ -160,7 +160,7 @@ VALUES (
         5,
         4,
         'Mercado Pago',
-        'Recebido',
+        'Pendente',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
@@ -183,5 +183,20 @@ VALUES (
         'Mercado Pago',
         'Pronto',
         CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    );
+
+INSERT INTO pagamento (
+        id_pedido,
+        estado,
+        metodo,
+        referencia,
+        data_criacao
+    )
+VALUES (
+        1,
+        'pendente',
+        'Mercado Pago',
+        'abc1234567890',
         CURRENT_TIMESTAMP
     );

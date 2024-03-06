@@ -4,6 +4,7 @@ pub mod usuario;
 pub mod cliente;
 pub mod pedido;
 pub mod produto;
+pub mod pagamento;
 
 use tokio_postgres::{NoTls, Error, Client};
 use tokio;
@@ -13,6 +14,7 @@ use self::usuario::get_usuario_table_columns;
 use self::cliente::get_cliente_table_columns;
 use self::produto::get_produto_table_columns;
 use self::pedido::get_pedido_table_columns;
+use self::pagamento::get_pagamento_table_columns;
 pub struct PgConnectionManager {
   pub client: Client,
 }
@@ -47,6 +49,10 @@ pub fn get_tables() -> Vec<Table> {
     Table {
       name: TablesNames::Pedido,
       columns: get_pedido_table_columns(),
+    },
+    Table {
+      name: TablesNames::Pagamento,
+      columns: get_pagamento_table_columns(),
     },
   ]
 }

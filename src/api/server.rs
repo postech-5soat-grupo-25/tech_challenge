@@ -16,9 +16,11 @@ use crate::adapters::jwt_authentication_adapter::JWTAuthenticationAdapter;
 use crate::gateways::{
     in_memory_cliente_gateway::InMemoryClienteRepository,
     in_memory_pedido_gateway::InMemoryPedidoRepository,
+    in_memory_pagamento_gateway::InMemoryPagamentoRepository,
     in_memory_usuario_gateway::InMemoryUsuarioRepository,
     postgres_cliente_gateway::PostgresClienteRepository,
     postgres_pedido_gateway::PostgresPedidoRepository,
+    postgres_pagamento_gateway::PostgresPagamentoRepository,
     postgres_usuario_gateway::PostgresUsuarioGateway,
     postgres_produto_gateway::PostgresProdutoRepository,
 };
@@ -27,6 +29,7 @@ use crate::traits::pagamento_adapter::PagamentoAdapter;
 use crate::traits::{
     cliente_gateway::ClienteGateway, pedido_gateway::PedidoGateway,
     produto_gateway::ProdutoGateway, usuario_gateway::UsuarioGateway,
+    pagamento_gateway::PagamentoGateway
 };
 
 #[get("/")]
@@ -77,7 +80,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         ))
     };
 
-    let pagamento_adapter: Arc<Mutex<dyn PagamentoAdapter + Sync + Send>> = Arc::new(Mutex::new(MockPagamentoSuccesso {}));
+    //let pagamento_adapter: Arc<Mutex<dyn PagamentoAdapter + Sync + Send>> = Arc::new(Mutex::new(MockPagamentoSuccesso {}));
 
     // Cloning cliente_repository to share ownership
     let cloned_cliente_repository = Arc::clone(&cliente_repository);
@@ -116,6 +119,25 @@ pub async fn main() -> Result<(), rocket::Error> {
         ))
     };
 
+    let cloned_pedido_repository = Arc::clone(&pedido_repository);
+
+    let pagamento_repository: Arc<Mutex<dyn PagamentoGateway + Sync + Send>> = if config.env
+        == Env::Test
+    {
+        println!("Using in memory database");
+        Arc::new(Mutex::new(InMemoryPagamentoRepository::new()))
+    } else {
+        println!("Connecting to database: {}", config.db_url.clone());
+        let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone())
+            .await
+            .unwrap();
+        let tables = postgres::get_tables();
+
+        Arc::new(Mutex::new(
+            PostgresPagamentoRepository::new(postgres_connection_manager.client, tables, cloned_pedido_repository).await,
+        ))
+    };
+
     let server_config = rocket::Config::figment()
         .merge(("address", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))))
         .merge(("port", 3000));
@@ -150,7 +172,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         .manage(cliente_repository)
         .manage(produto_repository)
         .manage(pedido_repository)
-        .manage(pagamento_adapter)
+        .manage(pagamento_repository)
         .configure(server_config)
         .launch()
         .await?;

@@ -7,6 +7,7 @@ use crate::entities::cliente::Cliente;
 use crate::entities::produto::{Produto,Categoria};
 
 use crate::entities::cpf::Cpf;
+use crate::entities::pagamento::Pagamento;
 use crate::entities::ingredientes::Ingredientes;
 
 use crate::traits::pedido_gateway::PedidoGateway;
@@ -14,6 +15,7 @@ use crate::traits::pedido_gateway::PedidoGateway;
 #[derive(Clone)]
 pub struct InMemoryPedidoRepository {
     _pedidos: Vec<Pedido>,
+    _pagamentos: Vec<Pagamento>,
 }
 
 impl InMemoryPedidoRepository {
@@ -48,8 +50,17 @@ impl InMemoryPedidoRepository {
             None,
             None,
             "mercadopago".to_string(),
-            Status::Recebido,
+            Status::Pendente,
             current_date.clone(),
+            current_date.clone(),
+        );
+
+        let pagamento = Pagamento::new(
+            1,
+            1,
+            "pago".to_string(),
+            "MercadoPago".to_string(),
+            "1234".to_string(),
             current_date,
         );
 
@@ -57,14 +68,15 @@ impl InMemoryPedidoRepository {
 
         InMemoryPedidoRepository {
             _pedidos: vec![pedido],
+            _pagamentos: vec![pagamento],
         }
     }
 }
 
 async fn get_status_by_string(status : String) -> Status {
-    let mut status_enum : Status = Status::Recebido;
+    let mut status_enum : Status = Status::Pendente;
     match status.as_str() {
-        "recebido" => status_enum = Status::Recebido,
+        "pendente" => status_enum = Status::Pendente,
         "em_preparacao" => status_enum = Status::EmPreparacao,
         "pronto" => status_enum = Status::Pronto,
         "finalizado" => status_enum = Status::Finalizado,
@@ -85,7 +97,7 @@ impl PedidoGateway for InMemoryPedidoRepository {
     async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
         let mut pedidos : Vec<Pedido> = Vec::new();
         for pedido in &self._pedidos {
-            if *pedido.status() == Status::Recebido{
+            if *pedido.status() == Status::Pendente{
                 pedidos.push(pedido.clone());
             }
         }
@@ -169,12 +181,14 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn cadastrar_pagamento(&mut self, pedido_id: usize, pagamento: String) -> Result<Pedido, DomainError> {
+    async fn cadastrar_pagamento( &mut self,
+        pagamento: Pagamento) -> Result<Pagamento, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
-            if *pedido.id() == pedido_id {
-                pedido.set_pagamento(pagamento.clone());
-                return Ok(pedido.clone());
+            if *pedido.id() == *pagamento.id_pedido() {
+                let pagamentos = &mut self._pagamentos;
+                pagamentos.push(pagamento.clone());
+                return Ok(pagamento.clone());
             }
         }
         Err(DomainError::NotFound)

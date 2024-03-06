@@ -5,6 +5,7 @@ use crate::entities::{
     cliente::Cliente,
     pedido::{Pedido, Status},
     produto::Produto,
+    pagamento::Pagamento,
 };
 use std::fmt;
 use std::str::FromStr;
@@ -14,7 +15,7 @@ impl FromStr for Status {
 
     fn from_str(input: &str) -> Result<Status, Self::Err> {
         match input {
-            "Recebido" => Ok(Status::Recebido),
+            "Pago" => Ok(Status::Pago),
             "EmPreparacao" => Ok(Status::EmPreparacao),
             "Pronto" => Ok(Status::Pronto),
             "Pendente" => Ok(Status::Pendente),
@@ -32,7 +33,7 @@ impl fmt::Display for Status {
             f,
             "{}",
             match self {
-                Status::Recebido => "Recebido",
+                Status::Pago => "Pago",
                 Status::EmPreparacao => "EmPreparacao",
                 Status::Pronto => "Pronto",
                 Status::Pendente => "Pendente",
@@ -81,9 +82,8 @@ pub trait PedidoGateway {
 
     async fn cadastrar_pagamento(
         &mut self,
-        pedido_id: usize,
-        pagamento_id: String,
-    ) -> Result<Pedido, DomainError>;
+        pagamento: Pagamento,
+    ) -> Result<Pagamento, DomainError>;
 
     async fn atualiza_status(
         &mut self,
