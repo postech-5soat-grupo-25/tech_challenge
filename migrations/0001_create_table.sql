@@ -87,7 +87,8 @@ CREATE TABLE IF NOT EXISTS pagamento (
     id SERIAL PRIMARY KEY,
     id_pedido INT,
     estado  TEXT NOT NULL,
+    valor FLOAT NOT NULL,
     metodo TEXT NOT NULL,
-    referencia TEXT NOT NULL,
+    referencia TEXT,
     data_criacao TIMESTAMP
 );

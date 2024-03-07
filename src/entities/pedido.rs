@@ -120,6 +120,25 @@ impl Pedido {
         &self.data_atualizacao
     }
 
+    pub fn valor(&self) -> f64 {
+
+        let mut total = 0.0;
+
+        if let Some(lanche) = &self.lanche {
+            total += lanche.preco();
+        }
+
+        if let Some(acompanhamento) = &self.acompanhamento {
+            total += acompanhamento.preco();
+        }
+
+        if let Some(bebida) = &self.bebida {
+            total += bebida.preco();
+        }
+
+        total 
+    }
+
     // Setters
     pub fn set_cliente(&mut self, cliente: Option<Cliente>) {
         self.cliente = cliente;

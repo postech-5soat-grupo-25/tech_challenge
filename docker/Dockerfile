@@ -1,4 +1,3 @@
-# Usando imagem alpine para diminuir o tamanho do container
 FROM rust:1.75-alpine3.19 as builder
 
 # Feature apenas em nightly
@@ -9,7 +8,8 @@ RUN rustup default nightly
 # Definindo a pasta dentro do container onde
 WORKDIR /usr/src/tech-challenge
 
-RUN apk add --no-cache musl-dev
+# Install necessary packages for building Rust applications and OpenSSL development headers
+RUN apk add musl-dev openssl-dev
 
 COPY . .
 

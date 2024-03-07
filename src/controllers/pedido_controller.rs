@@ -123,6 +123,12 @@ impl PedidoController {
         }
     }
 
+    pub async fn get_pagamento_by_pedido_id(&self, id: usize) -> Result<Pagamento, DomainError> {
+        self.pedidos_e_pagamentos_use_case
+            .get_pagamento_by_pedido_id(id)
+            .await
+    }
+
     pub async fn pagar(&self, id: usize) -> Result<Pagamento, DomainError> {
         self.pedidos_e_pagamentos_use_case
             .criar_pagamento_do_pedido(id)

@@ -2,9 +2,9 @@ use chrono::Utc;
 use tokio::time::{sleep, Duration};
 
 use crate::base::domain_error::DomainError;
-use crate::entities::pagamento::Pagamento;
 use crate::entities::cliente::Cliente;
-use crate::entities::produto::{Produto,Categoria};
+use crate::entities::pagamento::Pagamento;
+use crate::entities::produto::{Categoria, Produto};
 
 use crate::traits::pagamento_gateway::PagamentoGateway;
 
@@ -17,12 +17,11 @@ impl InMemoryPagamentoRepository {
     pub fn new() -> Self {
         let current_date = Utc::now().naive_utc().format("%Y-%m-%d").to_string();
 
-
-
         let pagamento = Pagamento::new(
             1,
             1,
             "pago".to_string(),
+            100.00,
             "MercadoPago".to_string(),
             "1234".to_string(),
             current_date,
@@ -36,7 +35,6 @@ impl InMemoryPagamentoRepository {
     }
 }
 
-
 #[async_trait]
 impl PagamentoGateway for InMemoryPagamentoRepository {
     async fn create_pagamento(&mut self, pagamento: Pagamento) -> Result<Pagamento, DomainError> {
@@ -45,7 +43,10 @@ impl PagamentoGateway for InMemoryPagamentoRepository {
         Ok(pagamento)
     }
 
-    async fn get_pagamento_by_id_pedido(&mut self, id_pagamento: usize) -> Result<Pagamento, DomainError> {
+    async fn get_pagamento_by_id_pedido(
+        &mut self,
+        id_pagamento: usize,
+    ) -> Result<Pagamento, DomainError> {
         let id = id_pagamento as i32;
         sleep(Duration::from_secs(1)).await;
         for pagamento in &self._pagamentos {
@@ -56,7 +57,10 @@ impl PagamentoGateway for InMemoryPagamentoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn update_pagamento(&mut self, updated_pagamento: Pagamento) -> Result<Pagamento, DomainError> {
+    async fn update_pagamento(
+        &mut self,
+        updated_pagamento: Pagamento,
+    ) -> Result<Pagamento, DomainError> {
         sleep(Duration::from_secs(1)).await;
         for pagamento in &mut self._pagamentos {
             if pagamento.id() == updated_pagamento.id() {
@@ -66,7 +70,7 @@ impl PagamentoGateway for InMemoryPagamentoRepository {
         }
         Err(DomainError::NotFound)
     }
-    
+
     // async fn atualiza_status(&mut self, id: usize, status: Status) -> Result<Pagamento, DomainError> {
     //     let pagamentos = &mut self._pagamentos;
     //     if (status == Status::Invalido){

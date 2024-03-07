@@ -189,6 +189,7 @@ VALUES (
 INSERT INTO pagamento (
         id_pedido,
         estado,
+        valor,
         metodo,
         referencia,
         data_criacao
@@ -196,6 +197,7 @@ INSERT INTO pagamento (
 VALUES (
         1,
         'pendente',
+        100.00,
         'Mercado Pago',
         'abc1234567890',
         CURRENT_TIMESTAMP
