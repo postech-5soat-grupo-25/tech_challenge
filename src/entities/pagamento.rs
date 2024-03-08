@@ -60,8 +60,8 @@ impl Pagamento {
         &self.estado
     }
 
-    pub fn valor(&self) -> &f64 {
-        &self.valor
+    pub fn valor(&self) -> f64 {
+        self.valor
     }
 
     pub fn metodo(&self) -> &String {

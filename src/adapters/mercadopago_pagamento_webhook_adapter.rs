@@ -24,16 +24,15 @@ impl MercadoPagoPagamentoWebhookAdapter {
 #[async_trait]
 impl PagamentoWebhookAdapter for MercadoPagoPagamentoWebhookAdapter {
     fn processa_webhook(&self, data: Value, mut pagamento: Pagamento) -> Pagamento {
-        // TODO update this to new key values
         if let Some(obj) = data.as_object() {
-            if let Some(action) = obj.get("action") {
-                if let Some(action_str) = action.as_str() {
-                    if action_str == "payment.approved" {
+            if let Some(payment_status) = obj.get("payment_status") {
+                if let Some(payment_status_str) = payment_status.as_str() {
+                    if payment_status_str == "success" {
                         pagamento.set_estado(String::from("aprovado"));
                     }
                 }
             }
-            if let Some(id) = obj.get("id") {
+            if let Some(id) = obj.get("payment_code") {
                 // Check if the action attribute is a string and if it equals "payment.approved"
                 if let Some(id_str) = id.as_str() {
                     pagamento.set_referencia(id_str.to_string());
@@ -67,17 +66,19 @@ impl PagamentoWebhookAdapter for MercadoPagoPagamentoWebhookAdapter {
             }
         };
 
+        // let post_url = "http://localhost:3000/";
+        // let API_HOST = "localhost:3000";
+
         let webhook_url = format!(
-            "https://{}/{}/pagamento",
+            "http://{}/{}/pagamento",
             API_HOST,
             pagamento.id_pedido().clone()
         );
 
         let client = reqwest::Client::new();
-        //TODO set value properly
         let body = serde_json::json!({
             "webhook_url": webhook_url,
-            "value": 100,
+            "value": pagamento.valor(),
         });
 
         let response = client.post(post_url).json(&body).send().await;

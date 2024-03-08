@@ -219,7 +219,6 @@ impl PedidosEPagamentosUseCase {
 
         let pedido: Pedido = pedido_repository.get_pedido_by_id(pedido_id).await?;
         let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
-
         let pagamento = Pagamento::new(
             0,
             pedido.id().clone(),

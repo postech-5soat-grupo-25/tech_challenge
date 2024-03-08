@@ -20,5 +20,5 @@ serde_with = "3.4.0"
 bytes = "1.0"
 mockall = "0.12.1"
 tokio = "1.36.0"
-openssl = { version = "0.10", features = ["vendored"] }
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "json", "blocking"] }
+
