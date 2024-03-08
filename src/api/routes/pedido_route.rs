@@ -166,6 +166,26 @@ async fn put_produto_by_categoria(
 }
 
 #[openapi(tag = "Pedidos")]
+#[get("/<id>/pagamento")]
+async fn get_pagamento_by_pedido_id(
+    pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
+    cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
+    produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
+    pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    id: usize,
+) -> Result<Json<Pagamento>, Status> {
+    let pedido_controller = PedidoController::new(
+        pedido_repository.inner().clone(),
+        cliente_repository.inner().clone(),
+        produto_repository.inner().clone(),
+        pagamento_repository.inner().clone(),
+    );
+    let pagamento = pedido_controller.get_pagamento_by_pedido_id(id).await?;
+
+    Ok(Json(pagamento))
+}
+
+#[openapi(tag = "Pedidos")]
 #[post("/<id>/pagamento")]
 async fn pagar(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
@@ -182,8 +202,6 @@ async fn pagar(
     );
     let pagamento = pedido_controller.pagar(id).await?;
 
-    // TODO
-    // should send webhook link (or inside pagar)
     Ok(Json(pagamento))
 }
 
@@ -217,6 +235,7 @@ pub fn routes() -> Vec<rocket::Route> {
         put_status_pedido,
         put_cliente_pedido,
         put_produto_by_categoria,
+        get_pagamento_by_pedido_id,
         pagar,
         webhook_pagamento,
     ]
