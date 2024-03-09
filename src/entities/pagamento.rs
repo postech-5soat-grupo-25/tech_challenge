@@ -14,6 +14,7 @@ pub struct Pagamento {
     id: usize,
     id_pedido: usize,
     estado: String,
+    valor: f64,
     metodo: String,
     referencia: String,
     data_criacao: String,
@@ -24,6 +25,7 @@ impl Pagamento {
         id: usize,
         id_pedido: usize,
         estado: String,
+        valor: f64,
         metodo: String,
         referencia: String,
         data_criacao: String,
@@ -32,6 +34,7 @@ impl Pagamento {
             id,
             id_pedido,
             estado,
+            valor,
             metodo,
             referencia,
             data_criacao,
@@ -57,6 +60,10 @@ impl Pagamento {
         &self.estado
     }
 
+    pub fn valor(&self) -> f64 {
+        self.valor
+    }
+
     pub fn metodo(&self) -> &String {
         &self.metodo
     }
@@ -74,6 +81,12 @@ impl Pagamento {
     pub fn set_estado(&mut self, estado: String) -> Result<(), DomainError> {
         assertion_concern::assert_argument_not_empty(estado.clone())?;
         self.estado = estado;
+        Ok(())
+    }
+
+    pub fn set_valor(&mut self, valor: f64) -> Result<(), DomainError> {
+        assertion_concern::assert_argument_not_negative(valor.clone())?;
+        self.valor = valor;
         Ok(())
     }
     
@@ -100,6 +113,7 @@ mod tests {
             1,
             1,
             "MercadoPago".to_string(),
+            100.00,
             "pendente".to_string(),
             "aaabbbccc".to_string(),
             _now.clone(),
@@ -111,6 +125,7 @@ mod tests {
         let pagamento = create_valid_pagamento();
         assert_eq!(pagamento.id(), &1);
         assert_eq!(pagamento.id_pedido(), &1);
+        assert_eq!(pagamento.valor(), 100.00);
         assert_eq!(pagamento.estado(), "pendente");
         assert_eq!(pagamento.metodo(), "MercadoPago");
         assert_eq!(pagamento.referencia(), "aaabbbccc");
@@ -130,6 +145,7 @@ mod tests {
             1,
             1,
             "pendente".to_string(),
+            100.00,
             "".to_string(),
             "aaabbbccc".to_string(),
             _now.clone(),

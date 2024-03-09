@@ -19,9 +19,9 @@ use crate::traits::pedido_gateway::PedidoGateway;
 use crate::external::postgres::table::Table;
 
 
-const CREATE_PAGAMENTO: &str = "INSERT INTO pagamento (id_pedido, estado, metodo, referencia, data_criacao) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)";
+const CREATE_PAGAMENTO: &str = "INSERT INTO pagamento (id_pedido, estado, valor, metodo, referencia, data_criacao) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) RETURNING id, id_pedido, estado, valor, metodo, referencia, data_criacao";
 const QUERY_PAGAMENTO_BY_ID_PEDIDO: &str = "SELECT * FROM pagamento WHERE id_pedido = $1 order by data_criacao DESC limit 1";
-const UPDATE_PAGAMENTO: &str = "UPDATE pagamento SET id_pedido = $2, estado = $3, metodo = $4, referencia = $5 WHERE id = $1 RETURNING id, id_pedido, estado, metodo, referencia, pagamento, data_criacao";
+const UPDATE_PAGAMENTO: &str = "UPDATE pagamento SET id_pedido = $2, estado = $3, valor = $4, metodo = $5, referencia = $6 WHERE id = $1 RETURNING id, id_pedido, estado, metodo, valor, referencia, data_criacao";
 
 
 pub struct PostgresPagamentoRepository {
@@ -61,25 +61,24 @@ impl PagamentoGateway for PostgresPagamentoRepository {
         pagamento: Pagamento
     ) -> Result<Pagamento, DomainError> {
         let _id_pedido = *pagamento.id_pedido() as i32;
-        let new_pagamento_row = self
+        let new_pagamento = self
             .client
-            .query_one(
+            .query(
                 CREATE_PAGAMENTO,
                 &[
                     &_id_pedido,
                     &String::from("pendente"),
+                    &pagamento.valor(),
                     &pagamento.metodo(),
                     &pagamento.referencia(),
                 ],
             )
-            .await;
-        match new_pagamento_row {
-            Ok(row) => {
-                let new_pagamento = Pagamento::from_row(&row);
-                println!("Novo pagamento cadastrado: {:?}", new_pagamento);
-                Ok(new_pagamento)
-            }
-            Err(_) => Err(DomainError::Invalid("Pagamento".to_string())),
+            .await
+            .unwrap();
+        let new_pagamento = new_pagamento.get(0);
+        match new_pagamento {
+            Some(pagamento) => Ok(Pagamento::from_row(pagamento)),
+            None => Err(DomainError::Invalid("Pagamento".to_string())),
         }
     }
 
@@ -108,6 +107,7 @@ impl PagamentoGateway for PostgresPagamentoRepository {
                     &_id,
                     &_id_pedido,
                     &pagamento.estado(),
+                    &pagamento.valor(),
                     &pagamento.metodo(),
                     &pagamento.referencia(),
                 ],

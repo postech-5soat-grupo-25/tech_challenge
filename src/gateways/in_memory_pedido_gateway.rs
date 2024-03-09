@@ -2,13 +2,13 @@ use chrono::Utc;
 use tokio::time::{sleep, Duration};
 
 use crate::base::domain_error::DomainError;
-use crate::entities::pedido::{Pedido, Status};
 use crate::entities::cliente::Cliente;
-use crate::entities::produto::{Produto,Categoria};
+use crate::entities::pedido::{Pedido, Status};
+use crate::entities::produto::{Categoria, Produto};
 
 use crate::entities::cpf::Cpf;
-use crate::entities::pagamento::Pagamento;
 use crate::entities::ingredientes::Ingredientes;
+use crate::entities::pagamento::Pagamento;
 
 use crate::traits::pedido_gateway::PedidoGateway;
 
@@ -38,7 +38,12 @@ impl InMemoryPedidoRepository {
             "O clássico pão, carne e queijo!".to_string(),
             Categoria::Lanche,
             9.99,
-            Ingredientes::new(vec!["Pão".to_string(), "Hambúrguer".to_string(), "Queijo".to_string()]).unwrap(),
+            Ingredientes::new(vec![
+                "Pão".to_string(),
+                "Hambúrguer".to_string(),
+                "Queijo".to_string(),
+            ])
+            .unwrap(),
             "2024-01-17".to_string(),
             "2024-01-17".to_string(),
         );
@@ -59,6 +64,7 @@ impl InMemoryPedidoRepository {
             1,
             1,
             "pago".to_string(),
+            100.0,
             "MercadoPago".to_string(),
             "1234".to_string(),
             current_date,
@@ -73,8 +79,8 @@ impl InMemoryPedidoRepository {
     }
 }
 
-async fn get_status_by_string(status : String) -> Status {
-    let mut status_enum : Status = Status::Pendente;
+async fn get_status_by_string(status: String) -> Status {
+    let mut status_enum: Status = Status::Pendente;
     match status.as_str() {
         "pendente" => status_enum = Status::Pendente,
         "em_preparacao" => status_enum = Status::EmPreparacao,
@@ -86,18 +92,16 @@ async fn get_status_by_string(status : String) -> Status {
     return status_enum;
 }
 
-
 #[async_trait]
 impl PedidoGateway for InMemoryPedidoRepository {
-
     async fn lista_pedidos(&mut self) -> Result<Vec<Pedido>, DomainError> {
         Ok(self._pedidos.clone())
     }
 
     async fn get_pedidos_novos(&self) -> Result<Vec<Pedido>, DomainError> {
-        let mut pedidos : Vec<Pedido> = Vec::new();
+        let mut pedidos: Vec<Pedido> = Vec::new();
         for pedido in &self._pedidos {
-            if *pedido.status() == Status::Pendente{
+            if *pedido.status() == Status::Pendente {
                 pedidos.push(pedido.clone());
             }
         }
@@ -105,10 +109,9 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Ok(pedidos)
     }
 
-
     async fn atualiza_status(&mut self, id: usize, status: Status) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
-        if (status == Status::Invalido){
+        if (status == Status::Invalido) {
             return Err::<Pedido, _>(DomainError::Invalid("status".to_string()));
         }
         for pedido in pedidos.iter_mut() {
@@ -126,7 +129,6 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Ok(pedido)
     }
 
-
     async fn get_pedido_by_id(&self, pedido_id: usize) -> Result<Pedido, DomainError> {
         let pedidos = &self._pedidos;
         for pedido in pedidos.iter() {
@@ -137,7 +139,11 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn cadastrar_cliente(&mut self, pedido_id: usize, cliente: Cliente) -> Result<Pedido, DomainError> {
+    async fn cadastrar_cliente(
+        &mut self,
+        pedido_id: usize,
+        cliente: Cliente,
+    ) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
             if *pedido.id() == pedido_id {
@@ -148,7 +154,11 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn cadastrar_lanche(&mut self, pedido_id: usize, lanche: Produto) -> Result<Pedido, DomainError> {
+    async fn cadastrar_lanche(
+        &mut self,
+        pedido_id: usize,
+        lanche: Produto,
+    ) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
             if *pedido.id() == pedido_id {
@@ -159,7 +169,11 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn cadastrar_acompanhamento(&mut self, pedido_id: usize, acompanhamento: Produto) -> Result<Pedido, DomainError> {
+    async fn cadastrar_acompanhamento(
+        &mut self,
+        pedido_id: usize,
+        acompanhamento: Produto,
+    ) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
             if *pedido.id() == pedido_id {
@@ -170,7 +184,11 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn cadastrar_bebida(&mut self, pedido_id: usize, bebida: Produto) -> Result<Pedido, DomainError> {
+    async fn cadastrar_bebida(
+        &mut self,
+        pedido_id: usize,
+        bebida: Produto,
+    ) -> Result<Pedido, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
             if *pedido.id() == pedido_id {
@@ -181,8 +199,10 @@ impl PedidoGateway for InMemoryPedidoRepository {
         Err(DomainError::NotFound)
     }
 
-    async fn cadastrar_pagamento( &mut self,
-        pagamento: Pagamento) -> Result<Pagamento, DomainError> {
+    async fn cadastrar_pagamento(
+        &mut self,
+        pagamento: Pagamento,
+    ) -> Result<Pagamento, DomainError> {
         let pedidos = &mut self._pedidos;
         for pedido in pedidos.iter_mut() {
             if *pedido.id() == *pagamento.id_pedido() {
@@ -193,7 +213,6 @@ impl PedidoGateway for InMemoryPedidoRepository {
         }
         Err(DomainError::NotFound)
     }
-
 }
 
 unsafe impl Sync for InMemoryPedidoRepository {}
