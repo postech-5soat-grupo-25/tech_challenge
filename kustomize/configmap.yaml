@@ -8,3 +8,4 @@ data:
   POSTGRES_USER: postgres
   DB_URL: postgres://postgres:postgres@db-svc:5432
   MOCK_PAGAMENTOS_URL: mock-pagamentos-svc:9000
+  API_HOST: rust-app-svc:3000
