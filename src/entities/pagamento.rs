@@ -112,9 +112,9 @@ mod tests {
         Pagamento::new(
             1,
             1,
-            "MercadoPago".to_string(),
-            100.00,
             "pendente".to_string(),
+            100.00,
+            "MercadoPago".to_string(),
             "aaabbbccc".to_string(),
             _now.clone(),
         )
@@ -123,8 +123,8 @@ mod tests {
     #[test]
     fn test_pagamento_creation_valid() {
         let pagamento = create_valid_pagamento();
-        assert_eq!(pagamento.id(), &1);
-        assert_eq!(pagamento.id_pedido(), &1);
+        assert_eq!(*pagamento.id(), 1);
+        assert_eq!(*pagamento.id_pedido(), 1);
         assert_eq!(pagamento.valor(), 100.00);
         assert_eq!(pagamento.estado(), "pendente");
         assert_eq!(pagamento.metodo(), "MercadoPago");

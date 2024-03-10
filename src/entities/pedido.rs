@@ -66,10 +66,13 @@ impl Pedido {
                     .to_string(),
             ));
         };
+
+
         match self.status {
             Status::EmPreparacao
             | Status::Pago
             | Status::Pronto
+            | Status::Pendente
             | Status::Finalizado
             | Status::Cancelado => (),
             _ => {
