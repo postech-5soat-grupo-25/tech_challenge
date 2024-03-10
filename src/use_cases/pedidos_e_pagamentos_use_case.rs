@@ -66,28 +66,28 @@ impl PedidosEPagamentosUseCase {
     ) -> Result<Pedido, DomainError> {
         let cliente = if let Some(cliente_id) = pedido_input.cliente_id {
             let cliente_repo = self.cliente_repository.lock().await;
-            cliente_repo.get_cliente_by_id(cliente_id).await.ok()
+            Some(cliente_repo.get_cliente_by_id(cliente_id).await?)
         } else {
             None
         };
 
         let lanche = if let Some(lanche_id) = pedido_input.lanche_id {
             let produto_repo = self.produto_repository.lock().await;
-            produto_repo.get_produto_by_id(lanche_id).await.ok()
+            Some(produto_repo.get_produto_by_id(lanche_id).await?)
         } else {
             None
         };
 
         let bebida = if let Some(bebida_id) = pedido_input.bebida_id {
             let produto_repo = self.produto_repository.lock().await;
-            produto_repo.get_produto_by_id(bebida_id).await.ok()
+            Some(produto_repo.get_produto_by_id(bebida_id).await?)
         } else {
             None
         };
 
         let acompanhamento = if let Some(acompanhamento_id) = pedido_input.acompanhamento_id {
             let produto_repo = self.produto_repository.lock().await;
-            produto_repo.get_produto_by_id(acompanhamento_id).await.ok()
+            Some(produto_repo.get_produto_by_id(acompanhamento_id).await?)
         } else {
             None
         };
@@ -106,9 +106,15 @@ impl PedidosEPagamentosUseCase {
         );
 
         let mut pedido_repository = self.pedido_repository.lock().await;
-        let result: Result<Pedido, DomainError> = pedido_repository.create_pedido(pedido).await;
-        match result {
-            Ok(pedido) => Ok(pedido),
+        let novo_pedido = pedido_repository.create_pedido(pedido).await;
+
+        match novo_pedido {
+            Ok(pedido) => {
+                self
+                    .criar_pagamento_do_pedido(pedido.id().clone())
+                    .await?;
+                Ok(pedido)
+            }
             Err(err) => Err(err),
         }
     }
@@ -127,13 +133,6 @@ impl PedidosEPagamentosUseCase {
             .await
     }
 
-    pub async fn lista_lanches(&self) -> Result<Vec<Produto>, DomainError> {
-        let produtos_repository = self.produto_repository.lock().await;
-        produtos_repository
-            .get_produtos_by_categoria(Categoria::Lanche)
-            .await
-    }
-
     pub async fn adicionar_lanche_com_personalizacao(
         &self,
         pedido_id: usize,
@@ -147,13 +146,6 @@ impl PedidosEPagamentosUseCase {
         }
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository.cadastrar_lanche(pedido_id, lanche).await
-    }
-
-    pub async fn lista_acompanhamentos(&self) -> Result<Vec<Produto>, DomainError> {
-        let produtos_repository = self.produto_repository.lock().await;
-        produtos_repository
-            .get_produtos_by_categoria(Categoria::Acompanhamento)
-            .await
     }
 
     pub async fn adicionar_acompanhamento(
@@ -174,13 +166,6 @@ impl PedidosEPagamentosUseCase {
         let mut pedido_repository = self.pedido_repository.lock().await;
         pedido_repository
             .cadastrar_acompanhamento(pedido_id, acompanhamento)
-            .await
-    }
-
-    pub async fn lista_bebidas(&self) -> Result<Vec<Produto>, DomainError> {
-        let produtos_repository = self.produto_repository.lock().await;
-        produtos_repository
-            .get_produtos_by_categoria(Categoria::Bebida)
             .await
     }
 
@@ -214,7 +199,7 @@ impl PedidosEPagamentosUseCase {
         &self,
         pedido_id: usize,
     ) -> Result<Pagamento, DomainError> {
-        let mut pedido_repository = self.pedido_repository.lock().await;
+        let pedido_repository = self.pedido_repository.lock().await;
         let mut pagamento_repository = self.pagamento_repository.lock().await;
 
         let pedido: Pedido = pedido_repository.get_pedido_by_id(pedido_id).await?;
