@@ -206,7 +206,7 @@ async fn pagar(
 }
 
 #[openapi(tag = "Pedidos")]
-#[put("/<id>/pagamento", data = "<data>")]
+#[post("/<id>/webhook/pagamento", data = "<data>")]
 async fn webhook_pagamento(
     pedido_repository: &State<Arc<Mutex<dyn PedidoGateway + Sync + Send>>>,
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,

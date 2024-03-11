@@ -2,7 +2,9 @@ use crate::base::domain_error::DomainError;
 use crate::entities::pagamento::Pagamento;
 use crate::traits::pagamento_webhook_adapter::PagamentoWebhookAdapter;
 use reqwest::Error as ReqwestError;
+use std::collections::HashMap;
 use std::env;
+use serde::Serialize;
 
 use serde_json::Value;
 
@@ -10,6 +12,12 @@ impl From<ReqwestError> for DomainError {
     fn from(error: ReqwestError) -> Self {
         DomainError::Invalid(format!("Reqwest error: {}", error))
     }
+}
+
+#[derive(Serialize)]
+struct Data {
+    webhook_url: String,
+    value: f64,
 }
 
 #[derive(Clone)]
@@ -66,22 +74,24 @@ impl PagamentoWebhookAdapter for MercadoPagoPagamentoWebhookAdapter {
             }
         };
 
-        // let post_url = "http://localhost:3000/";
+        // let post_url = "http://localhost:9000/payment/";
         // let API_HOST = "localhost:3000";
 
         let webhook_url = format!(
-            "http://{}/{}/pagamento",
+            "http://{}/pedidos/{}/webhook/pagamento",
             API_HOST,
             pagamento.id_pedido().clone()
         );
 
         let client = reqwest::Client::new();
-        let body = serde_json::json!({
-            "webhook_url": webhook_url,
-            "value": pagamento.valor(),
-        });
 
-        let response = client.post(post_url).json(&body).send().await;
+        
+        let data = Data {
+            webhook_url : webhook_url,
+            value: pagamento.valor(),
+        };
+
+        let response = client.post(post_url).form(&data).send().await;
 
         match response {
             Ok(resp) => {
