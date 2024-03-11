@@ -110,6 +110,7 @@ impl PedidosEPagamentosUseCase {
 
         match novo_pedido {
             Ok(pedido) => {
+                drop(pedido_repository);
                 self
                     .criar_pagamento_do_pedido(pedido.id().clone())
                     .await?;
