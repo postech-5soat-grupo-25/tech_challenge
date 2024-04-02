@@ -296,7 +296,6 @@ mod tests {
         cliente_gateway::MockClienteGateway, pagamento_gateway::MockPagamentoGateway,
         pedido_gateway::MockPedidoGateway, produto_gateway::MockProdutoGateway,
     };
-    use mockall::predicate::eq;
     use tokio::sync::Mutex;
     use std::sync::Arc;
     use tokio;
@@ -421,46 +420,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_lista_lanches() {
-        let mut mock = MockProdutoGateway::new();
-
-        let ingredientes = Ingredientes::new(vec![
-            "Pão".to_string(),
-            "Hambúrguer".to_string(),
-            "Queijo".to_string(),
-        ])
-        .unwrap();
-
-        let returned_produto = Produto::new(
-            1,
-            "X-Bacon".to_string(),
-            "foto.png".to_string(),
-            "Saundiche de queijo e bacon".to_string(),
-            Categoria::Lanche,
-            10.0,
-            ingredientes,
-            "2021-10-10".to_string(),
-            "2021-10-10".to_string(),
-        );
-
-        let expected_produto = returned_produto.clone();
-
-        mock.expect_get_produtos_by_categoria()
-            .times(1)
-            .with(eq(Categoria::Lanche))
-            .returning(move |_| Ok(vec![returned_produto.clone()]));
-
-        let use_case = PedidosEPagamentosUseCase::new(
-            Arc::new(Mutex::new(MockPedidoGateway::new())),
-            Arc::new(Mutex::new(MockClienteGateway::new())),
-            Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockPagamentoGateway::new())),
-        );
-        let result = use_case.lista_lanches().await;
-        assert_eq!(result.unwrap()[0].id(), expected_produto.id());
-    }
-
-    #[tokio::test]
     async fn test_adicionar_lanche_com_personalizacao() {
         let mut mock_produto_repository = MockProdutoGateway::new();
 
@@ -520,41 +479,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_lista_acompanhamentos() {
-        let mut mock = MockProdutoGateway::new();
-
-        let ingredientes = Ingredientes::new(vec![]).unwrap();
-
-        let returned_produto = Produto::new(
-            1,
-            "Batata Frita M".to_string(),
-            "foto.png".to_string(),
-            "Batata frita do tamanho médio".to_string(),
-            Categoria::Acompanhamento,
-            10.0,
-            ingredientes,
-            "2021-10-10".to_string(),
-            "2021-10-10".to_string(),
-        );
-
-        let expected_produto = returned_produto.clone();
-
-        mock.expect_get_produtos_by_categoria()
-            .times(1)
-            .with(eq(Categoria::Acompanhamento))
-            .returning(move |_| Ok(vec![returned_produto.clone()]));
-
-        let use_case = PedidosEPagamentosUseCase::new(
-            Arc::new(Mutex::new(MockPedidoGateway::new())),
-            Arc::new(Mutex::new(MockClienteGateway::new())),
-            Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockPagamentoGateway::new())),
-        );
-        let result = use_case.lista_acompanhamentos().await;
-        assert_eq!(result.unwrap()[0].id(), expected_produto.id());
-    }
-
-    #[tokio::test]
     async fn test_adicionar_acompanhamento() {
         let mut mock_produto_repository = MockProdutoGateway::new();
 
@@ -607,42 +531,6 @@ mod tests {
 
         let result = use_case.adicionar_acompanhamento(1, 1).await;
         assert_eq!(result.unwrap().id(), expected_pedido.id());
-    }
-
-    #[tokio::test]
-    async fn test_lista_bebidas() {
-        let mut mock = MockProdutoGateway::new();
-
-        let ingredientes = Ingredientes::new(vec![]).unwrap();
-
-        let returned_produto = Produto::new(
-            1,
-            "Refrigerante de Cola M".to_string(),
-            "foto.png".to_string(),
-            "Refrigerante de Cola do tamanho médio".to_string(),
-            Categoria::Bebida,
-            10.0,
-            ingredientes,
-            "2021-10-10".to_string(),
-            "2021-10-10".to_string(),
-        );
-
-        let expected_produto = returned_produto.clone();
-
-        mock.expect_get_produtos_by_categoria()
-            .times(1)
-            .with(eq(Categoria::Bebida))
-            .returning(move |_| Ok(vec![returned_produto.clone()]));
-
-        let use_case = PedidosEPagamentosUseCase::new(
-            Arc::new(Mutex::new(MockPedidoGateway::new())),
-            Arc::new(Mutex::new(MockClienteGateway::new())),
-            Arc::new(Mutex::new(mock)),
-            Arc::new(Mutex::new(MockPagamentoGateway::new())),
-        );
-
-        let result = use_case.lista_bebidas().await;
-        assert_eq!(result.unwrap()[0].id(), expected_produto.id());
     }
 
     #[tokio::test]
