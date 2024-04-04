@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use rocket::http::Status;
@@ -14,6 +15,7 @@ use crate::controllers::pedido_controller::PedidoController;
 use crate::entities::pagamento::Pagamento;
 use crate::entities::pedido::Pedido;
 
+use crate::traits::pagamento_webhook_adapter::PagamentoWebhookAdapter;
 use crate::traits::{
     cliente_gateway::ClienteGateway, pagamento_gateway::PagamentoGateway,
     pedido_gateway::PedidoGateway, produto_gateway::ProdutoGateway,
@@ -27,6 +29,7 @@ async fn get_pedidos(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     _logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Pedido>>, Status> {
     let pedido_controller = PedidoController::new(
@@ -34,6 +37,7 @@ async fn get_pedidos(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pedidos = pedido_controller.get_pedidos().await?;
     Ok(Json(pedidos))
@@ -46,6 +50,7 @@ async fn get_pedido_by_id(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     id: usize,
     __logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Pedido>, Status> {
@@ -54,6 +59,7 @@ async fn get_pedido_by_id(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pedido = pedido_controller.get_pedido_by_id(id).await?;
     Ok(Json(pedido))
@@ -66,6 +72,7 @@ async fn post_novo_pedido(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     pedido_input: Json<CreatePedidoInput>,
 ) -> Result<Json<Pedido>, Status> {
     let pedido_controller = PedidoController::new(
@@ -73,6 +80,7 @@ async fn post_novo_pedido(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pedido_input = pedido_input.into_inner();
     let novo_pedido = pedido_controller.novo_pedido(pedido_input).await?;
@@ -86,6 +94,7 @@ async fn get_pedidos_novos(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     __logged_user_info: AuthenticatedUser,
 ) -> Result<Json<Vec<Pedido>>, Status> {
     let pedido_controller = PedidoController::new(
@@ -93,6 +102,7 @@ async fn get_pedidos_novos(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pedidos_novos = pedido_controller.get_pedidos_novos().await?;
     Ok(Json(pedidos_novos))
@@ -105,6 +115,7 @@ async fn put_status_pedido(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     id: usize,
     status: &str,
     __logged_user_info: AuthenticatedUser,
@@ -114,6 +125,7 @@ async fn put_status_pedido(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pedido = pedido_controller.atualiza_status_pedido(id, status).await?;
     Ok(Json(pedido))
@@ -126,6 +138,7 @@ async fn put_cliente_pedido(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     id: usize,
     cliente_id: usize,
 ) -> Result<Json<Pedido>, Status> {
@@ -134,6 +147,7 @@ async fn put_cliente_pedido(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pedido = pedido_controller
         .atualiza_cliente_pedido(id, cliente_id)
@@ -148,6 +162,7 @@ async fn put_produto_by_categoria(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     id: usize,
     categoria: &str,
     produto_id: usize,
@@ -157,6 +172,7 @@ async fn put_produto_by_categoria(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pedido = pedido_controller
         .atualiza_produto_by_categoria(id, categoria, produto_id)
@@ -172,6 +188,7 @@ async fn get_pagamento_by_pedido_id(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     id: usize,
 ) -> Result<Json<Pagamento>, Status> {
     let pedido_controller = PedidoController::new(
@@ -179,6 +196,7 @@ async fn get_pagamento_by_pedido_id(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pagamento = pedido_controller.get_pagamento_by_pedido_id(id).await?;
 
@@ -192,6 +210,7 @@ async fn pagar(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     id: usize,
 ) -> Result<Json<Pagamento>, Status> {
     let pedido_controller = PedidoController::new(
@@ -199,6 +218,7 @@ async fn pagar(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
     let pagamento = pedido_controller.pagar(id).await?;
 
@@ -212,6 +232,7 @@ async fn webhook_pagamento(
     cliente_repository: &State<Arc<Mutex<dyn ClienteGateway + Sync + Send>>>,
     produto_repository: &State<Arc<Mutex<dyn ProdutoGateway + Sync + Send>>>,
     pagamento_repository: &State<Arc<Mutex<dyn PagamentoGateway + Sync + Send>>>,
+    metodos_pagamento: &State<HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>>,
     id: usize,
     data: Json<Value>,
 ) -> Result<Json<Pagamento>, Status> {
@@ -220,6 +241,7 @@ async fn webhook_pagamento(
         cliente_repository.inner().clone(),
         produto_repository.inner().clone(),
         pagamento_repository.inner().clone(),
+        metodos_pagamento.inner().clone(),
     );
 
     let data_pagamento = data.into_inner();

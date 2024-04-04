@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use rocket::http::hyper::Method;
@@ -6,6 +7,7 @@ use tokio::sync::Mutex;
 use crate::base::domain_error::DomainError;
 use crate::entities::pagamento::{self, Pagamento};
 use crate::entities::pedido::{self, Pedido};
+use crate::traits::pagamento_webhook_adapter::PagamentoWebhookAdapter;
 use serde_json::Value;
 use crate::traits::{
     cliente_gateway::ClienteGateway, pagamento_gateway::PagamentoGateway,
@@ -29,12 +31,14 @@ impl PedidoController {
         cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
         produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
         pagamento_repository: Arc<Mutex<dyn PagamentoGateway + Sync + Send>>,
+        metodos_pagamento: HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>
     ) -> PedidoController {
         let pedidos_e_pagamentos_use_case = PedidosEPagamentosUseCase::new(
             pedido_repository.clone(),
             cliente_repository,
             produto_repository,
             pagamento_repository,
+            metodos_pagamento,
         );
         let preparacao_e_entrega_use_case = PreparacaoeEntregaUseCase::new(pedido_repository);
 

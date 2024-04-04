@@ -1,3 +1,5 @@
+use mockall::*;
+
 use crate::{
     base::domain_error::DomainError,
     entities::pagamento::Pagamento,
@@ -8,6 +10,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+#[automock]
 #[async_trait]
 pub trait PagamentoWebhookAdapter: Send + Sync {
     fn processa_webhook(
