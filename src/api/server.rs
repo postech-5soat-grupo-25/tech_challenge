@@ -1,35 +1,36 @@
 use rocket::response::Redirect;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::swagger_ui::*;
-use tokio::sync::Mutex;
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use super::error_handling::generic_catchers;
-use super::routes::{
-    auth_route, cliente_route, pedido_route, produto_route, usuario_route,
-};
+use super::routes::{auth_route, cliente_route, pedido_route, produto_route, usuario_route};
+use crate::adapters::jwt_authentication_adapter::JWTAuthenticationAdapter;
+use crate::adapters::mercadopago_pagamento_webhook_adapter::MercadoPagoPagamentoWebhookAdapter;
 use crate::api::config::{Config, Env};
 use crate::external::pagamento::mock::MockPagamentoSuccesso;
 use crate::external::postgres;
-use crate::adapters::jwt_authentication_adapter::JWTAuthenticationAdapter;
 use crate::gateways::{
     in_memory_cliente_gateway::InMemoryClienteRepository,
-    in_memory_pedido_gateway::InMemoryPedidoRepository,
     in_memory_pagamento_gateway::InMemoryPagamentoRepository,
+    in_memory_pedido_gateway::InMemoryPedidoRepository,
     in_memory_usuario_gateway::InMemoryUsuarioRepository,
     postgres_cliente_gateway::PostgresClienteRepository,
-    postgres_pedido_gateway::PostgresPedidoRepository,
     postgres_pagamento_gateway::PostgresPagamentoRepository,
-    postgres_usuario_gateway::PostgresUsuarioGateway,
+    postgres_pedido_gateway::PostgresPedidoRepository,
     postgres_produto_gateway::PostgresProdutoRepository,
+    postgres_usuario_gateway::PostgresUsuarioGateway,
 };
 use crate::traits::authentication_adapter::AuthenticationAdapter;
 use crate::traits::pagamento_adapter::PagamentoAdapter;
+use crate::traits::pagamento_webhook_adapter::PagamentoWebhookAdapter;
 use crate::traits::{
-    cliente_gateway::ClienteGateway, pedido_gateway::PedidoGateway,
-    produto_gateway::ProdutoGateway, usuario_gateway::UsuarioGateway,
-    pagamento_gateway::PagamentoGateway
+    cliente_gateway::ClienteGateway, pagamento_gateway::PagamentoGateway,
+    pedido_gateway::PedidoGateway, produto_gateway::ProdutoGateway,
+    usuario_gateway::UsuarioGateway,
 };
 
 #[get("/")]
@@ -41,9 +42,8 @@ fn redirect_to_docs() -> Redirect {
 pub async fn main() -> Result<(), rocket::Error> {
     let config = Config::build();
 
-    let jwt_authentication_adapter: Arc<dyn AuthenticationAdapter + Sync + Send>  = Arc::new(JWTAuthenticationAdapter::new(
-        config.secret.clone(),
-    ));
+    let jwt_authentication_adapter: Arc<dyn AuthenticationAdapter + Sync + Send> =
+        Arc::new(JWTAuthenticationAdapter::new(config.secret.clone()));
 
     println!("Loading environment variables...");
     let usuario_repository: Arc<Mutex<dyn UsuarioGateway + Sync + Send>> = if config.env
@@ -96,8 +96,7 @@ pub async fn main() -> Result<(), rocket::Error> {
     // Cloning produto_repository to share ownership
     let cloned_produto_repository = Arc::clone(&produto_repository);
 
-    let pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>> = if config.env
-        == Env::Test
+    let pedido_repository: Arc<Mutex<dyn PedidoGateway + Sync + Send>> = if config.env == Env::Test
     {
         println!("Using in memory database");
         Arc::new(Mutex::new(InMemoryPedidoRepository::new()))
@@ -134,9 +133,20 @@ pub async fn main() -> Result<(), rocket::Error> {
         let tables = postgres::get_tables();
 
         Arc::new(Mutex::new(
-            PostgresPagamentoRepository::new(postgres_connection_manager.client, tables, cloned_pedido_repository).await,
+            PostgresPagamentoRepository::new(
+                postgres_connection_manager.client,
+                tables,
+                cloned_pedido_repository,
+            )
+            .await,
         ))
     };
+
+    let mercado_pago_adapter: Arc<dyn PagamentoWebhookAdapter + Sync + Send> =
+        Arc::new(MercadoPagoPagamentoWebhookAdapter::new());
+
+    let mut metodos_pagamento: HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>> = HashMap::new();
+    metodos_pagamento.insert("Mercado Pago".to_string(), mercado_pago_adapter);
 
     let server_config = rocket::Config::figment()
         .merge(("address", IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))))
@@ -173,6 +183,7 @@ pub async fn main() -> Result<(), rocket::Error> {
         .manage(produto_repository)
         .manage(pedido_repository)
         .manage(pagamento_repository)
+        .manage(metodos_pagamento)
         .configure(server_config)
         .launch()
         .await?;

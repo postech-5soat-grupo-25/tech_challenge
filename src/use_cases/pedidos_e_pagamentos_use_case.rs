@@ -16,6 +16,7 @@ use chrono::Utc;
 use rocket::serde::json::Value;
 use schemars::JsonSchema;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -33,6 +34,7 @@ pub struct PedidosEPagamentosUseCase {
     cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
     produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
     pagamento_repository: Arc<Mutex<dyn PagamentoGateway + Sync + Send>>,
+    metodos_pagamento: HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>,
 }
 
 impl PedidosEPagamentosUseCase {
@@ -41,12 +43,14 @@ impl PedidosEPagamentosUseCase {
         cliente_repository: Arc<Mutex<dyn ClienteGateway + Sync + Send>>,
         produto_repository: Arc<Mutex<dyn ProdutoGateway + Sync + Send>>,
         pagamento_repository: Arc<Mutex<dyn PagamentoGateway + Sync + Send>>,
+        metodos_pagamento: HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>>,
     ) -> Self {
         PedidosEPagamentosUseCase {
             pedido_repository,
             cliente_repository,
             produto_repository,
             pagamento_repository,
+            metodos_pagamento,
         }
     }
 
@@ -111,9 +115,7 @@ impl PedidosEPagamentosUseCase {
         match novo_pedido {
             Ok(pedido) => {
                 drop(pedido_repository);
-                self
-                    .criar_pagamento_do_pedido(pedido.id().clone())
-                    .await?;
+                self.criar_pagamento_do_pedido(pedido.id().clone()).await?;
                 Ok(pedido)
             }
             Err(err) => Err(err),
@@ -193,7 +195,6 @@ impl PedidosEPagamentosUseCase {
         pagamento_repository
             .get_pagamento_by_id_pedido(pedido_id)
             .await
-
     }
 
     pub async fn criar_pagamento_do_pedido(
@@ -217,12 +218,14 @@ impl PedidosEPagamentosUseCase {
         let mut pagamento = pagamento_repository.create_pagamento(pagamento).await?;
 
         // set webhook
-        match pagamento.metodo().as_str() {
-            "Mercado Pago" => {
-                let mercado_pago_adapter: Arc<dyn PagamentoWebhookAdapter + Sync + Send> =
-                    Arc::new(MercadoPagoPagamentoWebhookAdapter::new());
+        let metodo_pagamento = self.metodos_pagamento.get(pagamento.metodo().as_str());
 
-                match mercado_pago_adapter.set_webhook_pagamento(pagamento.clone()).await {
+        match metodo_pagamento.cloned() {
+            Some(metodo_pagamento) => {
+                match metodo_pagamento
+                    .set_webhook_pagamento(pagamento.clone())
+                    .await
+                {
                     Ok(pagamento_updated) => {
                         println!("Webhook set successfully");
                         let updated_pagamento = pagamento_repository
@@ -240,7 +243,7 @@ impl PedidosEPagamentosUseCase {
                     }
                 }
             }
-            _ => {
+            None => {
                 println!("Metodo de pagamento invalido");
                 Err(DomainError::Invalid("Internal server error".to_string()))
             }
@@ -295,10 +298,11 @@ mod tests {
     use crate::traits::{
         cliente_gateway::MockClienteGateway, pagamento_gateway::MockPagamentoGateway,
         pedido_gateway::MockPedidoGateway, produto_gateway::MockProdutoGateway,
+        pagamento_webhook_adapter::MockPagamentoWebhookAdapter
     };
-    use tokio::sync::Mutex;
     use std::sync::Arc;
     use tokio;
+    use tokio::sync::Mutex;
 
     #[tokio::test]
     async fn test_lista_pedidos() {
@@ -327,6 +331,7 @@ mod tests {
             Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(MockProdutoGateway::new())),
             Arc::new(Mutex::new(MockPagamentoGateway::new())),
+            HashMap::new(),
         );
         let result = use_case.lista_pedidos().await;
         assert_eq!(result.unwrap()[0].id(), expected_pedido.id());
@@ -359,6 +364,7 @@ mod tests {
             Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(MockProdutoGateway::new())),
             Arc::new(Mutex::new(MockPagamentoGateway::new())),
+            HashMap::new(),
         );
         let result = use_case.seleciona_pedido_por_id(1).await;
         assert_eq!(result.unwrap().id(), expected_pedido.id());
@@ -368,6 +374,8 @@ mod tests {
     async fn test_novo_pedido() {
         let mut mock_pedido_repository = MockPedidoGateway::new();
         let mut mock_cliente_repository = MockClienteGateway::new();
+        let mut mock_pagamento_repository = MockPagamentoGateway::new();
+        let mut mock_mercado_pago_webhook_adapter = MockPagamentoWebhookAdapter::new();
 
         let returned_cliente = Cliente::new(
             1,
@@ -377,6 +385,20 @@ mod tests {
             "2021-10-10".to_string(),
             "2021-10-10".to_string(),
         );
+
+        let returned_pagamento = Pagamento::new(
+            1,
+            1,
+            "pendente".to_string(),
+            10.0,
+            "Mercado Pago".to_string(),
+            "id_pagamento".to_string(),
+            "2021-10-10".to_string(),
+        );
+
+        let updated_pagamento = returned_pagamento.clone();
+
+        let payed_pagamento = returned_pagamento.clone();
 
         let returned_pedido = Pedido::new(
             1,
@@ -392,21 +414,47 @@ mod tests {
 
         let expected_pedido = returned_pedido.clone();
 
+        let created_pedido = returned_pedido.clone();
+
         mock_pedido_repository
             .expect_create_pedido()
             .times(1)
             .returning(move |_| Ok(returned_pedido.clone()));
+
+        mock_pedido_repository
+            .expect_get_pedido_by_id()
+            .times(1)
+            .returning(move |_| Ok(created_pedido.clone()));
 
         mock_cliente_repository
             .expect_get_cliente_by_id()
             .times(1)
             .returning(move |_| Ok(returned_cliente.clone()));
 
+        mock_pagamento_repository
+            .expect_create_pagamento()
+            .times(1)
+            .returning(move |_| Ok(returned_pagamento.clone()));
+
+        mock_pagamento_repository
+            .expect_update_pagamento()
+            .times(1)
+            .returning(move |_| Ok(updated_pagamento.clone()));
+
+        mock_mercado_pago_webhook_adapter
+            .expect_set_webhook_pagamento()
+            .times(1)
+            .returning(move |_| Ok(payed_pagamento.clone()));
+
+        let mut metodos_pagamento: HashMap<String, Arc<dyn PagamentoWebhookAdapter + Sync + Send>> = HashMap::new();
+            metodos_pagamento.insert("Mercado Pago".to_string(), Arc::new(mock_mercado_pago_webhook_adapter));
+
         let use_case = PedidosEPagamentosUseCase::new(
             Arc::new(Mutex::new(mock_pedido_repository)),
             Arc::new(Mutex::new(mock_cliente_repository)),
             Arc::new(Mutex::new(MockProdutoGateway::new())),
-            Arc::new(Mutex::new(MockPagamentoGateway::new())),
+            Arc::new(Mutex::new(mock_pagamento_repository)),
+            metodos_pagamento,
         );
         let result = use_case
             .novo_pedido(CreatePedidoInput {
@@ -473,6 +521,7 @@ mod tests {
             Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock_produto_repository)),
             Arc::new(Mutex::new(MockPagamentoGateway::new())),
+            HashMap::new(),
         );
         let result = use_case.adicionar_lanche_com_personalizacao(1, 1).await;
         assert_eq!(result.unwrap().id(), expected_pedido.id());
@@ -527,6 +576,7 @@ mod tests {
             Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock_produto_repository)),
             Arc::new(Mutex::new(MockPagamentoGateway::new())),
+            HashMap::new(),
         );
 
         let result = use_case.adicionar_acompanhamento(1, 1).await;
@@ -582,10 +632,10 @@ mod tests {
             Arc::new(Mutex::new(MockClienteGateway::new())),
             Arc::new(Mutex::new(mock_produto_repository)),
             Arc::new(Mutex::new(MockPagamentoGateway::new())),
+            HashMap::new(),
         );
 
         let result = use_case.adicionar_bebida(1, 1).await;
         assert_eq!(result.unwrap().id(), expected_pedido.id());
     }
-
 }
