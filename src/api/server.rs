@@ -13,6 +13,7 @@ use crate::adapters::mercadopago_pagamento_webhook_adapter::MercadoPagoPagamento
 use crate::api::config::{Config, Env};
 use crate::external::pagamento::mock::MockPagamentoSuccesso;
 use crate::external::postgres;
+use crate::gateways::cognito_cliente_gateway::CognitoClienteGateway;
 use crate::gateways::{
     in_memory_cliente_gateway::InMemoryClienteRepository,
     in_memory_pagamento_gateway::InMemoryPagamentoRepository,
@@ -69,14 +70,15 @@ pub async fn main() -> Result<(), rocket::Error> {
         println!("Using in memory database");
         Arc::new(Mutex::new(InMemoryClienteRepository::new()))
     } else {
-        println!("Connecting to database: {}", config.db_url);
-        let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone())
-            .await
-            .unwrap();
-        let tables = postgres::get_tables();
+        // println!("Connecting to database: {}", config.db_url);
+        // let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone())
+        //     .await
+        //     .unwrap();
+        // let tables = postgres::get_tables();
+        println!("Using Cognito for Cliente");
 
         Arc::new(Mutex::new(
-            PostgresClienteRepository::new(postgres_connection_manager.client, tables).await,
+            CognitoClienteGateway::new().await,
         ))
     };
 
