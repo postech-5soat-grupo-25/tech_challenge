@@ -8,3 +8,4 @@ pub mod in_memory_pagamento_gateway;
 pub mod postgres_pagamento_gateway;
 pub mod postgres_produto_gateway;
 pub mod in_memory_produto_gateway;
+pub mod cognito_cliente_gateway;
