@@ -1,6 +1,7 @@
 use aws_config::from_env;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_cognitoidentityprovider::operation::list_users;
+use aws_sdk_cognitoidentityprovider::types::AttributeType;
 use aws_sdk_cognitoidentityprovider::{config::Region, meta::PKG_VERSION, Client};
 use chrono::Utc;
 
@@ -11,8 +12,8 @@ use crate::{
 
 fn option_to_string(option: Option<&str>) -> String {
     match option {
-        Some(value) => value.to_string(), // Convert &str to String
-        None => String::new(),            // Return an empty String for None
+        Some(value) => value.to_string(),
+        None => String::new(),
     }
 }
 
@@ -25,7 +26,7 @@ impl AwsCognitoRepository {
     pub async fn new(user_pool_id: String) -> Self {
         // TODO config the region correctly
 
-        let region_provider = RegionProviderChain::default_provider(); // Default region provider chain
+        let region_provider = RegionProviderChain::default_provider();
 
         let config = aws_config::from_env().region(region_provider).load().await;
         let client = Client::new(&config);
@@ -50,7 +51,6 @@ impl ClienteGateway for AwsCognitoRepository {
 
         match response {
             Ok(response) => {
-                println!("Estamos GIGANTESCOS");
                 let users = response.users();
 
                 for user in users {
@@ -63,12 +63,12 @@ impl ClienteGateway for AwsCognitoRepository {
 
                     for attr in user.attributes() {
                         match attr.name() {
-                            "id" => id =option_to_string(attr.value()),
-                            "nome" => nome = option_to_string(attr.value()),
-                            "email" => email = option_to_string(attr.value()),
-                            "cpf" => cpf_string = option_to_string(attr.value()),
-                            "data_criacao" => data_criacao = option_to_string(attr.value()),
-                            "data_atualizacao" => data_atualizacao = option_to_string(attr.value()),
+                            "custom:id" => id =option_to_string(attr.value()),
+                            "custom:nome" => nome = option_to_string(attr.value()),
+                            "custom:email" => email = option_to_string(attr.value()),
+                            "custom:cpf" => cpf_string = option_to_string(attr.value()),
+                            "custom:data_criacao" => data_criacao = option_to_string(attr.value()),
+                            "custom:data_atualizacao" => data_atualizacao = option_to_string(attr.value()),
                             _ => {}
                         }
                     };
@@ -77,16 +77,24 @@ impl ClienteGateway for AwsCognitoRepository {
 
                     match cpf {
                         Ok(cpf) => {
-                            let cliente = Cliente::new(
-                                user.username().unwrap_or_default().parse().unwrap_or(0),
-                                nome,
-                                email,
-                                cpf,
-                                data_criacao,
-                                data_atualizacao,
-                            );
-        
-                            clientes.push(cliente);
+                            match id.parse::<usize>() {
+                                Ok(id_value) => {
+                                    let cliente = Cliente::new(
+                                        id_value,
+                                        nome,
+                                        email,
+                                        cpf,
+                                        data_criacao,
+                                        data_atualizacao,
+                                    );
+                
+                                    clientes.push(cliente);
+                                },
+                                Err(error) => {
+                                    println!("Failed to convert string, ID: {}", id);
+                                }
+                            }
+                            
                         },
                         Err(err) => println!("Invalid CPF for user: {}", nome),
                     };
@@ -102,132 +110,124 @@ impl ClienteGateway for AwsCognitoRepository {
     }
 
     async fn get_cliente_by_cpf(&self, cpf: Cpf) -> Result<Cliente, DomainError> {
-        // let request = self.client
-        //     .list_users()
-        //     .user_pool_id(&self.user_pool_id)
-        //     .filter(format!("cpf = \"{}\"", cpf))
-        //     .build();
+        let clientes_result = self.get_clientes().await;
 
-        // let response = self.client.list_users(request).await?;
-        // if let Some(user) = response.users().first() {
-        //     let mut email = String::new();
-        //     if let Some(attributes) = user.attributes() {
-        //         for attr in attributes {
-        //             if attr.name() == "email" {
-        //                 email = attr.value().to_owned();
-        //             }
-        //         }
-        //     }
+        let clientes = match clientes_result {
+            Ok(clientes) => clientes,
+            Err(err) => {
+                println!("Error retrieving clientes");
+                return Err(err);
+            }
+        };
 
-        //     let cliente = Cliente {
-        //         id: user.username().unwrap_or("").to_owned(),
-        //         cpf: cpf.to_owned(),
-        //         email,
-        //     };
+        for cliente in clientes {
+            if cpf.0 == cliente.cpf().0 {
+                return Ok(cliente);
+            }
+        }
 
-        //     Ok(cliente)
-        // } else {
-        //     Err(Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, "Cliente not found")))
-        // }
-        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            _now.clone(),
-            _now,
-        );
+        Err(DomainError::NotFound)
 
-        Ok(cliente)
     }
 
     async fn get_cliente_by_id(&self, id: usize) -> Result<Cliente, DomainError> {
-        // let request = self.client
-        //     .admin_get_user()
-        //     .user_pool_id(&self.user_pool_id)
-        //     .username(id)
-        //     .build();
+        let clientes_result = self.get_clientes().await;
 
-        // let response = self.client.admin_get_user(request).await?;
-        // let mut cpf = String::new();
-        // let mut email = String::new();
+        let clientes = match clientes_result {
+            Ok(clientes) => clientes,
+            Err(err) => {
+                println!("Error retrieving clientes");
+                return Err(err);
+            }
+        };
 
-        // for attr in response.user_attributes().unwrap_or_default() {
-        //     if attr.name() == "cpf" {
-        //         cpf = attr.value().to_owned();
-        //     }
-        //     if attr.name() == "email" {
-        //         email = attr.value().to_owned();
-        //     }
-        // }
+        for cliente in clientes {
 
-        // let cliente = Cliente {
-        //     id: id.to_owned(),
-        //     cpf,
-        //     email,
-        // };
+            if id == *cliente.id() {
+                return Ok(cliente);
+            }
+        }
 
-        // Ok(cliente)
-        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            _now.clone(),
-            _now,
-        );
-
-        Ok(cliente)
+        Err(DomainError::NotFound)
     }
 
     async fn create_cliente(&mut self, cliente: Cliente) -> Result<Cliente, DomainError> {
-        // let request = self.client
-        //     .admin_create_user()
-        //     .user_pool_id(&self.user_pool_id)
-        //     .username(&cliente.cpf)
-        //     .temporary_password("TempPassword123!")
-        //     .user_attributes(
-        //         AttributeType::builder()
-        //             .name("email")
-        //             .value(&cliente.email)
-        //             .build(),
-        //         AttributeType::builder()
-        //             .name("cpf")
-        //             .value(&cliente.cpf)
-        //             .build(),
-        //     )
-        //     .build();
+        println!("chegueeeei");
+        // Convert the `Cliente` object into AWS Cognito attributes
 
-        // self.client.admin_create_user(request).await?;
+        let cpf_string = &cliente.cpf().0;
+        // Initialize an empty vector to hold successfully built attributes
+        let mut attributes = Vec::new();
 
-        // println!("Cliente '{}' created successfully.", cliente.cpf);
-        // Ok(())
-        let _now = Utc::now().format("%Y-%m-%d %H:%M:%S%.3f%z").to_string();
-        let cliente = Cliente::new(
-            1,
-            "Fulano da Silva".to_string(),
-            "".to_string(),
-            Cpf::new("123.456.789-09".to_string()).unwrap(),
-            _now.clone(),
-            _now,
-        );
+        let id = cpf_string.replace(".", "").replace("-", "");
+        let string_id: &str = &id;
+        // List of attribute specifications
+        let attribute_specs = vec![
+            ("custom:id", string_id),
+            ("custom:nome", cliente.nome()),
+            ("custom:email", cliente.email()),
+            ("custom:cpf", cpf_string),
+            ("custom:data_criacao", cliente.data_criacao()),
+            ("custom:data_atualizacao", cliente.data_atualizacao()),
+        ];
 
-        Ok(cliente)
+        // Iterate over attribute specifications
+        for (name, value) in attribute_specs {
+            // Attempt to build an attribute
+            match AttributeType::builder()
+                .name(name)
+                .value(value)
+                .build()
+            {
+                Ok(attr) => {
+                    // Successfully built the attribute, add it to the vector
+                    attributes.push(attr);
+                },
+                Err(err) => {
+                    println!("Failed to build attribute {}: {}", name, err);
+                }
+            }
+        }
+
+        let response = self.client
+            .admin_create_user()
+            .user_pool_id(&self.user_pool_id)
+            .username(cpf_string)
+            .temporary_password(cpf_string)
+            .set_user_attributes(Some(attributes))
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                println!("Successfully created user: {}", cliente.id());
+                Ok(cliente)
+            },
+            Err(err) => {
+                println!("SDK ERROR: {}",err.to_string());
+                println!("Failed to create user: {}", cpf_string);
+                Err(DomainError::Invalid("Cliente".to_string()))
+            }
+        }
     }
 
     async fn delete_cliente(&mut self, cpf: Cpf) -> Result<(), DomainError> {
-        // let request = self.client
-        //     .admin_delete_user()
-        //     .user_pool_id(&self.user_pool_id)
-        //     .username(cpf)
-        //     .build();
+        let cpf_string = cpf.0;
+        let response = self.client
+            .admin_delete_user()
+            .user_pool_id(&self.user_pool_id)
+            .username(cpf_string.clone())
+            .send()
+            .await;
 
-        // self.client.admin_delete_user(request).await?;
-        // println!("Cliente '{}' deleted successfully.", cpf);
-        // Ok(())
-
-        Ok(())
+        match response {
+            Ok(_) => {
+                Ok(())
+            },
+            Err(err) => {
+                println!("Failed to delete user: {}", cpf_string);
+                Err(DomainError::NotFound)
+            }
+        }
     }
 }

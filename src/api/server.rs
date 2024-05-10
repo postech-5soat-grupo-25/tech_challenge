@@ -71,10 +71,8 @@ pub async fn main() -> Result<(), rocket::Error> {
         Arc::new(Mutex::new(InMemoryClienteRepository::new()))
     } else {
         println!("Connecting to database: {}", config.db_url);
-        // TODO
-        // change this to aws_cognito_connection
-        // then create a Cognito Repository
 
+        // TODO get this from env value
         Arc::new(Mutex::new(
             AwsCognitoRepository::new(String::from("us-east-1_9KnwgXBoZ")).await,
         ))
