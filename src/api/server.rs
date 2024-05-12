@@ -2,6 +2,7 @@ use rocket::response::Redirect;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::swagger_ui::*;
 use std::collections::HashMap;
+use std::process;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -72,9 +73,15 @@ pub async fn main() -> Result<(), rocket::Error> {
     } else {
         println!("Connecting to database: {}", config.db_url);
 
-        // TODO get this from env value
+        let user_pool_id = match std::env::var("AWS_COGNITO_USER_POOL_ID") {
+            Ok(val) => val,
+            Err(_) => {
+                eprintln!("AWS_COGNITO_USER_POOL_ID environment variable not set.");
+                process::exit(1);
+            }
+        };
         Arc::new(Mutex::new(
-            AwsCognitoRepository::new(String::from("us-east-1_9KnwgXBoZ")).await,
+            AwsCognitoRepository::new(String::from(user_pool_id)).await,
         ))
     };
 

@@ -24,8 +24,6 @@ pub struct AwsCognitoRepository {
 
 impl AwsCognitoRepository {
     pub async fn new(user_pool_id: String) -> Self {
-        // TODO config the region correctly
-
         let region_provider = RegionProviderChain::default_provider();
 
         let config = aws_config::from_env().region(region_provider).load().await;
