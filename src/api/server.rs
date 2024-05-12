@@ -2,6 +2,7 @@ use rocket::response::Redirect;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::swagger_ui::*;
 use std::collections::HashMap;
+use std::process;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -13,6 +14,7 @@ use crate::adapters::mercadopago_pagamento_webhook_adapter::MercadoPagoPagamento
 use crate::api::config::{Config, Env};
 use crate::external::pagamento::mock::MockPagamentoSuccesso;
 use crate::external::postgres;
+use crate::gateways::aws_cognito_gateway::AwsCognitoRepository;
 use crate::gateways::{
     in_memory_cliente_gateway::InMemoryClienteRepository,
     in_memory_pagamento_gateway::InMemoryPagamentoRepository,
@@ -70,13 +72,16 @@ pub async fn main() -> Result<(), rocket::Error> {
         Arc::new(Mutex::new(InMemoryClienteRepository::new()))
     } else {
         println!("Connecting to database: {}", config.db_url);
-        let postgres_connection_manager = postgres::PgConnectionManager::new(config.db_url.clone())
-            .await
-            .unwrap();
-        let tables = postgres::get_tables();
 
+        let user_pool_id = match std::env::var("AWS_COGNITO_USER_POOL_ID") {
+            Ok(val) => val,
+            Err(_) => {
+                eprintln!("AWS_COGNITO_USER_POOL_ID environment variable not set.");
+                process::exit(1);
+            }
+        };
         Arc::new(Mutex::new(
-            PostgresClienteRepository::new(postgres_connection_manager.client, tables).await,
+            AwsCognitoRepository::new(String::from(user_pool_id)).await,
         ))
     };
 
