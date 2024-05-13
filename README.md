@@ -37,6 +37,18 @@ Com a expansão de uma lanchonete e a ausência de um sistema de controle de ped
 
 Para mais informações sobre o projeto, incluindo detalhes técnicos e guias de utilização, acesse nossa *documentação completa* em: [postech-5soat-grupo-25.github.io](https://postech-5soat-grupo-25.github.io/). O sumário abaixo irá direcioná-lo para as documentações de cada etapa do desenvolvimento do projeto.
 
+
+### Como fazer deploy
+
+Essa aplicação foi configurada para deploy em um cluster EKS na AWS, para isso, execute os seguintes passos:
+ - Faça deploy da infra do EKS e do RDS necessários
+ - Configure os secrets `AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY` no repositório
+ - Insira a url do banco de dados com usuário e senha na variável `DB_URL` no arquivo `kustomize/configmap.yaml`
+ - Abra um PR para a branch main e rode o primeiro deploy
+ - Após o deploy e configuração inicial pegue as URLs dos dois load balancers no console AWS e insira-os no arquivo `kustomize/configmap.yaml` nas variáveis `API_HOST` e `MOCK_PAGAMENTOS_URL`
+ - Abra mais um PR para a branch main e rode o mais um deploy
+
+
 #### Fase 1
 
 ##### Entregável 1
