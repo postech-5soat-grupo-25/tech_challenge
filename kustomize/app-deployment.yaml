@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: rust-app-container
-          image: brunomafra/grupo-25-tech-challenge:latest
+          image: 739842188003.dkr.ecr.us-east-1.amazonaws.com/rust_api:latest
           ports:
             - containerPort: 3000   
           envFrom:
