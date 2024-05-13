@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rust-app-svc
+  name: rust-app-nodeport-svc
 spec:
   type: NodePort
   selector:
@@ -11,3 +11,17 @@ spec:
       port: 3000
       targetPort: 3000
       nodePort: 31200
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rust-app-loadbalancer-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: rust-app 
+  ports:
+    - port: 3000
+      targetPort: 3000

@@ -7,6 +7,6 @@ metadata:
 spec:
   containers:
     - name: mock-pagamentos
-      image: brunomafra/mock-pagamentos:latest
+      image: 739842188003.dkr.ecr.us-east-1.amazonaws.com/django_api:latest
       ports:
         - containerPort: 9000
