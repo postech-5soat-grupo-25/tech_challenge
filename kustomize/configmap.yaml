@@ -9,3 +9,4 @@ data:
   DB_URL: postgresql://mainuser:mainpassword@tech-challenge-db.cra60s8i0ksr.us-east-1.rds.amazonaws.com:5432/TechChallengeDb
   MOCK_PAGAMENTOS_URL: http://a94c2deea7c61486daf1a1e8b06f1dca-136206254.us-east-1.elb.amazonaws.com:9000/payment/
   API_HOST: afdf66f829fff46b287fc8f1c922e715-1960790542.us-east-1.elb.amazonaws.com:3000
+  AWS_COGNITO_USER_POOL_ID: us-east-1_cHfnf8rNY
